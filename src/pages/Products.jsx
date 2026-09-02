@@ -10,7 +10,8 @@ export default function Products() {
       price: 'Rp 2.000 / pcs',
       status: 'PO Buka',
       desc: 'Jajanan kaki lima khas Filipina berupa telur puyuh rebus yang dibalut adonan tepung berwarna oranye dan digoreng hingga renyah.',
-      image: '/produk-kwek-kwek.jpg'
+      image: '/produk-kwek-kwek.jpg',
+      waLink: 'https://wa.link/kdmsu4'
     },
     {
       id: 2,
@@ -18,7 +19,8 @@ export default function Products() {
       price: 'Rp 15.000 / porsi',
       status: 'PO Buka',
       desc: 'Hidangan nasional Filipina berupa potongan ayam yang dimasak perlahan dalam campuran kecap asin, cuka, bawang putih, dan merica hitam hingga meresap sempurna.',
-      image: '/produk-chicken-adobo.jpg'
+      image: '/produk-chicken-adobo.jpg',
+      waLink: 'https://wa.link/y1k3hz'
     },
     {
       id: 3,
@@ -26,14 +28,14 @@ export default function Products() {
       price: 'Rp 5.000 / cup',
       status: 'PO Buka',
       desc: 'Pencuci mulut es serut ikonik dari Filipina dengan campuran ube (ubi ungu), susu evaporasi, dan aneka isian menyegarkan.',
-      image: '/produk-halo-halo.jpg'
+      image: '/produk-halo-halo.jpg',
+      waLink: 'https://wa.link/ukep08'
     }
   ];
 
-  const getWhatsAppLink = (productName) => {
-    const baseWaLink = 'https://wa.link/ewddmf';
+  const getWhatsAppLink = (waLink, productName) => {
     const message = encodeURIComponent(`Halo, saya ingin memesan produk kuliner FREONIX: ${productName}. Apakah masih bisa di-order?`);
-    return `${baseWaLink}?text=${message}`;
+    return `${waLink}?text=${message}`;
   };
 
   return (
@@ -93,7 +95,7 @@ export default function Products() {
                     Detail & Gizi
                   </Link>
                   <a 
-                    href={getWhatsAppLink(item.name)}
+                    href={getWhatsAppLink(item.waLink, item.name)}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full flex items-center justify-center gap-2 bg-[#8B5742] hover:bg-[#5D3A29] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm"

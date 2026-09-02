@@ -29,6 +29,29 @@ export default function FreonixWebsite() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Countdown ke 23 September 2026
+  const [countdown, setCountdown] = useState({ hari: 0, jam: 0, menit: 0, detik: 0 });
+
+  useEffect(() => {
+    const target = new Date('2026-09-23T00:00:00').getTime();
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = target - now;
+      if (diff <= 0) {
+        setCountdown({ hari: 0, jam: 0, menit: 0, detik: 0 });
+        clearInterval(interval);
+        return;
+      }
+      setCountdown({
+        hari: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        jam: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        menit: Math.floor((diff / (1000 * 60)) % 60),
+        detik: Math.floor((diff / 1000) % 60),
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const scrollToSection = (id) => {
     setActiveSection(id);
     setMobileMenuOpen(false);
@@ -46,7 +69,8 @@ export default function FreonixWebsite() {
       price: 'Rp 2.000 / pcs',
       status: 'PO Buka',
       desc: 'Jajanan kaki lima khas Filipina berupa telur puyuh rebus yang dibalut adonan tepung berwarna oranye dan digoreng hingga renyah.',
-      image: 'https://kommodo.ai/i/Wc3lBakVVNt7IgCzbgDR'
+      image: 'https://kommodo.ai/i/Wc3lBakVVNt7IgCzbgDR',
+      waLink: 'https://wa.link/kdmsu4'
     },
     {
       id: 2,
@@ -54,7 +78,8 @@ export default function FreonixWebsite() {
       price: 'Rp 15.000 / porsi',
       status: 'PO Buka',
       desc: 'Hidangan nasional Filipina berupa potongan ayam yang dimasak perlahan dalam campuran kecap asin, cuka, bawang putih, dan merica hitam hingga meresap sempurna.',
-      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d'
+      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d',
+      waLink: 'https://wa.link/y1k3hz'
     },
     {
       id: 3,
@@ -62,15 +87,15 @@ export default function FreonixWebsite() {
       price: 'Rp 5.000 / cup',
       status: 'PO Buka',
       desc: 'Pencuci mulut es serut ikonik dari Filipina dengan campuran ube (ubi ungu), susu evaporasi, dan aneka isian menyegarkan.',
-      image: 'https://kommodo.ai/i/oVjITA1lpigSZNcxhvyA'
+      image: 'https://kommodo.ai/i/oVjITA1lpigSZNcxhvyA',
+      waLink: 'https://wa.link/ukep08'
     }
   ];
 
   // Helper fungsi link WhatsApp pemesanan
-  const getWhatsAppLink = (productName) => {
-    const baseWaLink = 'https://wa.link/ewddmf';
+  const getWhatsAppLink = (waLink, productName) => {
     const message = encodeURIComponent(`Halo, saya ingin memesan produk kuliner FREONIX: ${productName}. Apakah masih bisa di-order?`);
-    return `${baseWaLink}?text=${message}`;
+    return `${waLink}?text=${message}`;
   };
 
   return (
@@ -291,6 +316,35 @@ export default function FreonixWebsite() {
             <p className="text-[#4B5563] text-sm sm:text-base">
               Pilihan hidangan tradisional Filipina yang diolah higienis dan lezat oleh siswa-siswi FREONIX. Pesan sekarang melalui WhatsApp sebelum kuota PO penuh!
             </p>
+
+            {/* Countdown Timer */}
+            <div className="mt-8 mb-4">
+              <p className="text-[#8B5742] font-semibold text-sm mb-3 uppercase tracking-wider">
+                ⏳ Batas Waktu Pemesanan
+              </p>
+              <div className="flex items-center justify-center gap-3 sm:gap-4">
+                {[
+                  { label: 'Hari', value: countdown.hari },
+                  { label: 'Jam', value: countdown.jam },
+                  { label: 'Menit', value: countdown.menit },
+                  { label: 'Detik', value: countdown.detik },
+                ].map((unit, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div className="bg-[#5D3A29] text-white rounded-xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
+                      <span className="text-2xl sm:text-3xl font-extrabold tabular-nums">
+                        {String(unit.value).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-[#8B5742] mt-1.5 uppercase tracking-wider">
+                      {unit.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-[#4B5563] mt-3">
+                Menuju 23 September 2026
+              </p>
+            </div>
           </div>
 
           {/* Grid Produk */}
@@ -330,7 +384,7 @@ export default function FreonixWebsite() {
 
                   {/* Tombol Pesan Langsung via WhatsApp */}
                   <a 
-                    href={getWhatsAppLink(item.name)}
+                    href={getWhatsAppLink(item.waLink, item.name)}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full flex items-center justify-center gap-2 bg-[#8B5742] hover:bg-[#5D3A29] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm"

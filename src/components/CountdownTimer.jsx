@@ -2,10 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { useDb } from '../utils/useDb';
 
+// Helper untuk mendapatkan timestamp target dalam zona waktu Jakarta (WIB / UTC+7)
+function getTargetTimestampJakarta(targetInput, defaultEventDate) {
+  const raw = targetInput || (defaultEventDate ? `${defaultEventDate}T08:00:00` : '2026-09-23T08:00:00');
+
+  if (typeof raw === 'number') return raw;
+  if (raw instanceof Date) return raw.getTime();
+
+  let str = String(raw).trim();
+
+  // Jika formatnya hanya tanggal YYYY-MM-DD, set ke pukul 08:00:00 WIB (+07:00)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    str = `${str}T08:00:00+07:00`;
+  }
+  // Jika format tanggal & jam tanpa penanda timezone (misal YYYY-MM-DDTHH:mm atau YYYY-MM-DDTHH:mm:ss)
+  else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(str)) {
+    if (str.length === 16) {
+      str += ':00';
+    }
+    str += '+07:00';
+  }
+  // Jika string belum memiliki penanda timezone Z atau +XX:XX / -XX:XX
+  else if (!/(Z|[+-]\d{2}:\d{2})$/.test(str)) {
+    str += '+07:00';
+  }
+
+  const parsed = new Date(str).getTime();
+  return isNaN(parsed) ? new Date('2026-09-23T08:00:00+07:00').getTime() : parsed;
+}
+
 export default function CountdownTimer({ targetDate }) {
   const db = useDb();
   const settings = db.getSettings() || {};
-  const effectiveTargetDate = targetDate || (settings.eventDate ? `${settings.eventDate}T08:00:00` : '2026-09-23T08:00:00');
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -16,8 +44,10 @@ export default function CountdownTimer({ targetDate }) {
   });
 
   useEffect(() => {
+    const targetTimestamp = getTargetTimestampJakarta(targetDate, settings.eventDate);
+
     const calculateTime = () => {
-      const difference = +new Date(effectiveTargetDate) - +new Date();
+      const difference = targetTimestamp - Date.now();
 
       if (difference <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
@@ -36,7 +66,7 @@ export default function CountdownTimer({ targetDate }) {
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
     return () => clearInterval(interval);
-  }, [effectiveTargetDate]);
+  }, [targetDate, settings.eventDate]);
 
   if (timeLeft.isExpired) {
     return (

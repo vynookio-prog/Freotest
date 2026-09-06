@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ShoppingBag, FileText, Sparkles, AlertCircle, CheckCircle2, Package } from 'lucide-react';
+import React from 'react';
+import { ShoppingBag, FileText, Sparkles, AlertCircle, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FAQ from '../components/FAQ';
 import CountdownTimer from '../components/CountdownTimer';
@@ -8,15 +8,7 @@ import { useDb } from '../utils/useDb';
 export default function Products() {
   const db = useDb();
   const activeProducts = db.getActiveProducts() || [];
-  const categories = db.getActiveCategories() || [];
   const settings = db.getSettings() || {};
-
-  const [selectedCategory, setSelectedCategory] = useState('all');
-
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'all') return activeProducts;
-    return activeProducts.filter(p => p.categoryId === selectedCategory);
-  }, [activeProducts, selectedCategory]);
 
   return (
     <section className="py-12 px-4 sm:px-6">
@@ -48,40 +40,8 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Category Filter Tabs */}
-        {categories.length > 0 && (
-          <div className="flex items-center justify-center gap-2 mb-10 overflow-x-auto pb-2 scrollbar-none">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shadow-xs ${
-                selectedCategory === 'all'
-                  ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white shadow-md'
-                  : 'bg-white/70 text-stone-600 hover:bg-white hover:text-[#5D3A29] border border-white/80'
-              }`}
-            >
-              Semua Menu ({activeProducts.length})
-            </button>
-            {categories.map(cat => {
-              const count = activeProducts.filter(p => p.categoryId === cat.id).length;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shadow-xs ${
-                    selectedCategory === cat.id
-                      ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white shadow-md'
-                      : 'bg-white/70 text-stone-600 hover:bg-white hover:text-[#5D3A29] border border-white/80'
-                  }`}
-                >
-                  {cat.name} ({count})
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Product Cards Grid or Empty State */}
-        {filteredProducts.length === 0 ? (
+        {activeProducts.length === 0 ? (
           <div className="py-16 px-6 text-center max-w-md mx-auto bg-white/60 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(93,58,41,0.06)] mb-16">
             <div className="w-16 h-16 rounded-2xl bg-[#8B5742]/10 text-[#8B5742] flex items-center justify-center mx-auto mb-4 shadow-inner">
               <Package size={28} />
@@ -99,7 +59,7 @@ export default function Products() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {filteredProducts.map((item, index) => {
+            {activeProducts.map((item, index) => {
               const isOutOfStock = (item.stock || 0) === 0;
               const isLowStock = (item.stock || 0) > 0 && (item.stock || 0) <= (settings.lowStockThreshold || 5);
               const formattedPrice = `Rp ${Number(item.price || 0).toLocaleString('id-ID')} / ${item.unit || 'porsi'}`;

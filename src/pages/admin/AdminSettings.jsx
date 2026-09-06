@@ -28,7 +28,7 @@ export default function AdminSettings() {
   const [formData, setFormData] = useState({
     storeName: currentSettings.storeName || 'FREONIX - Kokurikuler Filipina',
     storeStatus: currentSettings.storeStatus || 'open',
-    eventDate: currentSettings.eventDate || '2026-09-08',
+    eventDate: currentSettings.eventDate || '2026-09-23',
     whatsappAdmin: currentSettings.whatsappAdmin || '6287856624994',
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
     orderPrefix: currentSettings.orderPrefix || 'FRX'

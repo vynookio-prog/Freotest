@@ -1,69 +1,62 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ChefHat, Activity, Info, CheckCircle2, Sparkles, Droplets } from 'lucide-react';
-
-const productDetails = {
-  1: {
-    name: 'Kwek Kwek',
-    image: '/produk-kwek-kwek.jpg',
-    desc: 'Jajanan kaki lima khas Filipina berupa telur puyuh rebus yang dibalut adonan tepung berwarna oranye dan digoreng hingga renyah.',
-    price: 'Rp 2.000 / pcs',
-    ingredients: ['Telur puyuh (direbus & dikupas)', 'Tepung terigu & maizena', 'Pewarna makanan oranye alami (Annatto)', 'Garam, kaldu bubuk, & merica', 'Air mineral', 'Minyak goreng'],
-    tools: ['Mangkuk adonan', 'Pengaduk (Whisk)', 'Wajan penggorengan', 'Saringan minyak', 'Tusuk sate bambu', 'Spatula/Sutil'],
-    nutrition: [
-      { label: 'Kalori', value: '150 kkal' },
-      { label: 'Protein', value: '6 g' },
-      { label: 'Lemak', value: '10 g' },
-      { label: 'Karbohidrat', value: '8 g' }
-    ]
-  },
-  2: {
-    name: 'Chicken Adobo',
-    image: '/produk-chicken-adobo.jpg',
-    desc: 'Hidangan nasional Filipina berupa potongan ayam yang dimasak perlahan dalam campuran kecap asin, cuka, bawang putih, dan merica hitam hingga meresap sempurna.',
-    price: 'Rp 15.000 / porsi',
-    ingredients: ['Daging ayam segar (potong sedang)', 'Kecap asin pekat', 'Cuka putih / cuka aren', 'Bawang putih (geprek kasar)', 'Biji lada hitam utuh', 'Daun salam kering (Bay leaves)', 'Sedikit gula pasir', 'Air & Minyak goreng'],
-    tools: ['Pisau daging', 'Talenan tebal', 'Panci atau Wajan tertutup', 'Spatula kayu', 'Mangkuk marinasi'],
-    nutrition: [
-      { label: 'Kalori', value: '250 kkal' },
-      { label: 'Protein', value: '25 g' },
-      { label: 'Lemak', value: '12 g' },
-      { label: 'Karbohidrat', value: '5 g' }
-    ]
-  },
-  3: {
-    name: 'Halo-Halo',
-    image: '/produk-halo-halo.jpg',
-    desc: 'Pencuci mulut es serut ikonik dari Filipina dengan campuran ube (ubi ungu), susu evaporasi, dan aneka isian menyegarkan.',
-    price: 'Rp 5.000 / cup',
-    ingredients: ['Es batu kristal', 'Susu evaporasi cair', 'Ube Halaya (selai ubi ungu)', 'Kacang merah manis', 'Nata de coco & jelly', 'Irisan pisang raja matang', 'Nangka manis', 'Es krim Ube (opsional)', 'Gula aren cair'],
-    tools: ['Mesin penyerut es / blender es', 'Gelas cup plastik saji', 'Sendok panjang', 'Wadah penyimpanan isian'],
-    nutrition: [
-      { label: 'Kalori', value: '300 kkal' },
-      { label: 'Protein', value: '8 g' },
-      { label: 'Lemak', value: '6 g' },
-      { label: 'Karbohidrat', value: '55 g' }
-    ]
-  }
-};
+import { ArrowLeft, ChefHat, Activity, Info, CheckCircle2, Sparkles, Droplets, Box, Image as ImageIcon, ShoppingBag, Package } from 'lucide-react';
+import Product3DViewer from '../components/Product3DViewer';
+import { useDb } from '../utils/useDb';
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = productDetails[id];
+  const db = useDb();
+  const [viewMode, setViewMode] = useState('photo');
 
   // Scroll to top on mount for smooth experience
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Lookup in DB
+  const product = db.getProductById(id);
+
   if (!product) {
     return (
-      <div className="pt-28 text-center min-h-[70vh]">
-        <h2 className="text-2xl font-bold text-[#5D3A29]">Produk tidak ditemukan</h2>
-        <Link to="/products" className="text-[#8B5742] hover:underline mt-4 inline-block font-medium">Kembali ke Menu Produk</Link>
+      <div className="pt-28 text-center min-h-[70vh] flex flex-col items-center justify-center px-4">
+        <div className="w-16 h-16 rounded-2xl bg-[#8B5742]/10 text-[#8B5742] flex items-center justify-center mb-4">
+          <Package size={28} />
+        </div>
+        <h2 className="text-2xl font-bold text-[#5D3A29]">Produk Tidak Ditemukan</h2>
+        <p className="text-xs text-stone-500 mt-1 max-w-sm">
+          Menu produk ini belum terdaftar atau telah dihapus dari database.
+        </p>
+        <Link 
+          to="/products" 
+          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8B5742] text-white text-xs font-bold shadow-md hover:bg-[#5D3A29] transition-all"
+        >
+          <ArrowLeft size={14} /> Kembali ke Menu Produk
+        </Link>
       </div>
     );
   }
+
+  const formattedPrice = typeof product.price === 'number' 
+    ? `Rp ${product.price.toLocaleString('id-ID')} / ${product.unit || 'porsi'}` 
+    : product.price;
+
+  const ingredients = product.ingredients && product.ingredients.length > 0 
+    ? product.ingredients 
+    : ['Bahan baku pilihan berkualitas', 'Bumbu racikan standar higienis'];
+
+  const tools = product.tools && product.tools.length > 0 
+    ? product.tools 
+    : ['Peralatan standar memasak higienis', 'Wadah saji ramah lingkungan'];
+
+  const nutrition = product.nutrition && product.nutrition.length > 0 
+    ? product.nutrition 
+    : [
+      { label: 'Kalori', value: '200 kkal' },
+      { label: 'Protein', value: '10 g' },
+      { label: 'Lemak', value: '8 g' },
+      { label: 'Karbohidrat', value: '25 g' }
+    ];
 
   return (
     <div className="pb-16 bg-[#FAFAF9] min-h-[80vh] relative overflow-hidden opacity-0 animate-fade-in">
@@ -82,23 +75,96 @@ export default function ProductDetail() {
         </Link>
         
         <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/50 opacity-0 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          {/* Gambar Produk */}
-          <div className="md:w-5/12 relative min-h-[350px] group overflow-hidden">
-            <img 
-              src={product.image} 
-              alt={product.name} 
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div className="absolute bottom-8 left-8 right-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <div className="flex items-center gap-2 mb-2 opacity-90">
-                <Sparkles size={16} className="text-[#DDA15E]" />
-                <span className="text-[#DDA15E] text-xs font-bold uppercase tracking-widest">Premium Taste</span>
+          {/* Kolom Visual Makanan (3D & Foto) */}
+          <div className="md:w-5/12 p-3 sm:p-5 flex flex-col justify-between bg-stone-900/5 border-b md:border-b-0 md:border-r border-stone-200/60">
+            {/* View Mode Switcher */}
+            <div className="flex items-center justify-center p-1 bg-stone-200/70 rounded-full mb-3 max-w-[280px] mx-auto w-full">
+              <button
+                type="button"
+                onClick={() => setViewMode('photo')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold transition-all duration-200 ${
+                  viewMode === 'photo'
+                    ? 'bg-white text-[#5D3A29] shadow-sm'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <ImageIcon size={14} className="text-[#8B5742]" />
+                Foto Asli
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('3d')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold transition-all duration-200 ${
+                  viewMode === '3d'
+                    ? 'bg-white text-[#5D3A29] shadow-sm'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Box size={14} className="text-[#DDA15E]" />
+                3D Interaktif
+              </button>
+            </div>
+
+            {/* Konten Tampilan: 3D atau Foto */}
+            <div className="flex-1 flex items-center justify-center">
+              {viewMode === '3d' ? (
+                <Product3DViewer 
+                  image={product.image} 
+                  name={product.name} 
+                  price={formattedPrice} 
+                />
+              ) : (
+                <div className="relative w-full h-[380px] sm:h-[420px] rounded-3xl overflow-hidden shadow-lg group">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+
+                  {/* Tombol Shortcut Lihat 3D di Atas Foto */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('3d')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md text-[#DDA15E] text-xs font-bold border border-[#DDA15E]/40 shadow-lg transition-all hover:scale-105 active:scale-95"
+                    >
+                      <Box size={13} />
+                      Lihat Versi 3D
+                    </button>
+                  </div>
+
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex items-center gap-2 mb-2 opacity-90">
+                      <Sparkles size={16} className="text-[#DDA15E]" />
+                      <span className="text-[#DDA15E] text-xs font-bold uppercase tracking-widest">Premium Quality</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-wide drop-shadow-lg">{product.name}</h1>
+                    <span className="inline-block bg-gradient-to-r from-[#DDA15E] to-[#8B5742] text-white px-4 py-1.5 rounded-full text-xs font-black shadow-lg">
+                      {formattedPrice}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Info Singkat Judul di bawah jika mode 3D */}
+            {viewMode === '3d' && (
+              <div className="mt-3 text-center px-2">
+                <h1 className="text-2xl font-black text-[#5D3A29]">{product.name}</h1>
+                <p className="text-xs text-[#8B5742] font-semibold">{formattedPrice}</p>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-wide drop-shadow-lg">{product.name}</h1>
-              <span className="inline-block bg-gradient-to-r from-[#DDA15E] to-[#8B5742] text-white px-5 py-2 rounded-full text-sm font-black shadow-lg animate-float">
-                {product.price}
-              </span>
+            )}
+
+            {/* Pesan Sekarang Action */}
+            <div className="mt-4">
+              <Link
+                to="/checkout"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+              >
+                <ShoppingBag size={16} />
+                Pesan di Menu Checkout
+              </Link>
             </div>
           </div>
 
@@ -111,9 +177,9 @@ export default function ProductDetail() {
               <h3 className="text-xl font-bold text-[#5D3A29] mb-4 flex items-center gap-2">
                 <Info size={22} className="text-[#DDA15E]" /> Deskripsi Singkat
               </h3>
-              <p className="text-stone-600 leading-relaxed bg-gradient-to-br from-stone-50 to-white p-5 rounded-2xl border border-stone-100 shadow-sm relative overflow-hidden">
-                <span className="absolute left-0 top-0 w-1 h-full bg-[#DDA15E]"></span>
-                {product.desc}
+              <p className="text-stone-700 leading-relaxed bg-white/50 backdrop-blur-xl p-6 rounded-2xl border border-white/80 shadow-xs relative overflow-hidden">
+                <span className="absolute left-0 top-0 w-1.5 h-full bg-gradient-to-b from-[#DDA15E] to-[#8B5742]"></span>
+                {product.desc || 'Tidak ada deskripsi tambahan.'}
               </p>
             </div>
 
@@ -123,9 +189,9 @@ export default function ProductDetail() {
                 <Activity size={22} className="text-[#DDA15E]" /> Estimasi Nilai Gizi
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {product.nutrition.map((item, i) => (
-                  <div key={i} className="bg-white border border-stone-100 rounded-2xl p-4 text-center shadow-sm hover:shadow-md hover:border-[#DDA15E]/50 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="text-[10px] text-stone-400 font-bold mb-2 uppercase tracking-widest group-hover:text-[#8B5742] transition-colors">{item.label}</div>
+                {nutrition.map((item, i) => (
+                  <div key={i} className="bg-white/60 backdrop-blur-xl border border-white/90 rounded-2xl p-4 text-center shadow-xs hover:shadow-md hover:border-[#DDA15E]/60 hover:-translate-y-0.5 transition-all duration-300 group">
+                    <div className="text-[10px] text-stone-500 font-bold mb-1.5 uppercase tracking-widest group-hover:text-[#8B5742] transition-colors">{item.label}</div>
                     <div className="text-xl font-black text-[#8B5742]">{item.value}</div>
                   </div>
                 ))}
@@ -137,14 +203,14 @@ export default function ProductDetail() {
               <h3 className="text-xl font-bold text-[#5D3A29] mb-4 flex items-center gap-2">
                 <ChefHat size={22} className="text-[#DDA15E]" /> Alat & Bahan
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-stone-50/50 p-6 rounded-2xl border border-stone-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white/45 backdrop-blur-xl p-6 rounded-2xl border border-white/80 shadow-xs">
                 <div>
-                  <h4 className="font-bold text-[#8B5742] mb-4 flex items-center gap-2 border-b-2 border-[#DDA15E]/30 pb-2 inline-block">
+                  <h4 className="font-bold text-[#8B5742] mb-4 flex items-center gap-2 border-b-2 border-[#DDA15E]/40 pb-2 inline-block">
                     Bahan-bahan
                   </h4>
                   <ul className="space-y-3">
-                    {product.ingredients.map((item, i) => (
-                      <li key={i} className="text-sm text-stone-600 flex items-start gap-3 hover:translate-x-1 transition-transform">
+                    {ingredients.map((item, i) => (
+                      <li key={i} className="text-sm text-stone-700 flex items-start gap-3 hover:translate-x-1 transition-transform">
                         <CheckCircle2 size={18} className="text-[#DDA15E] shrink-0 mt-0.5" />
                         <span className="leading-snug">{item}</span>
                       </li>
@@ -152,12 +218,12 @@ export default function ProductDetail() {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-[#8B5742] mb-4 flex items-center gap-2 border-b-2 border-[#DDA15E]/30 pb-2 inline-block">
+                  <h4 className="font-bold text-[#8B5742] mb-4 flex items-center gap-2 border-b-2 border-[#DDA15E]/40 pb-2 inline-block">
                     Alat Produksi
                   </h4>
                   <ul className="space-y-3">
-                    {product.tools.map((item, i) => (
-                      <li key={i} className="text-sm text-stone-600 flex items-start gap-3 hover:translate-x-1 transition-transform">
+                    {tools.map((item, i) => (
+                      <li key={i} className="text-sm text-stone-700 flex items-start gap-3 hover:translate-x-1 transition-transform">
                         <CheckCircle2 size={18} className="text-[#DDA15E] shrink-0 mt-0.5" />
                         <span className="leading-snug">{item}</span>
                       </li>

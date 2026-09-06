@@ -5,20 +5,21 @@ export default function About() {
   return (
     <section className="py-12 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           
-          <div className="relative group">
-            <div className="absolute -inset-2 bg-gradient-to-r from-[#DDA15E]/20 to-[#8B5742]/20 rounded-3xl blur-lg transition duration-500 group-hover:opacity-100 opacity-60"></div>
+          <div className="relative group p-2 rounded-[2.5rem] bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)]">
             <img 
               src="/foto-kenangan-1.jpg" 
               alt="Kenangan Kelas FREONIX" 
-              className="relative rounded-2xl w-full h-[340px] sm:h-[420px] object-cover shadow-md transition duration-500 group-hover:scale-[1.01]"
+              className="rounded-[2rem] w-full h-[340px] sm:h-[420px] object-cover shadow-sm transition duration-700 group-hover:scale-[1.02]"
             />
           </div>
 
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 text-[#8B5742] font-bold text-xs uppercase tracking-widest">
-              <Info size={16} /> Profil & Filosofi
+          <div className="space-y-6 bg-white/60 backdrop-blur-2xl p-8 sm:p-10 rounded-[2.5rem] border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)] relative overflow-hidden">
+            <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
+
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-md border border-white/80 text-[#8B5742] text-xs font-bold uppercase tracking-wider shadow-sm">
+              <Info size={14} className="text-[#DDA15E]" /> Profil & Filosofi
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#5D3A29] leading-tight">
               Keluarga Besar Kelas Sains XII-F1
@@ -30,22 +31,22 @@ export default function About() {
               Melalui proyek kokurikuler ini, kami belajar mengasah kemampuan kewirausahaan, menyajikan cita rasa autentik khas Filipina, dan mempererat tali persaudaraan.
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center gap-4">
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <a 
                 href="https://www.instagram.com/freonix__?igsi=YzA1MDF4amhva3Qx" 
                 target="_blank" 
                 rel="noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-[#5D3A29] text-xs font-bold transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-[#5D3A29] text-xs font-bold transition-all shadow-xs border border-white/80 active:scale-95"
               >
-                <ExternalLink size={14} /> Instagram Resmi
+                <ExternalLink size={14} className="text-[#8B5742]" /> Instagram Resmi
               </a>
               <a 
                 href="https://www.tiktok.com/@duabelasefsatu1?_r=1&_t=ZS-98ZVLY09Qxh" 
                 target="_blank" 
                 rel="noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-[#5D3A29] text-xs font-bold transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-[#5D3A29] text-xs font-bold transition-all shadow-xs border border-white/80 active:scale-95"
               >
-                <ExternalLink size={14} /> TikTok Resmi
+                <ExternalLink size={14} className="text-[#8B5742]" /> TikTok Resmi
               </a>
             </div>
           </div>

@@ -1220,15 +1220,16 @@ export const db = {
     data.notifications.unshift(newNotif);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
+    // Simpan ke Supabase jika ada sesi admin
     if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .insert(mapNotificationToDb(newNotif))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase addNotification warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase addNotification err:', err));
+      supabase.auth.getSession().then(({ data: authData }) => {
+        if (authData?.session) {
+          supabase
+            .from('notifications')
+            .insert(mapNotificationToDb(newNotif))
+            .catch(err => console.warn('Supabase addNotification err:', err));
+        }
+      }).catch(() => {});
     }
   },
   markNotificationRead(id) {
@@ -1282,15 +1283,16 @@ export const db = {
     if (data.auditLogs.length > 100) data.auditLogs = data.auditLogs.slice(0, 100);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
+    // Simpan ke Supabase jika ada sesi admin
     if (isSupabaseConfigured) {
-      supabase
-        .from('audit_logs')
-        .insert(mapAuditLogToDb(newLog))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase addAuditLog warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase addAuditLog err:', err));
+      supabase.auth.getSession().then(({ data: authData }) => {
+        if (authData?.session) {
+          supabase
+            .from('audit_logs')
+            .insert(mapAuditLogToDb(newLog))
+            .catch(err => console.warn('Supabase addAuditLog err:', err));
+        }
+      }).catch(() => {});
     }
   },
 

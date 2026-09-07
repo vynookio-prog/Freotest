@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
@@ -15,7 +15,7 @@ import {
   ShieldCheck, 
   Check, 
   AlertTriangle, 
-  Clock,
+  Clock, 
   Sparkles
 } from 'lucide-react';
 import { useDb } from '../../utils/useDb';
@@ -41,8 +41,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   }, [isAuthenticated]);
 
   if (!isAuthenticated) {
-    navigate('/admin/login', { replace: true });
-    return null;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const notifications = db.getNotifications() || [];

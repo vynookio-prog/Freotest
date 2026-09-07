@@ -13,6 +13,16 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If URL contains ?force=true or ?logout=true, clear any stale session
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('force') === 'true' || params.get('logout') === 'true') {
+        sessionStorage.removeItem('freonix_admin_auth');
+        localStorage.removeItem('freonix_admin_auth');
+        return;
+      }
+    }
+
     // If already logged in, go to dashboard
     const isAuth = sessionStorage.getItem('freonix_admin_auth') === 'true' || 
                    localStorage.getItem('freonix_admin_auth') === 'true';

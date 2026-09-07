@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -33,7 +33,7 @@ const PageLoader = () => (
 
 function AppLayout() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = location.pathname.toLowerCase().startsWith('/admin');
 
   if (isAdminRoute) {
     return (
@@ -47,6 +47,7 @@ function AppLayout() {
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </Suspense>
       </div>
@@ -70,6 +71,7 @@ function AppLayout() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </main>

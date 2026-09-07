@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useDb } from '../../utils/useDb';
+import { logoutAdmin } from '../../utils/firebase';
 
 export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -40,9 +41,8 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   const unreadCount = notifications.filter(n => !n.read).length;
   const settings = db.getSettings() || {};
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('freonix_admin_auth');
-    localStorage.removeItem('freonix_admin_auth');
+  const handleLogout = async () => {
+    await logoutAdmin();
     navigate('/admin/login', { replace: true });
   };
 

@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Gambar produk: publik dapat melihat, upload dibatasi untuk user terautentikasi
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Bukti transfer pelanggan: pelanggan dapat mengunggah (gambar < 10MB)
+    match /payment_proofs/{allPaths=**} {
+      allow read: if true;
+      allow create: if request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+      allow update, delete: if request.auth != null;
+    }
+
+    // Direktori unggahan umum
+    match /uploads/{allPaths=**} {
+      allow read: if true;
+      allow create: if request.resource.size < 10 * 1024 * 1024;
+      allow update, delete: if request.auth != null;
+    }
+  }
+}

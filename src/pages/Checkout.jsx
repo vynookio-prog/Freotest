@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDb } from '../utils/useDb';
-import { uploadToSupabaseStorage } from '../utils/supabase';
+import { uploadToFirebaseStorage } from '../utils/firebase';
 
 export default function Checkout() {
   const db = useDb();
@@ -131,14 +131,14 @@ export default function Checkout() {
   };
 
   const uploadToCdn = async (file) => {
-    // 1. Coba upload ke Supabase Storage terlebih dahulu
+    // 1. Coba upload ke Firebase Storage terlebih dahulu
     try {
-      const sbResult = await uploadToSupabaseStorage(file, 'payment_proofs');
-      if (sbResult.success && sbResult.url) {
-        return sbResult.url;
+      const fbResult = await uploadToFirebaseStorage(file, 'payment_proofs');
+      if (fbResult.success && fbResult.url) {
+        return fbResult.url;
       }
     } catch (e) {
-      console.warn('Supabase storage upload fallback...', e);
+      console.warn('Firebase storage upload fallback...', e);
     }
 
     // 2. Fallback cadangan ke Litterbox CDN
@@ -335,7 +335,7 @@ export default function Checkout() {
       waUrl
     };
 
-    // 1. Simpan ke Supabase via database terpadu (db.js) - otomatis potong stok & buat notifikasi
+    // 1. Simpan ke Firebase via database terpadu (db.js) - otomatis potong stok & buat notifikasi
     try {
       await db.createOrder(summaryData);
     } catch (err) {

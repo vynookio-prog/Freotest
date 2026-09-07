@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function untuk cek apakah user adalah Admin
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // Store Settings: Publik dapat membaca, hanya admin yang dapat mengubah
+    match /store_settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Categories: Publik dapat melihat menu kategori, hanya admin yang dapat mengelola
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Products: Publik dapat melihat produk
+    // Admin dapat membuat/mengubah/menghapus produk
+    // Customer dapat mengurangi stok saat membuat pesanan (stok >= 0)
+    match /products/{productId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'updatedAt']) &&
+        request.resource.data.stock <= resource.data.stock &&
+        request.resource.data.stock >= 0
+      );
+    }
+
+    // Orders:
+    // Pelanggan dapat membuat pesanan baru
+    // Pelanggan dan Admin dapat membaca data pesanan
+    // Hanya admin yang dapat mengubah status pembayaran atau menghapus pesanan
+    match /orders/{orderId} {
+      allow create: if request.resource.data.id == orderId || request.resource.data.orderId == orderId;
+      allow read: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Notifications:
+    // Sistem/pelanggan dapat menambahkan notifikasi pesanan baru
+    // Hanya admin yang dapat membaca, menandai selesai, atau menghapus notifikasi
+    match /notifications/{notifId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Audit Logs:
+    // Sistem dapat mencatat aktivitas penting
+    // Hanya admin yang dapat melihat riwayat audit log
+    match /audit_logs/{logId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

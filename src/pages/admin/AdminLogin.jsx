@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, User, KeyRound, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { loginAdmin } from '../../utils/firebase';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -19,22 +20,15 @@ export default function AdminLogin() {
     }
   }, [navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const u = username.trim().toLowerCase();
-    const p = password.trim();
-
-    if (u === 'freonix' && p === 'Freonixx2026') {
-      if (rememberMe) {
-        localStorage.setItem('freonix_admin_auth', 'true');
-      } else {
-        sessionStorage.setItem('freonix_admin_auth', 'true');
-      }
+    const res = await loginAdmin(username, password, rememberMe);
+    if (res.success) {
       navigate('/admin', { replace: true });
     } else {
-      setError('Username atau password yang Anda masukkan salah.');
+      setError(res.error || 'Username atau password yang Anda masukkan salah.');
     }
   };
 

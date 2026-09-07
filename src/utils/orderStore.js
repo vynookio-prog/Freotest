@@ -1,17 +1,17 @@
 // src/utils/orderStore.js
-// Centralized order store & state management for FREONIX (Integrated with db.js & Supabase)
+// Centralized order store & state management for FREONIX (Integrated with db.js & Firebase)
 
 import { db } from './db';
 
 /**
- * Mengambil semua pesanan dari database terpadu (Supabase via in-memory cache)
+ * Mengambil semua pesanan dari database terpadu (Firebase via in-memory cache)
  */
 export function getAllOrders() {
   return db.getOrders();
 }
 
 /**
- * Menambahkan pesanan baru ke database (async, Supabase-first)
+ * Menambahkan pesanan baru ke database (async, Firebase-first)
  */
 export async function addOrder(orderData) {
   try {

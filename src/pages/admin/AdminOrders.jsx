@@ -38,7 +38,7 @@ export default function AdminOrders() {
       setOrders(fetched || []);
     } catch (err) {
       console.warn('Gagal fetch orders:', err.message);
-      setFetchError(err.message || 'Gagal memuat pesanan dari Supabase');
+      setFetchError(err.message || 'Gagal memuat pesanan dari Firebase');
       setOrders(db.getOrders() || []);
     } finally {
       setIsLoading(false);
@@ -236,11 +236,11 @@ export default function AdminOrders() {
             onClick={async () => {
               setIsRefreshing(true);
               await loadOrders();
-              showToast('Data pesanan berhasil disinkronkan dari Supabase!');
+              showToast('Data pesanan berhasil disinkronkan dari Firebase!');
             }}
             disabled={isRefreshing}
             className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95 disabled:opacity-50"
-            title="Muat ulang data pesanan langsung dari Supabase"
+            title="Muat ulang data pesanan langsung dari Firebase"
           >
             <RotateCcw size={15} className={`text-[#8B5742] ${isRefreshing ? 'animate-spin' : ''}`} />
             <span>{isRefreshing ? 'Menyinkronkan...' : 'Segarkan'}</span>
@@ -256,41 +256,25 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Supabase Error Banner if any */}
+      {/* Firebase Notice Banner if any */}
       {fetchError && (
         <div className="mb-6 p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <div className="font-bold mb-1">
-              {fetchError.includes('schema cache') || fetchError.includes('PGRST205')
-                ? 'Tabel "orders" Belum Ada di Supabase (PGRST205)'
-                : 'Pemberitahuan Database Supabase'}
-            </div>
+            <div className="font-bold mb-1">Pemberitahuan Database Firebase</div>
             <p className="text-amber-800 leading-relaxed">
-              {fetchError.includes('schema cache') || fetchError.includes('PGRST205')
-                ? 'Tabel "orders" belum dibuat di Supabase project ini. Jalankan script "SUPABASE_SCHEMA.sql" di Supabase SQL Editor agar seluruh browser/session admin dapat membaca dan menyimpan pesanan secara serentak.'
-                : fetchError}
+              {fetchError}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href="https://drive.google.com/drive/folders/1Azp41xNPTCVcXsPPHLM0vEzB7lieBWVr"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/firestore.rules"
+              download="firestore.rules"
               className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
-              title="Buka folder file SQL di Google Drive"
-            >
-              <ExternalLink size={13} className="text-amber-700" />
-              <span>Buka di GDrive</span>
-            </a>
-            <a
-              href="/SUPABASE_SCHEMA.sql"
-              download="SUPABASE_SCHEMA.sql"
-              className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
-              title="Unduh file SQL untuk dijalankan di Supabase SQL Editor"
+              title="Unduh file security rules untuk Cloud Firestore"
             >
               <Download size={13} className="text-amber-700" />
-              <span>Download SQL</span>
+              <span>Download Rules</span>
             </a>
             <button
               onClick={loadOrders}

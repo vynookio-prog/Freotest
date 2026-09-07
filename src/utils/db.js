@@ -1,11 +1,37 @@
 // src/utils/db.js
-// FREONIX Unified Database with Supabase as Primary Backend
+// FREONIX Unified Database with Firebase Cloud Firestore as Primary Backend
 
-import { supabase, isSupabaseConfigured } from './supabase';
+import {
+  isFirebaseConfigured,
+  fetchStoreSettings,
+  saveStoreSettings,
+  fetchCategories as fbFetchCategories,
+  saveCategory as fbSaveCategory,
+  deleteCategory as fbDeleteCategory,
+  fetchProducts as fbFetchProducts,
+  saveProduct as fbSaveProduct,
+  updateProductStock as fbUpdateStock,
+  deleteProduct as fbDeleteProduct,
+  fetchOrders as fbFetchOrders,
+  fetchOrderById as fbFetchOrderById,
+  saveOrder as fbSaveOrder,
+  updateOrder as fbUpdateOrder,
+  deleteOrder as fbDeleteOrder,
+  fetchNotifications as fbFetchNotifications,
+  saveNotification as fbSaveNotification,
+  updateNotification as fbUpdateNotification,
+  clearAllNotifications as fbClearNotifications,
+  fetchAuditLogs as fbFetchAuditLogs,
+  saveAuditLog as fbSaveAuditLog,
+  subscribeToOrders as fbSubOrders,
+  subscribeToProducts as fbSubProducts,
+  subscribeToCategories as fbSubCategories,
+  subscribeToStoreSettings as fbSubSettings
+} from './firebase.js';
 
 const DB_KEY = 'freonix_database_v3';
 
-// Data default awal sebagai fallback dan template seeding
+// Data default awal sebagai template seeding dan fallback offline
 export const INITIAL_DB = {
   settings: {
     storeName: 'FREONIX XII-F1',
@@ -165,198 +191,6 @@ export const INITIAL_DB = {
   auditLogs: []
 };
 
-// --- DATA MAPPERS (Supabase snake_case <-> Application camelCase) ---
-
-function mapCategoryFromDb(row) {
-  return {
-    id: row.id,
-    slug: row.slug || row.id,
-    name: row.name,
-    description: row.description || '',
-    status: row.status || 'active',
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  };
-}
-
-function mapCategoryToDb(cat) {
-  return {
-    id: cat.id,
-    slug: cat.slug || cat.id,
-    name: cat.name,
-    description: cat.description || '',
-    status: cat.status || 'active',
-    updated_at: new Date().toISOString()
-  };
-}
-
-function mapProductFromDb(row) {
-  return {
-    id: row.id,
-    slug: row.slug || row.id,
-    name: row.name,
-    categoryId: row.category_id,
-    categoryName: row.category_name,
-    price: Number(row.price) || 0,
-    discountPrice: Number(row.discount_price) || 0,
-    stock: Number(row.stock) || 0,
-    unit: row.unit || 'porsi',
-    status: row.status || 'active',
-    desc: row.description || '',
-    description: row.description || '',
-    image: row.image || '',
-    waLink: row.wa_link || '',
-    ingredients: Array.isArray(row.ingredients) ? row.ingredients : [],
-    tools: Array.isArray(row.tools) ? row.tools : [],
-    nutrition: Array.isArray(row.nutrition) ? row.nutrition : [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  };
-}
-
-function mapProductToDb(prod) {
-  return {
-    id: prod.id,
-    slug: prod.slug || prod.id,
-    name: prod.name,
-    category_id: prod.categoryId || null,
-    category_name: prod.categoryName || '',
-    price: Number(prod.price) || 0,
-    discount_price: Number(prod.discountPrice) || 0,
-    stock: Math.max(0, Number(prod.stock) || 0),
-    unit: prod.unit || 'porsi',
-    status: prod.status || 'active',
-    description: prod.desc || prod.description || '',
-    image: prod.image || '',
-    wa_link: prod.waLink || '',
-    ingredients: Array.isArray(prod.ingredients) ? prod.ingredients : [],
-    tools: Array.isArray(prod.tools) ? prod.tools : [],
-    nutrition: Array.isArray(prod.nutrition) ? prod.nutrition : [],
-    updated_at: new Date().toISOString()
-  };
-}
-
-export function mapOrderFromDb(row) {
-  const id = row.id;
-  return {
-    id: id,
-    orderId: id,
-    name: row.name,
-    kelas: row.kelas,
-    phone: row.phone || '',
-    items: Array.isArray(row.items) ? row.items : [],
-    totalHarga: Number(row.total_harga) || 0,
-    paymentMethod: row.payment_method || 'qris',
-    paymentStatus: row.payment_status || 'PENDING',
-    orderStatus: row.order_status || 'Pending',
-    paymentProof: row.payment_proof || '',
-    paymentProofUrl: row.payment_proof_url || '',
-    notes: row.notes || '',
-    orderTime: row.order_time || '',
-    history: Array.isArray(row.history) ? row.history : [],
-    verifiedAt: row.verified_at || null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  };
-}
-
-export function mapOrderToDb(o) {
-  const id = o.orderId || o.id;
-  return {
-    id: id,
-    name: o.name,
-    kelas: o.kelas,
-    phone: o.phone || '',
-    items: Array.isArray(o.items) ? o.items : [],
-    total_harga: Number(o.totalHarga) || 0,
-    payment_method: o.paymentMethod || 'qris',
-    payment_status: o.paymentStatus || 'PENDING',
-    order_status: o.orderStatus || 'Pending',
-    payment_proof: o.paymentProof || o.paymentProofImage || '',
-    payment_proof_url: o.paymentProofUrl || '',
-    notes: o.notes || '',
-    order_time: o.orderTime || '',
-    history: Array.isArray(o.history) ? o.history : [],
-    verified_at: o.verifiedAt || null,
-    updated_at: new Date().toISOString()
-  };
-}
-
-function mapSettingsFromDb(row) {
-  return {
-    storeName: row.store_name || 'FREONIX XII-F1',
-    eventDate: row.event_date || '2026-09-23',
-    eventDateDisplay: row.event_date_display || '23 September 2026',
-    adminPhone: row.admin_phone || '6287856624994',
-    currency: row.currency || 'IDR',
-    lowStockThreshold: Number(row.low_stock_threshold) || 5,
-    storeStatus: row.store_status || 'open',
-    orderPrefix: row.order_prefix || 'FRX',
-    updatedAt: row.updated_at
-  };
-}
-
-function mapSettingsToDb(s) {
-  return {
-    id: 'default',
-    store_name: s.storeName,
-    event_date: s.eventDate,
-    event_date_display: s.eventDateDisplay,
-    admin_phone: s.adminPhone,
-    currency: s.currency || 'IDR',
-    low_stock_threshold: Number(s.lowStockThreshold) || 5,
-    store_status: s.storeStatus || 'open',
-    order_prefix: s.orderPrefix || 'FRX',
-    updated_at: new Date().toISOString()
-  };
-}
-
-function mapNotificationFromDb(row) {
-  return {
-    id: row.id,
-    title: row.title,
-    message: row.message || '',
-    type: row.type || 'info',
-    read: Boolean(row.read),
-    time: row.time || '',
-    createdAt: row.created_at
-  };
-}
-
-function mapNotificationToDb(n) {
-  return {
-    id: n.id,
-    title: n.title,
-    message: n.message || '',
-    type: n.type || 'info',
-    read: Boolean(n.read),
-    time: n.time || '',
-    created_at: n.createdAt || new Date().toISOString()
-  };
-}
-
-function mapAuditLogFromDb(row) {
-  return {
-    id: row.id,
-    action: row.action,
-    details: row.details || '',
-    actor: row.actor || 'Admin',
-    time: row.time || '',
-    createdAt: row.created_at
-  };
-}
-
-function mapAuditLogToDb(l) {
-  return {
-    id: l.id,
-    action: l.action,
-    details: l.details || '',
-    actor: l.actor || 'Admin',
-    time: l.time || '',
-    created_at: l.createdAt || new Date().toISOString()
-  };
-}
-
 // In-memory cache
 let cachedDb = null;
 let isSyncing = false;
@@ -365,6 +199,9 @@ let syncStatus = {
   connected: false,
   error: null
 };
+
+// Unsubscribe handlers for cleanup
+let unsubscribeHandlers = [];
 
 function loadLocalDb() {
   if (cachedDb) return cachedDb;
@@ -382,7 +219,7 @@ function loadLocalDb() {
       settings: { ...INITIAL_DB.settings, ...(parsed.settings || {}) },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
       products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : INITIAL_DB.products,
-      orders: [], // Pesanan selalu dimuat langsung dari Supabase, bukan dari localStorage
+      orders: [], // Pesanan selalu dimuat dari Firebase secara langsung
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
     };
@@ -398,8 +235,6 @@ function saveLocalDb(data) {
   cachedDb = data;
   try {
     if (typeof localStorage !== 'undefined') {
-      // Hanya cache pengaturan, kategori, dan produk untuk performa UI offline.
-      // JANGAN menyimpan data pesanan (orders) ke localStorage agar tidak terjadi bias antar-browser.
       const persistentData = {
         settings: data.settings,
         categories: data.categories,
@@ -418,10 +253,10 @@ function saveLocalDb(data) {
 // Inisialisasi awal
 loadLocalDb();
 
-// --- SUPABASE DATA SYNCHRONIZATION ---
+// --- FIREBASE DATA SYNCHRONIZATION ---
 
-async function fetchFromSupabase() {
-  if (!isSupabaseConfigured || isSyncing) return;
+async function fetchFromFirebase() {
+  if (!isFirebaseConfigured || isSyncing) return;
   isSyncing = true;
 
   try {
@@ -429,71 +264,44 @@ async function fetchFromSupabase() {
     let hasUpdates = false;
 
     // 1. Fetch Store Settings
-    const { data: remoteSettings, error: settingsError } = await supabase
-      .from('store_settings')
-      .select('*')
-      .eq('id', 'default')
-      .maybeSingle();
-
-    if (!settingsError && remoteSettings) {
-      data.settings = { ...data.settings, ...mapSettingsFromDb(remoteSettings) };
+    const remoteSettings = await fetchStoreSettings();
+    if (remoteSettings) {
+      data.settings = { ...data.settings, ...remoteSettings };
       hasUpdates = true;
     }
 
     // 2. Fetch Categories
-    const { data: remoteCategories, error: catError } = await supabase
-      .from('categories')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (!catError && Array.isArray(remoteCategories) && remoteCategories.length > 0) {
-      data.categories = remoteCategories.map(mapCategoryFromDb);
+    const remoteCategories = await fbFetchCategories();
+    if (Array.isArray(remoteCategories) && remoteCategories.length > 0) {
+      data.categories = remoteCategories;
       hasUpdates = true;
     }
 
     // 3. Fetch Products
-    const { data: remoteProducts, error: prodError } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (!prodError && Array.isArray(remoteProducts) && remoteProducts.length > 0) {
-      data.products = remoteProducts.map(mapProductFromDb);
+    const remoteProducts = await fbFetchProducts();
+    if (Array.isArray(remoteProducts) && remoteProducts.length > 0) {
+      data.products = remoteProducts;
       hasUpdates = true;
     }
 
     // 4. Fetch Orders
-    const { data: remoteOrders, error: ordersError } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!ordersError && Array.isArray(remoteOrders)) {
-      data.orders = remoteOrders.map(mapOrderFromDb);
+    const remoteOrders = await fbFetchOrders();
+    if (Array.isArray(remoteOrders)) {
+      data.orders = remoteOrders;
       hasUpdates = true;
     }
 
     // 5. Fetch Notifications
-    const { data: remoteNotifs, error: notifError } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (!notifError && Array.isArray(remoteNotifs)) {
-      data.notifications = remoteNotifs.map(mapNotificationFromDb);
+    const remoteNotifs = await fbFetchNotifications();
+    if (Array.isArray(remoteNotifs)) {
+      data.notifications = remoteNotifs;
       hasUpdates = true;
     }
 
     // 6. Fetch Audit Logs
-    const { data: remoteLogs, error: logError } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (!logError && Array.isArray(remoteLogs)) {
-      data.auditLogs = remoteLogs.map(mapAuditLogFromDb);
+    const remoteLogs = await fbFetchAuditLogs();
+    if (Array.isArray(remoteLogs)) {
+      data.auditLogs = remoteLogs;
       hasUpdates = true;
     }
 
@@ -507,7 +315,7 @@ async function fetchFromSupabase() {
       saveLocalDb(data);
     }
   } catch (err) {
-    console.warn('Sync with Supabase notice:', err.message);
+    console.warn('Sync with Firebase notice:', err.message);
     syncStatus = {
       lastSync: new Date().toISOString(),
       connected: false,
@@ -518,90 +326,59 @@ async function fetchFromSupabase() {
   }
 }
 
-// --- SETUP SUPABASE REALTIME SUBSCRIPTION ---
-let realtimeChannel = null;
+// --- SETUP FIREBASE REALTIME LISTENERS ---
 
 function setupRealtime() {
-  if (!isSupabaseConfigured || typeof window === 'undefined' || realtimeChannel) return;
+  if (!isFirebaseConfigured || typeof window === 'undefined' || unsubscribeHandlers.length > 0) return;
 
   try {
-    realtimeChannel = supabase
-      .channel('freonix_realtime_sync')
-      // Categories changes
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, payload => {
+    // 1. Categories Realtime
+    const unsubCat = fbSubCategories((categories) => {
+      if (Array.isArray(categories) && categories.length > 0) {
         const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapCategoryFromDb(payload.new);
-          if (!data.categories.some(c => c.id === item.id)) {
-            data.categories.push(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapCategoryFromDb(payload.new);
-          data.categories = data.categories.map(c => c.id === item.id ? item : c);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.categories = data.categories.filter(c => c.id !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      // Products changes
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+        data.categories = categories;
+        saveLocalDb(data);
+      }
+    });
+    unsubscribeHandlers.push(unsubCat);
+
+    // 2. Products Realtime
+    const unsubProd = fbSubProducts((products) => {
+      if (Array.isArray(products) && products.length > 0) {
         const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapProductFromDb(payload.new);
-          if (!data.products.some(p => p.id === item.id)) {
-            data.products.push(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapProductFromDb(payload.new);
-          data.products = data.products.map(p => p.id === item.id ? item : p);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.products = data.products.filter(p => p.id !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      // Orders changes
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+        data.products = products;
+        saveLocalDb(data);
+      }
+    });
+    unsubscribeHandlers.push(unsubProd);
+
+    // 3. Orders Realtime
+    const unsubOrders = fbSubOrders((orders) => {
+      if (Array.isArray(orders)) {
         const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapOrderFromDb(payload.new);
-          if (!data.orders.some(o => o.orderId === item.orderId)) {
-            data.orders.unshift(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapOrderFromDb(payload.new);
-          data.orders = data.orders.map(o => o.orderId === item.orderId ? item : o);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.orders = data.orders.filter(o => o.orderId !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      // Settings changes
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
-        if (payload.new && payload.new.id === 'default') {
-          const data = loadLocalDb();
-          data.settings = { ...data.settings, ...mapSettingsFromDb(payload.new) };
-          saveLocalDb(data);
-        }
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          // Connected
-        }
-      });
+        data.orders = orders;
+        saveLocalDb(data);
+      }
+    });
+    unsubscribeHandlers.push(unsubOrders);
+
+    // 4. Settings Realtime
+    const unsubSettings = fbSubSettings((settings) => {
+      if (settings) {
+        const data = loadLocalDb();
+        data.settings = { ...data.settings, ...settings };
+        saveLocalDb(data);
+      }
+    });
+    unsubscribeHandlers.push(unsubSettings);
   } catch (err) {
-    console.warn('Realtime subscription notice:', err.message);
+    console.warn('Firebase Realtime subscription notice:', err.message);
   }
 }
 
 // Mulai sinkronisasi dan realtime jika di browser
 if (typeof window !== 'undefined') {
-  fetchFromSupabase();
+  fetchFromFirebase();
   setupRealtime();
 }
 
@@ -616,7 +393,7 @@ export const db = {
     return syncStatus;
   },
   async syncNow() {
-    await fetchFromSupabase();
+    await fetchFromFirebase();
     return syncStatus;
   },
   resetToInitial() {
@@ -628,19 +405,19 @@ export const db = {
       }
     } catch (e) {}
 
-    // Reset ke Supabase secara async jika tabel sudah dibuat
-    if (isSupabaseConfigured) {
+    // Reset ke Firebase Firestore secara async jika terkonfigurasi
+    if (isFirebaseConfigured) {
       (async () => {
         try {
-          await supabase.from('store_settings').upsert(mapSettingsToDb(fresh.settings));
+          await saveStoreSettings(fresh.settings);
           for (const cat of fresh.categories) {
-            await supabase.from('categories').upsert(mapCategoryToDb(cat));
+            await fbSaveCategory(cat);
           }
           for (const prod of fresh.products) {
-            await supabase.from('products').upsert(mapProductToDb(prod));
+            await fbSaveProduct(prod);
           }
         } catch (e) {
-          console.warn('Gagal sinkron reset ke Supabase:', e);
+          console.warn('Gagal sinkron reset ke Firebase:', e);
         }
       })();
     }
@@ -658,15 +435,9 @@ export const db = {
     data.settings = { ...data.settings, ...newSettings, updatedAt: new Date().toISOString() };
     saveLocalDb(data);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('store_settings')
-        .upsert(mapSettingsToDb(data.settings))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateSettings warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateSettings err:', err));
+    // Kirim ke Firebase Firestore
+    if (isFirebaseConfigured) {
+      saveStoreSettings(data.settings).catch(err => console.warn('Firebase updateSettings err:', err));
     }
 
     this.addAuditLog('UPDATE_SETTINGS', 'Memperbarui pengaturan sistem toko');
@@ -698,15 +469,9 @@ export const db = {
     data.categories.push(newCat);
     saveLocalDb(data);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('categories')
-        .upsert(mapCategoryToDb(newCat))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase createCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase createCategory err:', err));
+    // Kirim ke Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbSaveCategory(newCat).catch(err => console.warn('Firebase createCategory err:', err));
     }
 
     this.addAuditLog('CREATE_CATEGORY', `Membuat kategori: ${newCat.name}`);
@@ -736,16 +501,9 @@ export const db = {
     saveLocalDb(data);
     const updated = data.categories.find(c => c.id === id);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured && updated) {
-      supabase
-        .from('categories')
-        .update(mapCategoryToDb(updated))
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateCategory err:', err));
+    // Kirim ke Firebase Firestore
+    if (isFirebaseConfigured && updated) {
+      fbSaveCategory(updated).catch(err => console.warn('Firebase updateCategory err:', err));
     }
 
     this.addAuditLog('UPDATE_CATEGORY', `Memperbarui kategori ID ${id}`);
@@ -761,16 +519,9 @@ export const db = {
     data.categories = data.categories.filter(c => c.id !== id);
     saveLocalDb(data);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('categories')
-        .delete()
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase deleteCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase deleteCategory err:', err));
+    // Hapus dari Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbDeleteCategory(id).catch(err => console.warn('Firebase deleteCategory err:', err));
     }
 
     this.addAuditLog('DELETE_CATEGORY', `Menghapus kategori: ${cat?.name || id}`);
@@ -830,15 +581,9 @@ export const db = {
     data.products.push(newProd);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('products')
-        .upsert(mapProductToDb(newProd))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase createProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase createProduct err:', err));
+    // Simpan ke Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbSaveProduct(newProd).catch(err => console.warn('Firebase createProduct err:', err));
     }
 
     this.addAuditLog('ADD_PRODUCT', `Menambahkan produk baru: ${newProd.name}`);
@@ -870,16 +615,9 @@ export const db = {
     saveLocalDb(data);
     const updated = data.products.find(p => p.id === id);
 
-    // Kirim perubahan ke Supabase
-    if (isSupabaseConfigured && updated) {
-      supabase
-        .from('products')
-        .update(mapProductToDb(updated))
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateProduct err:', err));
+    // Kirim ke Firebase Firestore
+    if (isFirebaseConfigured && updated) {
+      fbSaveProduct(updated).catch(err => console.warn('Firebase updateProduct err:', err));
     }
 
     this.addAuditLog('UPDATE_PRODUCT', `Memperbarui produk ID ${id}`);
@@ -891,16 +629,9 @@ export const db = {
     data.products = data.products.filter(p => p.id !== id);
     saveLocalDb(data);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('products')
-        .delete()
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase deleteProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase deleteProduct err:', err));
+    // Hapus dari Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbDeleteProduct(id).catch(err => console.warn('Firebase deleteProduct err:', err));
     }
 
     this.addAuditLog('DELETE_PRODUCT', `Menghapus produk: ${prod?.name || id}`);
@@ -920,15 +651,8 @@ export const db = {
 
     saveLocalDb(data);
 
-    if (isSupabaseConfigured && updatedProd) {
-      supabase
-        .from('products')
-        .update({ stock: updatedProd.stock, updated_at: updatedProd.updatedAt })
-        .eq('id', updatedProd.id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase adjustStock warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase adjustStock err:', err));
+    if (isFirebaseConfigured && updatedProd) {
+      fbUpdateStock(updatedProd.id, updatedProd.stock).catch(err => console.warn('Firebase adjustStock err:', err));
     }
 
     // Cek jika low stock
@@ -955,35 +679,25 @@ export const db = {
     return cachedDb?.orders || [];
   },
   async fetchOrders() {
-    if (!isSupabaseConfigured) return cachedDb?.orders || [];
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.warn('Gagal mengambil orders dari Supabase:', error.message);
+    if (!isFirebaseConfigured) return cachedDb?.orders || [];
+    try {
+      const orders = await fbFetchOrders();
+      if (cachedDb) {
+        cachedDb.orders = orders;
+      }
+      return orders;
+    } catch (error) {
+      console.warn('Gagal mengambil orders dari Firebase:', error.message);
       throw error;
     }
-    const mapped = (data || []).map(mapOrderFromDb);
-    if (cachedDb) {
-      cachedDb.orders = mapped;
-    }
-    return mapped;
   },
   async getOrderByIdAsync(id) {
-    if (isSupabaseConfigured) {
+    if (isFirebaseConfigured) {
       try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-        if (!error && data) {
-          return mapOrderFromDb(data);
-        }
+        const order = await fbFetchOrderById(id);
+        if (order) return order;
       } catch (e) {
-        console.warn('Supabase getOrderByIdAsync error:', e);
+        console.warn('Firebase getOrderByIdAsync error:', e);
       }
     }
     return this.getOrderById(id);
@@ -1008,36 +722,25 @@ export const db = {
       updatedAt: new Date().toISOString()
     };
 
-    // 1. Kurangi stok produk secara otomatis di database Supabase
+    // 1. Kurangi stok produk secara otomatis di database Firestore & lokal
     for (const item of (newOrder.items || [])) {
       const p = data.products.find(prod => prod.id === item.id || prod.name === item.name);
       if (p) {
         p.stock = Math.max(0, (p.stock || 0) - (item.qty || 1));
         p.updatedAt = new Date().toISOString();
-        if (isSupabaseConfigured) {
-          try {
-            await supabase.from('products').update({ stock: p.stock, updated_at: p.updatedAt }).eq('id', p.id);
-          } catch (e) {
-            console.warn('Supabase stock update error:', e);
-          }
+        if (isFirebaseConfigured) {
+          fbUpdateStock(p.id, p.stock).catch(e => console.warn('Firebase stock update error:', e));
         }
       }
     }
 
-    // 2. SIMPAN KE SUPABASE SEBAGAI DATABASE UTAMA
-    if (isSupabaseConfigured) {
-      const { data: insertedData, error } = await supabase
-        .from('orders')
-        .insert(mapOrderToDb(newOrder))
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase createOrder error:', error);
+    // 2. SIMPAN KE FIREBASE FIRESTORE SEBAGAI DATABASE UTAMA
+    if (isFirebaseConfigured) {
+      try {
+        await fbSaveOrder(newOrder);
+      } catch (error) {
+        console.error('Firebase saveOrder error:', error);
         throw new Error(error.message);
-      }
-      if (insertedData) {
-        Object.assign(newOrder, mapOrderFromDb(insertedData));
       }
     }
 
@@ -1078,19 +781,16 @@ export const db = {
       return o;
     });
 
-    // Update di Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          order_status: updatedOrder ? updatedOrder.orderStatus : newStatus,
+    // Update di Firebase Firestore
+    if (isFirebaseConfigured) {
+      try {
+        await fbUpdateOrder(orderId, {
+          orderStatus: updatedOrder ? updatedOrder.orderStatus : newStatus,
           history: updatedOrder ? updatedOrder.history : undefined,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('Supabase updateOrderStatus error:', error);
+          updatedAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Firebase updateOrderStatus error:', error);
         throw new Error(error.message);
       }
     }
@@ -1131,20 +831,17 @@ export const db = {
       }
     } catch (e) {}
 
-    // Update di Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          payment_status: newPaymentStatus,
-          order_status: newPaymentStatus === 'SUCCESS' ? 'Processing' : undefined,
-          verified_at: newPaymentStatus === 'SUCCESS' ? new Date().toLocaleString('id-ID') : null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('Supabase updatePaymentStatus error:', error);
+    // Update di Firebase Firestore
+    if (isFirebaseConfigured) {
+      try {
+        await fbUpdateOrder(orderId, {
+          paymentStatus: newPaymentStatus,
+          orderStatus: newPaymentStatus === 'SUCCESS' ? 'Processing' : undefined,
+          verifiedAt: newPaymentStatus === 'SUCCESS' ? new Date().toLocaleString('id-ID') : null,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Firebase updatePaymentStatus error:', error);
         throw new Error(error.message);
       }
     }
@@ -1157,15 +854,12 @@ export const db = {
     const data = loadLocalDb();
     data.orders = (data.orders || []).filter(o => o.orderId !== orderId && o.id !== orderId);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('Supabase deleteOrder error:', error);
+    // Hapus dari Firebase Firestore
+    if (isFirebaseConfigured) {
+      try {
+        await fbDeleteOrder(orderId);
+      } catch (error) {
+        console.error('Firebase deleteOrder error:', error);
         throw new Error(error.message);
       }
     }
@@ -1222,15 +916,9 @@ export const db = {
     data.notifications.unshift(newNotif);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .insert(mapNotificationToDb(newNotif))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase addNotification warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase addNotification err:', err));
+    // Simpan ke Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbSaveNotification(newNotif).catch(err => console.warn('Firebase addNotification err:', err));
     }
   },
   markNotificationRead(id) {
@@ -1238,31 +926,18 @@ export const db = {
     data.notifications = data.notifications.map(n => n.id === id ? { ...n, read: true } : n);
     saveLocalDb(data);
 
-    if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase markNotificationRead warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase markNotificationRead err:', err));
+    if (isFirebaseConfigured) {
+      fbUpdateNotification(id, { read: true }).catch(err => console.warn('Firebase markNotificationRead err:', err));
     }
   },
   clearNotifications() {
     const data = loadLocalDb();
+    const ids = data.notifications.map(n => n.id);
     data.notifications = [];
     saveLocalDb(data);
 
-    if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .delete()
-        .neq('id', '')
-        .then(({ error }) => {
-          if (error) console.warn('Supabase clearNotifications warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase clearNotifications err:', err));
+    if (isFirebaseConfigured) {
+      fbClearNotifications(ids).catch(err => console.warn('Firebase clearNotifications err:', err));
     }
   },
 
@@ -1284,15 +959,9 @@ export const db = {
     if (data.auditLogs.length > 100) data.auditLogs = data.auditLogs.slice(0, 100);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('audit_logs')
-        .insert(mapAuditLogToDb(newLog))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase addAuditLog warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase addAuditLog err:', err));
+    // Simpan ke Firebase Firestore
+    if (isFirebaseConfigured) {
+      fbSaveAuditLog(newLog).catch(err => console.warn('Firebase addAuditLog err:', err));
     }
   },
 

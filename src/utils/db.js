@@ -1,7 +1,7 @@
 // src/utils/db.js
 // FREONIX Unified Database with Supabase as Primary Backend
 
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const DB_KEY = 'freonix_database_v3';
 
@@ -264,21 +264,20 @@ export function mapOrderToDb(o) {
   const id = o.orderId || o.id;
   return {
     id: id,
-    name: o.name,
-    kelas: o.kelas,
+    name: o.name || '',
+    kelas: o.kelas || '',
     phone: o.phone || '',
     items: Array.isArray(o.items) ? o.items : [],
-    total_harga: Number(o.totalHarga) || 0,
-    payment_method: o.paymentMethod || 'qris',
-    payment_status: o.paymentStatus || 'PENDING',
-    order_status: o.orderStatus || 'Pending',
-    payment_proof: o.paymentProof || o.paymentProofImage || '',
-    payment_proof_url: o.paymentProofUrl || '',
+    total_harga: Number(o.totalHarga != null ? o.totalHarga : o.total_harga) || 0,
+    payment_method: o.paymentMethod || o.payment_method || 'qris',
+    payment_status: o.paymentStatus || o.payment_status || 'PENDING',
+    order_status: o.orderStatus || o.order_status || 'Pending',
+    payment_proof: o.paymentProof || o.paymentProofImage || o.payment_proof || '',
+    payment_proof_url: o.paymentProofUrl || o.payment_proof_url || '',
     notes: o.notes || '',
-    order_time: o.orderTime || '',
+    order_time: o.orderTime || o.order_time || '',
     history: Array.isArray(o.history) ? o.history : [],
-    verified_at: o.verifiedAt || null,
-    updated_at: new Date().toISOString()
+    verified_at: o.verifiedAt || o.verified_at || null
   };
 }
 
@@ -468,7 +467,7 @@ async function fetchFromSupabase() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!ordersError && Array.isArray(remoteOrders)) {
+    if (!ordersError && Array.isArray(remoteOrders) && remoteOrders.length > 0) {
       data.orders = remoteOrders.map(mapOrderFromDb);
       hasUpdates = true;
     }
@@ -1029,18 +1028,14 @@ export const db = {
 
     // 2. SIMPAN KE SUPABASE SEBAGAI DATABASE UTAMA
     if (isSupabaseConfigured) {
-      const { data: insertedData, error } = await supabase
+      const orderPayload = mapOrderToDb(newOrder);
+      const { error } = await supabase
         .from('orders')
-        .insert(mapOrderToDb(newOrder))
-        .select()
-        .single();
+        .insert(orderPayload);
 
       if (error) {
         console.error('Supabase createOrder error:', error);
         throw new Error(error.message);
-      }
-      if (insertedData) {
-        Object.assign(newOrder, mapOrderFromDb(insertedData));
       }
     }
 

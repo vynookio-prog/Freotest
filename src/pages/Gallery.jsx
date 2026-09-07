@@ -19,11 +19,18 @@ export default function Gallery() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="p-2.5 rounded-[2.5rem] bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)] group overflow-hidden">
             <div className="relative rounded-[2rem] overflow-hidden h-72 sm:h-80 bg-stone-100">
-              <img 
-                src="/foto-kenangan-1.jpg" 
-                alt="Galeri Kegiatan 1" 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-              />
+              <picture>
+                <source srcSet="/foto-kenangan-1.webp" type="image/webp" />
+                <img 
+                  src="/foto-kenangan-1.jpg" 
+                  alt="Galeri Kegiatan 1" 
+                  width="500"
+                  height="320"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
                 <div className="px-4 py-2 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-white text-xs font-bold">
                   Kebersamaan XII-F1 Sains
@@ -34,11 +41,18 @@ export default function Gallery() {
 
           <div className="p-2.5 rounded-[2.5rem] bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)] group overflow-hidden">
             <div className="relative rounded-[2rem] overflow-hidden h-72 sm:h-80 bg-stone-100">
-              <img 
-                src="/foto-kenangan-2.jpg" 
-                alt="Galeri Kegiatan 2" 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-              />
+              <picture>
+                <source srcSet="/foto-kenangan-2.webp" type="image/webp" />
+                <img 
+                  src="/foto-kenangan-2.jpg" 
+                  alt="Galeri Kegiatan 2" 
+                  width="500"
+                  height="320"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-6">
                 <div className="px-4 py-2 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-white text-xs font-bold">
                   Dokumentasi Persiapan Proyek

@@ -104,41 +104,65 @@ export default function AdminOrders() {
   const processingCount = orders.filter(o => o.orderStatus === 'Processing').length;
   const completedCount = orders.filter(o => o.orderStatus === 'Completed').length;
 
-  // Handlers
+  // Handlers with Optimistic Updates
   const handleVerifyPayment = async (orderId, newStatus) => {
+    const prevOrders = orders;
+    setOrders(prev => prev.map(o => (o.orderId === orderId || o.id === orderId) ? {
+      ...o,
+      paymentStatus: newStatus,
+      orderStatus: newStatus === 'SUCCESS' && o.orderStatus === 'Pending' ? 'Processing' : o.orderStatus,
+      verifiedAt: newStatus === 'SUCCESS' ? new Date().toLocaleString('id-ID') : o.verifiedAt
+    } : o));
+
+    if (selectedOrder && (selectedOrder.orderId === orderId || selectedOrder.id === orderId)) {
+      setSelectedOrder(prev => ({
+        ...prev,
+        paymentStatus: newStatus,
+        orderStatus: newStatus === 'SUCCESS' && prev.orderStatus === 'Pending' ? 'Processing' : prev.orderStatus,
+        verifiedAt: newStatus === 'SUCCESS' ? new Date().toLocaleString('id-ID') : prev.verifiedAt
+      }));
+    }
+
     try {
       await db.updatePaymentStatus(orderId, newStatus);
       showToast(`Pembayaran #${orderId} berhasil diubah ke ${newStatus}!`);
-      if (selectedOrder && selectedOrder.orderId === orderId) {
-        setSelectedOrder(prev => ({ ...prev, paymentStatus: newStatus }));
-      }
-      await loadOrders();
     } catch (err) {
+      setOrders(prevOrders);
       showToast(`Gagal update pembayaran: ${err.message}`, 'error');
     }
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    const prevOrders = orders;
+    setOrders(prev => prev.map(o => (o.orderId === orderId || o.id === orderId) ? {
+      ...o,
+      orderStatus: newStatus
+    } : o));
+
+    if (selectedOrder && (selectedOrder.orderId === orderId || selectedOrder.id === orderId)) {
+      setSelectedOrder(prev => ({ ...prev, orderStatus: newStatus }));
+    }
+
     try {
       await db.updateOrderStatus(orderId, newStatus, `Diubah ke ${newStatus} via Admin`);
       showToast(`Status pesanan #${orderId} diubah ke ${newStatus}!`);
-      if (selectedOrder && selectedOrder.orderId === orderId) {
-        setSelectedOrder(prev => ({ ...prev, orderStatus: newStatus }));
-      }
-      await loadOrders();
     } catch (err) {
+      setOrders(prevOrders);
       showToast(`Gagal update status: ${err.message}`, 'error');
     }
   };
 
   const handleDeleteOrder = async (orderId) => {
+    const prevOrders = orders;
+    setOrders(prev => prev.filter(o => o.orderId !== orderId && o.id !== orderId));
+    setDeleteConfirmId(null);
+    if (selectedOrder?.orderId === orderId || selectedOrder?.id === orderId) setSelectedOrder(null);
+
     try {
       await db.deleteOrder(orderId);
-      setDeleteConfirmId(null);
-      if (selectedOrder?.orderId === orderId) setSelectedOrder(null);
       showToast(`Pesanan #${orderId} telah dihapus.`, 'info');
-      await loadOrders();
     } catch (err) {
+      setOrders(prevOrders);
       showToast(`Gagal menghapus pesanan: ${err.message}`, 'error');
     }
   };

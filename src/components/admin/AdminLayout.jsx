@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useDb } from '../../utils/useDb';
+import { setupAdminRealtime } from '../../utils/db';
 import { logoutAdmin } from '../../utils/supabase';
 
 export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
@@ -31,6 +32,13 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   // Auth Guard
   const isAuthenticated = sessionStorage.getItem('freonix_admin_auth') === 'true' || 
                           localStorage.getItem('freonix_admin_auth') === 'true';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const unsub = setupAdminRealtime();
+      return () => unsub();
+    }
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     navigate('/admin/login', { replace: true });

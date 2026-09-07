@@ -7,5 +7,33 @@ export default defineConfig({
     host: true,
     port: 5173,
     allowedHosts: true
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    allowedHosts: true
+  },
+  build: {
+    target: 'es2020',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            return 'vendor-misc';
+          }
+        }
+      }
+    }
   }
 })

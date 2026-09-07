@@ -56,9 +56,9 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1F2937] font-sans antialiased selection:bg-[#DDA15E] selection:text-white flex flex-col relative overflow-x-hidden">
       {/* Apple-style Ambient Glow Orbs for Glassmorphism depth */}
-      <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#DDA15E]/18 blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '8s' }} />
-      <div className="fixed top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#8B5742]/12 blur-[140px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '10s' }} />
-      <div className="fixed bottom-[-10%] left-[20%] w-[550px] h-[550px] rounded-full bg-[#DDA15E]/15 blur-[130px] pointer-events-none -z-10" />
+      <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#DDA15E]/18 blur-[80px] md:blur-[120px] pointer-events-none -z-10 will-change-transform transform-gpu animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="fixed top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#8B5742]/12 blur-[90px] md:blur-[140px] pointer-events-none -z-10 will-change-transform transform-gpu animate-pulse" style={{ animationDuration: '10s' }} />
+      <div className="fixed bottom-[-10%] left-[20%] w-[550px] h-[550px] rounded-full bg-[#DDA15E]/15 blur-[80px] md:blur-[130px] pointer-events-none -z-10 will-change-transform transform-gpu" />
 
       <Navbar />
       <main className="flex-grow pt-28">

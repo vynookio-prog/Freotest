@@ -30,19 +30,5 @@ export function useDb() {
     };
   }, [refresh]);
 
-  // Auto-fetch orders dari Supabase saat pertama kali mount
-  useEffect(() => {
-    let isMounted = true;
-    db.fetchOrders()
-      .then(() => {
-        if (isMounted) refresh();
-      })
-      .catch(err => {
-        console.warn('useDb: fetchOrders warning:', err.message);
-      });
-
-    return () => { isMounted = false; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   return db;
 }

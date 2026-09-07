@@ -60,8 +60,6 @@ export default function Products() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {activeProducts.map((item, index) => {
-              const isOutOfStock = (item.stock || 0) === 0;
-              const isLowStock = (item.stock || 0) > 0 && (item.stock || 0) <= (settings.lowStockThreshold || 5);
               const formattedPrice = `Rp ${Number(item.price || 0).toLocaleString('id-ID')} / ${item.unit || 'porsi'}`;
 
               return (
@@ -74,28 +72,31 @@ export default function Products() {
 
                   <div className="relative h-60 w-full overflow-hidden bg-stone-100/50 p-2">
                     <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className={`w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ${
-                          isOutOfStock ? 'grayscale opacity-75' : ''
-                        }`} 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                      <picture>
+                        <source srcSet={item.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          width="380"
+                          height="240"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          fetchPriority={index === 0 ? "high" : "auto"}
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700" 
+                        />
+                      </picture>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
                       
-                      {/* Stock Status Pill */}
+                      {/* PO Status Pill */}
                       <div className="absolute top-3 right-3">
-                        {isOutOfStock ? (
+                        {settings.storeStatus === 'closed' ? (
                           <span className="bg-rose-500/90 text-white backdrop-blur-md text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
-                            Stok Habis
-                          </span>
-                        ) : isLowStock ? (
-                          <span className="bg-amber-500/90 text-white backdrop-blur-md text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm animate-pulse">
-                            Sisa {item.stock} {item.unit}!
+                            PO Ditutup
                           </span>
                         ) : (
-                          <span className="bg-white/85 text-[#5D3A29] backdrop-blur-md border border-white/90 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
-                            Tersedia: {item.stock} {item.unit}
+                          <span className="bg-emerald-600/90 text-white backdrop-blur-md border border-emerald-400/40 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Open PO
                           </span>
                         )}
                       </div>
@@ -135,10 +136,6 @@ export default function Products() {
                       {settings.storeStatus === 'closed' ? (
                         <div className="w-full py-3 rounded-xl bg-stone-200/80 text-stone-500 font-bold text-xs uppercase tracking-wider text-center cursor-not-allowed">
                           PO Ditutup
-                        </div>
-                      ) : isOutOfStock ? (
-                        <div className="w-full py-3 rounded-xl bg-stone-200/80 text-rose-500 font-bold text-xs uppercase tracking-wider text-center cursor-not-allowed">
-                          Habis Terjual
                         </div>
                       ) : (
                         <Link 

@@ -419,80 +419,40 @@ loadLocalDb();
 
 // --- SUPABASE DATA SYNCHRONIZATION ---
 
-async function fetchFromSupabase() {
-  if (!isSupabaseConfigured || isSyncing) return;
-  isSyncing = true;
+let lastCatalogFetchTime = 0;
+const CATALOG_CACHE_TTL = 30000; // 30 seconds debounce
+
+async function fetchCatalog(force = false) {
+  if (!isSupabaseConfigured) return;
+  const now = Date.now();
+  if (!force && now - lastCatalogFetchTime < CATALOG_CACHE_TTL) {
+    return;
+  }
+  lastCatalogFetchTime = now;
 
   try {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    // 1. Fetch Store Settings
-    const { data: remoteSettings, error: settingsError } = await supabase
-      .from('store_settings')
-      .select('*')
-      .eq('id', 'default')
-      .maybeSingle();
+    // Fetch Store Settings, Categories, and Products concurrently in a single roundtrip
+    const [settingsRes, catRes, prodRes] = await Promise.all([
+      supabase.from('store_settings').select('*').eq('id', 'default').maybeSingle(),
+      supabase.from('categories').select('*').order('created_at', { ascending: true }),
+      supabase.from('products').select('*').order('created_at', { ascending: true })
+    ]);
 
-    if (!settingsError && remoteSettings) {
-      data.settings = { ...data.settings, ...mapSettingsFromDb(remoteSettings) };
+    if (!settingsRes.error && settingsRes.data) {
+      data.settings = { ...data.settings, ...mapSettingsFromDb(settingsRes.data) };
       hasUpdates = true;
     }
 
-    // 2. Fetch Categories
-    const { data: remoteCategories, error: catError } = await supabase
-      .from('categories')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (!catError && Array.isArray(remoteCategories) && remoteCategories.length > 0) {
-      data.categories = remoteCategories.map(mapCategoryFromDb);
+    if (!catRes.error && Array.isArray(catRes.data) && catRes.data.length > 0) {
+      data.categories = catRes.data.map(mapCategoryFromDb);
       hasUpdates = true;
     }
 
-    // 3. Fetch Products
-    const { data: remoteProducts, error: prodError } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (!prodError && Array.isArray(remoteProducts) && remoteProducts.length > 0) {
-      data.products = remoteProducts.map(mapProductFromDb);
-      hasUpdates = true;
-    }
-
-    // 4. Fetch Orders
-    const { data: remoteOrders, error: ordersError } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!ordersError && Array.isArray(remoteOrders) && remoteOrders.length > 0) {
-      data.orders = remoteOrders.map(mapOrderFromDb);
-      hasUpdates = true;
-    }
-
-    // 5. Fetch Notifications
-    const { data: remoteNotifs, error: notifError } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (!notifError && Array.isArray(remoteNotifs)) {
-      data.notifications = remoteNotifs.map(mapNotificationFromDb);
-      hasUpdates = true;
-    }
-
-    // 6. Fetch Audit Logs
-    const { data: remoteLogs, error: logError } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (!logError && Array.isArray(remoteLogs)) {
-      data.auditLogs = remoteLogs.map(mapAuditLogFromDb);
+    if (!prodRes.error && Array.isArray(prodRes.data) && prodRes.data.length > 0) {
+      data.products = prodRes.data.map(mapProductFromDb);
       hasUpdates = true;
     }
 
@@ -506,27 +466,92 @@ async function fetchFromSupabase() {
       saveLocalDb(data);
     }
   } catch (err) {
-    console.warn('Sync with Supabase notice:', err.message);
+    console.warn('Sync catalog with Supabase notice:', err.message);
     syncStatus = {
       lastSync: new Date().toISOString(),
       connected: false,
       error: err.message
     };
+  }
+}
+
+async function fetchAdminData() {
+  if (!isSupabaseConfigured) return;
+
+  try {
+    const data = loadLocalDb();
+    let hasUpdates = false;
+
+    // Fetch Orders, Notifications, and Audit Logs concurrently in parallel
+    const [ordersRes, notifRes, logsRes] = await Promise.all([
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30),
+      supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50)
+    ]);
+
+    if (!ordersRes.error && Array.isArray(ordersRes.data)) {
+      data.orders = ordersRes.data.map(mapOrderFromDb);
+      hasUpdates = true;
+    }
+
+    if (!notifRes.error && Array.isArray(notifRes.data)) {
+      data.notifications = notifRes.data.map(mapNotificationFromDb);
+      hasUpdates = true;
+    }
+
+    if (!logsRes.error && Array.isArray(logsRes.data)) {
+      data.auditLogs = logsRes.data.map(mapAuditLogFromDb);
+      hasUpdates = true;
+    }
+
+    if (hasUpdates) {
+      saveLocalDb(data);
+    }
+  } catch (err) {
+    console.warn('Sync admin data with Supabase notice:', err.message);
+  }
+}
+
+async function fetchFromSupabase() {
+  if (!isSupabaseConfigured || isSyncing) return;
+  isSyncing = true;
+
+  try {
+    // 1. Always sync public catalog
+    await fetchCatalog();
+
+    // 2. Only sync admin data if an admin session is active
+    const isAdmin = typeof window !== 'undefined' && (
+      sessionStorage.getItem('freonix_admin_auth') === 'true' ||
+      localStorage.getItem('freonix_admin_auth') === 'true'
+    );
+
+    if (isAdmin) {
+      await fetchAdminData();
+    }
   } finally {
     isSyncing = false;
   }
 }
 
-// --- SETUP SUPABASE REALTIME SUBSCRIPTION ---
-let realtimeChannel = null;
+// --- SETUP SUPABASE REALTIME SUBSCRIPTIONS ---
+let publicRealtimeChannel = null;
+let adminRealtimeChannel = null;
 
 function setupRealtime() {
-  if (!isSupabaseConfigured || typeof window === 'undefined' || realtimeChannel) return;
+  if (!isSupabaseConfigured || typeof window === 'undefined' || publicRealtimeChannel) return;
 
   try {
-    realtimeChannel = supabase
-      .channel('freonix_realtime_sync')
-      // Categories changes
+    // Public channel: only subscribe to store_settings, categories, and products
+    publicRealtimeChannel = supabase
+      .channel('freonix_public_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
+        if (payload.new && payload.new.id === 'default') {
+          const data = loadLocalDb();
+          data.settings = { ...data.settings, ...mapSettingsFromDb(payload.new) };
+          saveLocalDb(data);
+        }
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, payload => {
         const data = loadLocalDb();
         if (payload.eventType === 'INSERT') {
@@ -544,7 +569,6 @@ function setupRealtime() {
           saveLocalDb(data);
         }
       })
-      // Products changes
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
         const data = loadLocalDb();
         if (payload.eventType === 'INSERT') {
@@ -562,7 +586,18 @@ function setupRealtime() {
           saveLocalDb(data);
         }
       })
-      // Orders changes
+      .subscribe();
+  } catch (err) {
+    console.warn('Public realtime subscription notice:', err.message);
+  }
+}
+
+export function setupAdminRealtime() {
+  if (!isSupabaseConfigured || typeof window === 'undefined' || adminRealtimeChannel) return () => {};
+
+  try {
+    adminRealtimeChannel = supabase
+      .channel('freonix_admin_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
         const data = loadLocalDb();
         if (payload.eventType === 'INSERT') {
@@ -580,25 +615,35 @@ function setupRealtime() {
           saveLocalDb(data);
         }
       })
-      // Settings changes
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
-        if (payload.new && payload.new.id === 'default') {
-          const data = loadLocalDb();
-          data.settings = { ...data.settings, ...mapSettingsFromDb(payload.new) };
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, payload => {
+        const data = loadLocalDb();
+        if (payload.eventType === 'INSERT') {
+          const item = mapNotificationFromDb(payload.new);
+          if (!data.notifications.some(n => n.id === item.id)) {
+            data.notifications.unshift(item);
+            saveLocalDb(data);
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          const item = mapNotificationFromDb(payload.new);
+          data.notifications = data.notifications.map(n => n.id === item.id ? item : n);
           saveLocalDb(data);
         }
       })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          // Connected
-        }
-      });
+      .subscribe();
+
+    return () => {
+      if (adminRealtimeChannel) {
+        supabase.removeChannel(adminRealtimeChannel);
+        adminRealtimeChannel = null;
+      }
+    };
   } catch (err) {
-    console.warn('Realtime subscription notice:', err.message);
+    console.warn('Admin realtime subscription notice:', err.message);
+    return () => {};
   }
 }
 
-// Mulai sinkronisasi dan realtime jika di browser
+// Mulai sinkronisasi katalog dan realtime jika di browser
 if (typeof window !== 'undefined') {
   fetchFromSupabase();
   setupRealtime();

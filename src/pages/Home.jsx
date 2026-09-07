@@ -19,6 +19,11 @@ export default function Home() {
             <img 
               src="https://cdn.phototourl.com/free/2026-09-02-4a88c19c-cba9-4d03-8a00-53eab79ada72.png" 
               alt="FREONIX Logo" 
+              width="128"
+              height="128"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="h-24 w-24 sm:h-32 sm:w-32 object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300"
             />
           </div>

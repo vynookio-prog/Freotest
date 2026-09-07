@@ -115,11 +115,19 @@ export default function ProductDetail() {
                 />
               ) : (
                 <div className="relative w-full h-[380px] sm:h-[420px] rounded-3xl overflow-hidden shadow-lg group">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                  />
+                  <picture>
+                    <source srcSet={product.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      width="420"
+                      height="420"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                    />
+                  </picture>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
 
                   {/* Tombol Shortcut Lihat 3D di Atas Foto */}

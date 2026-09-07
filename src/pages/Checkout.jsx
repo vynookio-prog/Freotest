@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDb } from '../utils/useDb';
-import { uploadToSupabaseStorage } from '../utils/supabase';
+import { mapOrderFromDb } from '../utils/db';
+import { uploadToSupabaseStorage, supabase, isSupabaseConfigured } from '../utils/supabase';
 
 export default function Checkout() {
   const db = useDb();
@@ -66,8 +67,42 @@ export default function Checkout() {
     return !!localStorage.getItem('freonix_last_order');
   });
 
-  // Dynamically sync order with db if order exists so real-time status update shows immediately on receipt
-  const currentDbOrder = savedOrder ? db.getOrderById(savedOrder.orderId) : null;
+  // Targeted live order state for receipt
+  const [liveOrder, setLiveOrder] = useState(null);
+
+  useEffect(() => {
+    const orderId = savedOrder?.orderId;
+    if (!orderId) return;
+
+    let isMounted = true;
+    db.getOrderByIdAsync(orderId).then(order => {
+      if (isMounted && order) setLiveOrder(order);
+    });
+
+    if (isSupabaseConfigured) {
+      const channel = supabase
+        .channel(`receipt_live_${orderId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        }, payload => {
+          if (isMounted && payload.new) {
+            setLiveOrder(mapOrderFromDb(payload.new));
+          }
+        })
+        .subscribe();
+
+      return () => {
+        isMounted = false;
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [savedOrder?.orderId, db]);
+
+  // Dynamically sync order with db/live state so real-time status update shows immediately on receipt
+  const currentDbOrder = liveOrder || (savedOrder ? db.getOrderById(savedOrder.orderId) : null);
   const orderSummary = currentDbOrder ? {
     ...savedOrder,
     paymentStatus: currentDbOrder.paymentStatus,
@@ -84,16 +119,9 @@ export default function Checkout() {
   };
 
   const handleQtyChange = (productId, delta) => {
-    const prod = activeProducts.find(p => p.id === productId);
-    const maxStock = prod ? (prod.stock || 0) : 999;
-    
     setQuantities(prev => {
       const current = prev[productId] || 0;
       const next = Math.max(0, current + delta);
-      if (next > maxStock) {
-        alert(`Maaf, stok ${prod.name} hanya tersisa ${maxStock} ${prod.unit || 'porsi'}.`);
-        return prev;
-      }
       return { ...prev, [productId]: next };
     });
   };
@@ -243,15 +271,6 @@ export default function Checkout() {
     if (totalItemCount === 0) {
       alert('Silakan pilih minimal 1 produk untuk dipesan.');
       return;
-    }
-
-    // Verify stock availability
-    for (const prod of activeProducts) {
-      const orderedQty = quantities[prod.id] || 0;
-      if (orderedQty > 0 && orderedQty > (prod.stock || 0)) {
-        alert(`Stok ${prod.name} tidak mencukupi. Tersedia hanya ${prod.stock} ${prod.unit}.`);
-        return;
-      }
     }
 
     const isQris = formData.paymentMethod === 'qris';
@@ -682,22 +701,24 @@ export default function Checkout() {
                 </div>
               ) : (
                 activeProducts.map(prod => {
-                  const isOutOfStock = (prod.stock || 0) === 0;
                   const currentQty = quantities[prod.id] || 0;
 
                   return (
-                    <div key={prod.id} className={`flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all ${
-                      isOutOfStock 
-                        ? 'bg-stone-100/60 border-stone-200 opacity-60' 
-                        : 'bg-white/50 backdrop-blur-md border-white/70'
-                    }`}>
+                    <div key={prod.id} className="flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70">
                       <div className="flex items-center gap-3">
                         {prod.image && (
-                          <img 
-                            src={prod.image} 
-                            alt={prod.name} 
-                            className="w-12 h-12 rounded-xl object-cover border border-white/80 shrink-0" 
-                          />
+                          <picture>
+                            <source srcSet={prod.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                            <img 
+                              src={prod.image} 
+                              alt={prod.name} 
+                              width="48"
+                              height="48"
+                              loading="lazy"
+                              decoding="async"
+                              className="w-12 h-12 rounded-xl object-cover border border-white/80 shrink-0" 
+                            />
+                          </picture>
                         )}
                         <div>
                           <h3 className="font-bold text-sm text-[#5D3A29]">{prod.name}</h3>
@@ -705,14 +726,9 @@ export default function Checkout() {
                             <span className="text-xs font-semibold text-[#8B5742]">
                               Rp {Number(prod.price || 0).toLocaleString('id-ID')} / {prod.unit || 'porsi'}
                             </span>
-                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${
-                              isOutOfStock 
-                                ? 'bg-rose-100 text-rose-700' 
-                                : (prod.stock || 0) <= 5 
-                                ? 'bg-amber-100 text-amber-800' 
-                                : 'bg-stone-100 text-stone-600'
-                            }`}>
-                              {isOutOfStock ? 'Habis' : `Stok: ${prod.stock}`}
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-emerald-600" />
+                              Open PO
                             </span>
                           </div>
                         </div>
@@ -721,7 +737,7 @@ export default function Checkout() {
                       <div className="flex items-center gap-3 shrink-0">
                         <button 
                           type="button"
-                          disabled={isOutOfStock || currentQty === 0}
+                          disabled={currentQty === 0}
                           onClick={() => handleQtyChange(prod.id, -1)}
                           className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
                         >
@@ -732,7 +748,6 @@ export default function Checkout() {
                         </span>
                         <button 
                           type="button"
-                          disabled={isOutOfStock || currentQty >= (prod.stock || 0)}
                           onClick={() => handleQtyChange(prod.id, 1)}
                           className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
                         >

@@ -2,24 +2,49 @@ import React, { useState, useRef, useEffect } from 'react';
 import { RotateCw, Play, Pause, Sparkles } from 'lucide-react';
 
 export default function Product3DViewer({ image, name, price }) {
-  const [rotationY, setRotationY] = useState(0);
-  const [rotationX, setRotationX] = useState(10);
   const [isAutoRotate, setIsAutoRotate] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
+  const isAutoRotateRef = useRef(isAutoRotate);
+  const isDraggingRef = useRef(false);
+  const turntableRef = useRef(null);
+  const glareRef = useRef(null);
+  const floorShadowRef = useRef(null);
+
+  const rotationYRef = useRef(0);
+  const rotationXRef = useRef(10);
   const startPos = useRef({ x: 0, y: 0 });
   const lastRotation = useRef({ x: 10, y: 0 });
   const animFrameRef = useRef(null);
 
-  // Auto-rotate loop when enabled and not dragging
+  // Keep isAutoRotateRef in sync with state
+  useEffect(() => {
+    isAutoRotateRef.current = isAutoRotate;
+  }, [isAutoRotate]);
+
+  // Apply CSS transforms directly to avoid React virtual DOM diffing on every frame
+  const applyTransforms = (rotX, rotY) => {
+    if (turntableRef.current) {
+      turntableRef.current.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    }
+    if (glareRef.current) {
+      glareRef.current.style.transform = `rotate(${-rotY}deg)`;
+    }
+    if (floorShadowRef.current) {
+      const scale = 1 - Math.abs(Math.sin((rotY * Math.PI) / 180)) * 0.15;
+      floorShadowRef.current.style.transform = `scale(${scale})`;
+    }
+  };
+
+  // High-performance 60fps loop on compositor thread
   useEffect(() => {
     let lastTime = performance.now();
 
     const loop = (currentTime) => {
-      if (isAutoRotate && !isDragging) {
+      if (isAutoRotateRef.current && !isDraggingRef.current) {
         const delta = currentTime - lastTime;
-        setRotationY((prev) => (prev + delta * 0.04) % 360);
+        rotationYRef.current = (rotationYRef.current + delta * 0.04) % 360;
+        applyTransforms(rotationXRef.current, rotationYRef.current);
       }
       lastTime = currentTime;
       animFrameRef.current = requestAnimationFrame(loop);
@@ -29,36 +54,36 @@ export default function Product3DViewer({ image, name, price }) {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [isAutoRotate, isDragging]);
+  }, []);
 
   // Mouse & Touch event handlers
   const handleStart = (clientX, clientY) => {
-    setIsDragging(true);
-    setHasInteracted(true);
+    isDraggingRef.current = true;
+    if (!hasInteracted) setHasInteracted(true);
     startPos.current = { x: clientX, y: clientY };
-    lastRotation.current = { x: rotationX, y: rotationY };
+    lastRotation.current = { x: rotationXRef.current, y: rotationYRef.current };
   };
 
   const handleMove = (clientX, clientY) => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
     const deltaX = clientX - startPos.current.x;
     const deltaY = clientY - startPos.current.y;
 
-    // Adjust sensitivity
     const newRotY = (lastRotation.current.y + deltaX * 0.8) % 360;
     const newRotX = Math.max(-25, Math.min(35, lastRotation.current.x - deltaY * 0.4));
 
-    setRotationY(newRotY);
-    setRotationX(newRotX);
+    rotationYRef.current = newRotY;
+    rotationXRef.current = newRotX;
+    applyTransforms(newRotX, newRotY);
   };
 
   const handleEnd = () => {
-    setIsDragging(false);
+    isDraggingRef.current = false;
   };
 
   // Toggle Auto-rotate
   const toggleAutoRotate = () => {
-    setIsAutoRotate((prev) => !prev);
+    setIsAutoRotate(prev => !prev);
   };
 
   return (
@@ -110,36 +135,41 @@ export default function Product3DViewer({ image, name, price }) {
       >
         {/* Dynamic Floor Shadow */}
         <div
-          className="absolute bottom-2 w-48 h-12 bg-black/60 rounded-full blur-xl transition-transform duration-100 pointer-events-none"
-          style={{
-            transform: `scale(${1 - Math.abs(Math.sin((rotationY * Math.PI) / 180)) * 0.15})`
-          }}
+          ref={floorShadowRef}
+          className="absolute bottom-2 w-48 h-12 bg-black/60 rounded-full blur-xl pointer-events-none will-change-transform"
+          style={{ transform: 'scale(1)' }}
         />
 
         {/* 3D Floating Platter / Turntable */}
         <div
-          className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full transition-transform duration-75 ease-out"
+          ref={turntableRef}
+          className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full will-change-transform"
           style={{
             transformStyle: 'preserve-3d',
-            transform: `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`
+            transform: 'rotateX(10deg) rotateY(0deg)'
           }}
         >
           {/* Outer Pedestal Plate */}
           <div className="absolute inset-0 rounded-full p-2 bg-gradient-to-tr from-[#8B5742] via-[#DDA15E] to-[#F5EBE0] shadow-2xl border-2 border-[#DDA15E]/40 flex items-center justify-center">
             {/* Food Image Container with 3D Depth */}
             <div className="relative w-full h-full rounded-full overflow-hidden shadow-inner border border-stone-800/40 bg-stone-900">
-              <img
-                src={image}
-                alt={name}
-                className="w-full h-full object-cover pointer-events-none select-none"
-                draggable="false"
-              />
+              <picture>
+                <source srcSet={image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                <img
+                  src={image}
+                  alt={name}
+                  width="256"
+                  height="256"
+                  loading="eager"
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                  draggable="false"
+                />
+              </picture>
               {/* Dynamic Glare Reflection Overlay */}
               <div
-                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none"
-                style={{
-                  transform: `rotate(${rotationY * -1}deg)`
-                }}
+                ref={glareRef}
+                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none will-change-transform"
+                style={{ transform: 'rotate(0deg)' }}
               />
             </div>
           </div>

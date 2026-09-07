@@ -8,11 +8,18 @@ export default function About() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           
           <div className="relative group p-2 rounded-[2.5rem] bg-white/40 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)]">
-            <img 
-              src="/foto-kenangan-1.jpg" 
-              alt="Kenangan Kelas FREONIX" 
-              className="rounded-[2rem] w-full h-[340px] sm:h-[420px] object-cover shadow-sm transition duration-700 group-hover:scale-[1.02]"
-            />
+            <picture>
+              <source srcSet="/foto-kenangan-1.webp" type="image/webp" />
+              <img 
+                src="/foto-kenangan-1.jpg" 
+                alt="Kenangan Kelas FREONIX" 
+                width="600"
+                height="420"
+                loading="lazy"
+                decoding="async"
+                className="rounded-[2rem] w-full h-[340px] sm:h-[420px] object-cover shadow-sm transition duration-700 group-hover:scale-[1.02]"
+              />
+            </picture>
           </div>
 
           <div className="space-y-6 bg-white/60 backdrop-blur-2xl p-8 sm:p-10 rounded-[2.5rem] border border-white/80 shadow-[0_20px_50px_rgba(93,58,41,0.08)] relative overflow-hidden">

@@ -3,34 +3,23 @@
 
 import { db } from './db';
 
-const STORAGE_KEY = 'freonix_orders_v2';
-
 /**
- * Mengambil semua pesanan dari database terpadu
+ * Mengambil semua pesanan dari database terpadu (Supabase via in-memory cache)
  */
 export function getAllOrders() {
-  const orders = db.getOrders();
-  if (Array.isArray(orders) && orders.length > 0) {
-    return orders;
-  }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (err) {
-    return [];
-  }
+  return db.getOrders();
 }
 
 /**
- * Menambahkan pesanan baru ke database
+ * Menambahkan pesanan baru ke database (async, Supabase-first)
  */
-export function addOrder(orderData) {
+export async function addOrder(orderData) {
   try {
     const existing = db.getOrderById(orderData.orderId || orderData.id);
     if (existing) {
       return getAllOrders();
     }
-    db.createOrder(orderData);
+    await db.createOrder(orderData);
     return getAllOrders();
   } catch (err) {
     console.error('Gagal menyimpan pesanan baru:', err);
@@ -41,9 +30,9 @@ export function addOrder(orderData) {
 /**
  * Mengubah status pembayaran pesanan (PENDING <-> SUCCESS atau CANCELLED)
  */
-export function updateOrderStatus(orderId, newStatus) {
+export async function updateOrderStatus(orderId, newStatus) {
   try {
-    db.updatePaymentStatus(orderId, newStatus);
+    await db.updatePaymentStatus(orderId, newStatus);
     return getAllOrders();
   } catch (err) {
     console.error('Gagal memperbarui status pesanan:', err);
@@ -54,9 +43,9 @@ export function updateOrderStatus(orderId, newStatus) {
 /**
  * Menghapus pesanan dari database
  */
-export function deleteOrder(orderId) {
+export async function deleteOrder(orderId) {
   try {
-    db.deleteOrder(orderId);
+    await db.deleteOrder(orderId);
     return getAllOrders();
   } catch (err) {
     console.error('Gagal menghapus pesanan:', err);

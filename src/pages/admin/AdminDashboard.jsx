@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   DollarSign, 
@@ -20,10 +20,48 @@ import { useDb } from '../../utils/useDb';
 
 export default function AdminDashboard() {
   const db = useDb();
-  const stats = useMemo(() => db.getStats(), [db]);
-  const orders = useMemo(() => db.getOrders(), [db]);
   const products = useMemo(() => db.getProducts(), [db]);
   const settings = useMemo(() => db.getSettings(), [db]);
+
+  const [orders, setOrders] = useState(db.getOrders() || []);
+
+  useEffect(() => {
+    let mounted = true;
+    const update = () => {
+      if (mounted) setOrders([...(db.getOrders() || [])]);
+    };
+    db.fetchOrders()
+      .then(fetched => { if (mounted) setOrders(fetched || []); })
+      .catch(update);
+
+    window.addEventListener('freonix_db_updated', update);
+    return () => {
+      mounted = false;
+      window.removeEventListener('freonix_db_updated', update);
+    };
+  }, [db]);
+
+  const stats = useMemo(() => {
+    const totalRevenue = orders.reduce((acc, o) => acc + (o.totalHarga || 0), 0);
+    const completedOrders = orders.filter(o => o.orderStatus === 'Completed').length;
+    const pendingOrders = orders.filter(o => o.orderStatus === 'Pending' || o.paymentStatus === 'PENDING').length;
+    const cancelledOrders = orders.filter(o => o.orderStatus === 'Cancelled').length;
+    const threshold = settings.lowStockThreshold || 5;
+    const activeProducts = products.filter(p => p.status === 'active').length;
+    const outOfStockProducts = products.filter(p => (p.stock || 0) === 0).length;
+    const lowStockProducts = products.filter(p => (p.stock || 0) > 0 && (p.stock || 0) <= threshold).length;
+    return {
+      totalRevenue,
+      totalOrders: orders.length,
+      completedOrders,
+      pendingOrders,
+      cancelledOrders,
+      totalProducts: products.length,
+      activeProducts,
+      outOfStockProducts,
+      lowStockProducts
+    };
+  }, [orders, products, settings]);
 
   const recentOrders = orders.slice(0, 5);
 

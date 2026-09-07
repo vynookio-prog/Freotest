@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Search, 
@@ -19,9 +19,25 @@ import { useDb } from '../../utils/useDb';
 
 export default function AdminCustomers() {
   const db = useDb();
-  const customers = db.getCustomers() || [];
+  const [customers, setCustomers] = useState(db.getCustomers() || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const update = () => {
+      if (mounted) setCustomers(db.getCustomers() || []);
+    };
+    db.fetchOrders()
+      .then(update)
+      .catch(update);
+
+    window.addEventListener('freonix_db_updated', update);
+    return () => {
+      mounted = false;
+      window.removeEventListener('freonix_db_updated', update);
+    };
+  }, [db]);
 
   // Filtered customers
   const filteredCustomers = useMemo(() => {

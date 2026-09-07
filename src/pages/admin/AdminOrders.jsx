@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   ShoppingCart, 
   Search, 
@@ -18,14 +18,42 @@ import {
   Sparkles,
   ShieldCheck,
   RotateCcw,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useDb } from '../../utils/useDb';
 
 export default function AdminOrders() {
   const db = useDb();
-  const orders = db.getOrders() || [];
+  const [orders, setOrders] = useState(db.getOrders() || []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      setFetchError(null);
+      const fetched = await db.fetchOrders();
+      setOrders(fetched || []);
+    } catch (err) {
+      console.warn('Gagal fetch orders:', err.message);
+      setFetchError(err.message || 'Gagal memuat pesanan dari Supabase');
+      setOrders(db.getOrders() || []);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [db]);
+
+  useEffect(() => {
+    loadOrders();
+    const handleDbUpdate = () => {
+      setOrders([...(db.getOrders() || [])]);
+    };
+    window.addEventListener('freonix_db_updated', handleDbUpdate);
+    return () => window.removeEventListener('freonix_db_updated', handleDbUpdate);
+  }, [loadOrders, db]);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,27 +105,42 @@ export default function AdminOrders() {
   const completedCount = orders.filter(o => o.orderStatus === 'Completed').length;
 
   // Handlers
-  const handleVerifyPayment = (orderId, newStatus) => {
-    db.updatePaymentStatus(orderId, newStatus);
-    showToast(`Pembayaran #${orderId} berhasil diubah ke ${newStatus}!`);
-    if (selectedOrder && selectedOrder.orderId === orderId) {
-      setSelectedOrder(prev => ({ ...prev, paymentStatus: newStatus }));
+  const handleVerifyPayment = async (orderId, newStatus) => {
+    try {
+      await db.updatePaymentStatus(orderId, newStatus);
+      showToast(`Pembayaran #${orderId} berhasil diubah ke ${newStatus}!`);
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(prev => ({ ...prev, paymentStatus: newStatus }));
+      }
+      await loadOrders();
+    } catch (err) {
+      showToast(`Gagal update pembayaran: ${err.message}`, 'error');
     }
   };
 
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
-    db.updateOrderStatus(orderId, newStatus, `Diubah ke ${newStatus} via Admin`);
-    showToast(`Status pesanan #${orderId} diubah ke ${newStatus}!`);
-    if (selectedOrder && selectedOrder.orderId === orderId) {
-      setSelectedOrder(prev => ({ ...prev, orderStatus: newStatus }));
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await db.updateOrderStatus(orderId, newStatus, `Diubah ke ${newStatus} via Admin`);
+      showToast(`Status pesanan #${orderId} diubah ke ${newStatus}!`);
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(prev => ({ ...prev, orderStatus: newStatus }));
+      }
+      await loadOrders();
+    } catch (err) {
+      showToast(`Gagal update status: ${err.message}`, 'error');
     }
   };
 
-  const handleDeleteOrder = (orderId) => {
-    db.deleteOrder(orderId);
-    setDeleteConfirmId(null);
-    if (selectedOrder?.orderId === orderId) setSelectedOrder(null);
-    showToast(`Pesanan #${orderId} telah dihapus.`, 'info');
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      await db.deleteOrder(orderId);
+      setDeleteConfirmId(null);
+      if (selectedOrder?.orderId === orderId) setSelectedOrder(null);
+      showToast(`Pesanan #${orderId} telah dihapus.`, 'info');
+      await loadOrders();
+    } catch (err) {
+      showToast(`Gagal menghapus pesanan: ${err.message}`, 'error');
+    }
   };
 
   // Export CSV
@@ -190,6 +233,20 @@ export default function AdminOrders() {
 
         <div className="flex items-center gap-2 self-stretch sm:self-auto">
           <button
+            onClick={async () => {
+              setIsRefreshing(true);
+              await loadOrders();
+              showToast('Data pesanan berhasil disinkronkan dari Supabase!');
+            }}
+            disabled={isRefreshing}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            title="Muat ulang data pesanan langsung dari Supabase"
+          >
+            <RotateCcw size={15} className={`text-[#8B5742] ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Menyinkronkan...' : 'Segarkan'}</span>
+          </button>
+
+          <button
             onClick={handleExportCSV}
             className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95"
           >
@@ -198,6 +255,52 @@ export default function AdminOrders() {
           </button>
         </div>
       </div>
+
+      {/* Supabase Error Banner if any */}
+      {fetchError && (
+        <div className="mb-6 p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <div className="font-bold mb-1">
+              {fetchError.includes('schema cache') || fetchError.includes('PGRST205')
+                ? 'Tabel "orders" Belum Ada di Supabase (PGRST205)'
+                : 'Pemberitahuan Database Supabase'}
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              {fetchError.includes('schema cache') || fetchError.includes('PGRST205')
+                ? 'Tabel "orders" belum dibuat di Supabase project ini. Jalankan script "SUPABASE_SCHEMA.sql" di Supabase SQL Editor agar seluruh browser/session admin dapat membaca dan menyimpan pesanan secara serentak.'
+                : fetchError}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="https://drive.google.com/drive/folders/1Azp41xNPTCVcXsPPHLM0vEzB7lieBWVr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
+              title="Buka folder file SQL di Google Drive"
+            >
+              <ExternalLink size={13} className="text-amber-700" />
+              <span>Buka di GDrive</span>
+            </a>
+            <a
+              href="/SUPABASE_SCHEMA.sql"
+              download="SUPABASE_SCHEMA.sql"
+              className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
+              title="Unduh file SQL untuk dijalankan di Supabase SQL Editor"
+            >
+              <Download size={13} className="text-amber-700" />
+              <span>Download SQL</span>
+            </a>
+            <button
+              onClick={loadOrders}
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs active:scale-95 transition-all shadow-xs"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick Action Badges / KPI Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

@@ -236,7 +236,7 @@ function mapProductToDb(prod) {
   };
 }
 
-function mapOrderFromDb(row) {
+export function mapOrderFromDb(row) {
   const id = row.id;
   return {
     id: id,
@@ -260,7 +260,7 @@ function mapOrderFromDb(row) {
   };
 }
 
-function mapOrderToDb(o) {
+export function mapOrderToDb(o) {
   const id = o.orderId || o.id;
   return {
     id: id,
@@ -272,7 +272,7 @@ function mapOrderToDb(o) {
     payment_method: o.paymentMethod || 'qris',
     payment_status: o.paymentStatus || 'PENDING',
     order_status: o.orderStatus || 'Pending',
-    payment_proof: o.paymentProof || '',
+    payment_proof: o.paymentProof || o.paymentProofImage || '',
     payment_proof_url: o.paymentProofUrl || '',
     notes: o.notes || '',
     order_time: o.orderTime || '',
@@ -382,7 +382,7 @@ function loadLocalDb() {
       settings: { ...INITIAL_DB.settings, ...(parsed.settings || {}) },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
       products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : INITIAL_DB.products,
-      orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+      orders: [], // Pesanan selalu dimuat langsung dari Supabase, bukan dari localStorage
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
     };
@@ -398,7 +398,14 @@ function saveLocalDb(data) {
   cachedDb = data;
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(DB_KEY, JSON.stringify(data));
+      // Hanya cache pengaturan, kategori, dan produk untuk performa UI offline.
+      // JANGAN menyimpan data pesanan (orders) ke localStorage agar tidak terjadi bias antar-browser.
+      const persistentData = {
+        settings: data.settings,
+        categories: data.categories,
+        products: data.products
+      };
+      localStorage.setItem(DB_KEY, JSON.stringify(persistentData));
     }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('freonix_db_updated', { detail: { timestamp: Date.now() } }));
@@ -945,12 +952,46 @@ export const db = {
 
   // --- ORDERS ---
   getOrders() {
-    return loadLocalDb().orders;
+    return cachedDb?.orders || [];
+  },
+  async fetchOrders() {
+    if (!isSupabaseConfigured) return cachedDb?.orders || [];
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('Gagal mengambil orders dari Supabase:', error.message);
+      throw error;
+    }
+    const mapped = (data || []).map(mapOrderFromDb);
+    if (cachedDb) {
+      cachedDb.orders = mapped;
+    }
+    return mapped;
+  },
+  async getOrderByIdAsync(id) {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (!error && data) {
+          return mapOrderFromDb(data);
+        }
+      } catch (e) {
+        console.warn('Supabase getOrderByIdAsync error:', e);
+      }
+    }
+    return this.getOrderById(id);
   },
   getOrderById(id) {
-    return loadLocalDb().orders.find(o => o.orderId === id || o.id === id);
+    return (cachedDb?.orders || []).find(o => o.orderId === id || o.id === id);
   },
-  createOrder(orderData) {
+  async createOrder(orderData) {
     const data = loadLocalDb();
     const orderId = orderData.orderId || `FRX-${Date.now()}`;
     const newOrder = {
@@ -967,28 +1008,42 @@ export const db = {
       updatedAt: new Date().toISOString()
     };
 
-    // Kurangi stok produk secara otomatis
-    (newOrder.items || []).forEach(item => {
+    // 1. Kurangi stok produk secara otomatis di database Supabase
+    for (const item of (newOrder.items || [])) {
       const p = data.products.find(prod => prod.id === item.id || prod.name === item.name);
       if (p) {
         p.stock = Math.max(0, (p.stock || 0) - (item.qty || 1));
         p.updatedAt = new Date().toISOString();
         if (isSupabaseConfigured) {
-          supabase.from('products').update({ stock: p.stock, updated_at: p.updatedAt }).eq('id', p.id).then();
-        }
-
-        // Notifikasi low stock jika perlu
-        if (p.stock <= (data.settings.lowStockThreshold || 5)) {
-          this.addNotification({
-            title: p.stock === 0 ? '🚨 Stok Habis' : '⚠️ Stok Menipis',
-            message: `${p.name} kini tersisa ${p.stock} ${p.unit}.`,
-            type: p.stock === 0 ? 'danger' : 'warning'
-          });
+          try {
+            await supabase.from('products').update({ stock: p.stock, updated_at: p.updatedAt }).eq('id', p.id);
+          } catch (e) {
+            console.warn('Supabase stock update error:', e);
+          }
         }
       }
-    });
+    }
 
-    data.orders.unshift(newOrder);
+    // 2. SIMPAN KE SUPABASE SEBAGAI DATABASE UTAMA
+    if (isSupabaseConfigured) {
+      const { data: insertedData, error } = await supabase
+        .from('orders')
+        .insert(mapOrderToDb(newOrder))
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase createOrder error:', error);
+        throw new Error(error.message);
+      }
+      if (insertedData) {
+        Object.assign(newOrder, mapOrderFromDb(insertedData));
+      }
+    }
+
+    // Simpan ke in-memory cache sementara untuk tab aktif
+    data.orders = [newOrder, ...(data.orders || []).filter(o => o.orderId !== orderId)];
+    saveLocalDb(data);
 
     // Buat notifikasi pesanan baru
     this.addNotification({
@@ -996,28 +1051,15 @@ export const db = {
       message: `Pesanan #${newOrder.orderId} dari ${newOrder.name} (${newOrder.kelas}) senilai Rp ${Number(newOrder.totalHarga).toLocaleString('id-ID')}.`,
       type: 'order'
     });
-
-    saveLocalDb(data);
-
-    // Simpan ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('orders')
-        .insert(mapOrderToDb(newOrder))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase createOrder warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase createOrder err:', err));
-    }
-
     this.addAuditLog('CREATE_ORDER', `Pesanan #${newOrder.orderId} dibuat oleh ${newOrder.name}`);
+
     return newOrder;
   },
-  updateOrderStatus(orderId, newStatus, note = '') {
+  async updateOrderStatus(orderId, newStatus, note = '') {
     const data = loadLocalDb();
     let updatedOrder = null;
 
-    data.orders = data.orders.map(o => {
+    data.orders = (data.orders || []).map(o => {
       if (o.orderId === orderId || o.id === orderId) {
         const history = o.history || [];
         history.push({
@@ -1036,32 +1078,32 @@ export const db = {
       return o;
     });
 
-    saveLocalDb(data);
-
     // Update di Supabase
-    if (isSupabaseConfigured && updatedOrder) {
-      supabase
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
         .from('orders')
         .update({
-          order_status: updatedOrder.orderStatus,
-          history: updatedOrder.history,
-          updated_at: updatedOrder.updatedAt
+          order_status: updatedOrder ? updatedOrder.orderStatus : newStatus,
+          history: updatedOrder ? updatedOrder.history : undefined,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', orderId)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateOrderStatus warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateOrderStatus err:', err));
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Supabase updateOrderStatus error:', error);
+        throw new Error(error.message);
+      }
     }
 
+    saveLocalDb(data);
     this.addAuditLog('UPDATE_ORDER_STATUS', `Status order #${orderId} diubah ke ${newStatus}`);
     return updatedOrder;
   },
-  updatePaymentStatus(orderId, newPaymentStatus) {
+  async updatePaymentStatus(orderId, newPaymentStatus) {
     const data = loadLocalDb();
     let updatedOrder = null;
 
-    data.orders = data.orders.map(o => {
+    data.orders = (data.orders || []).map(o => {
       if (o.orderId === orderId || o.id === orderId) {
         updatedOrder = {
           ...o,
@@ -1075,64 +1117,67 @@ export const db = {
       return o;
     });
 
-    saveLocalDb(data);
-
     // Sinkronkan ke local user jika sama
     try {
-      const activeRaw = localStorage.getItem('freonix_last_order');
-      if (activeRaw) {
-        const active = JSON.parse(activeRaw);
-        if (active.orderId === orderId) {
-          active.paymentStatus = newPaymentStatus;
-          localStorage.setItem('freonix_last_order', JSON.stringify(active));
+      if (typeof localStorage !== 'undefined') {
+        const activeRaw = localStorage.getItem('freonix_last_order');
+        if (activeRaw) {
+          const active = JSON.parse(activeRaw);
+          if (active.orderId === orderId) {
+            active.paymentStatus = newPaymentStatus;
+            localStorage.setItem('freonix_last_order', JSON.stringify(active));
+          }
         }
       }
     } catch (e) {}
 
     // Update di Supabase
-    if (isSupabaseConfigured && updatedOrder) {
-      supabase
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
         .from('orders')
         .update({
-          payment_status: updatedOrder.paymentStatus,
-          order_status: updatedOrder.orderStatus,
-          verified_at: updatedOrder.verifiedAt,
-          updated_at: updatedOrder.updatedAt
+          payment_status: newPaymentStatus,
+          order_status: newPaymentStatus === 'SUCCESS' ? 'Processing' : undefined,
+          verified_at: newPaymentStatus === 'SUCCESS' ? new Date().toLocaleString('id-ID') : null,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', orderId)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updatePaymentStatus warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updatePaymentStatus err:', err));
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Supabase updatePaymentStatus error:', error);
+        throw new Error(error.message);
+      }
     }
 
+    saveLocalDb(data);
     this.addAuditLog('UPDATE_PAYMENT', `Pembayaran order #${orderId} diubah ke ${newPaymentStatus}`);
     return updatedOrder;
   },
-  deleteOrder(orderId) {
+  async deleteOrder(orderId) {
     const data = loadLocalDb();
-    data.orders = data.orders.filter(o => o.orderId !== orderId && o.id !== orderId);
-    saveLocalDb(data);
+    data.orders = (data.orders || []).filter(o => o.orderId !== orderId && o.id !== orderId);
 
     // Hapus dari Supabase
     if (isSupabaseConfigured) {
-      supabase
+      const { error } = await supabase
         .from('orders')
         .delete()
-        .eq('id', orderId)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase deleteOrder warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase deleteOrder err:', err));
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Supabase deleteOrder error:', error);
+        throw new Error(error.message);
+      }
     }
 
+    saveLocalDb(data);
     this.addAuditLog('DELETE_ORDER', `Menghapus pesanan #${orderId}`);
     return true;
   },
 
   // --- CUSTOMERS (Derived from Orders) ---
   getCustomers() {
-    const orders = loadLocalDb().orders;
+    const orders = cachedDb?.orders || [];
     const customerMap = {};
 
     orders.forEach(o => {
@@ -1253,7 +1298,8 @@ export const db = {
 
   // --- ANALYTICS STATS ---
   getStats() {
-    const { products, orders, settings } = loadLocalDb();
+    const data = cachedDb || loadLocalDb();
+    const { products, orders, settings } = data;
     const totalRevenue = orders.reduce((acc, o) => acc + (o.totalHarga || 0), 0);
     const completedOrders = orders.filter(o => o.orderStatus === 'Completed').length;
     const pendingOrders = orders.filter(o => o.orderStatus === 'Pending' || o.paymentStatus === 'PENDING').length;

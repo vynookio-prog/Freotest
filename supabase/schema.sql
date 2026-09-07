@@ -103,6 +103,19 @@ ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
+-- Berikan izin akses penuh ke role anon, authenticated, dan service_role
+GRANT ALL ON TABLE public.categories TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.products TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.orders TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.store_settings TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.notifications TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.audit_logs TO anon, authenticated, service_role;
+
+-- Pastikan realtime update dan delete membawa payload penuh
+ALTER TABLE public.orders REPLICA IDENTITY FULL;
+ALTER TABLE public.products REPLICA IDENTITY FULL;
+ALTER TABLE public.categories REPLICA IDENTITY FULL;
+
 -- Policy Categories
 DROP POLICY IF EXISTS "Allow public read categories" ON public.categories;
 CREATE POLICY "Allow public read categories" ON public.categories FOR SELECT USING (true);

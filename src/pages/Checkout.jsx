@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDb } from '../utils/useDb';
-import { addOrder } from '../utils/orderStore';
 import { uploadToSupabaseStorage } from '../utils/supabase';
 
 export default function Checkout() {
@@ -215,7 +214,7 @@ export default function Checkout() {
 
   const totalItemCount = Object.values(quantities).reduce((a, b) => a + b, 0);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (settings.storeStatus === 'closed') {
@@ -336,21 +335,14 @@ export default function Checkout() {
       waUrl
     };
 
-    // 1. Simpan ke database terpadu (db.js) - otomatis potong stok & buat notifikasi
+    // 1. Simpan ke Supabase via database terpadu (db.js) - otomatis potong stok & buat notifikasi
     try {
-      db.createOrder(summaryData);
+      await db.createOrder(summaryData);
     } catch (err) {
       console.error('db.createOrder error:', err);
     }
 
-    // 2. Simpan ke orderStore untuk backward compatibility
-    try {
-      addOrder(summaryData);
-    } catch (err) {
-      console.error('OrderStore error:', err);
-    }
-
-    // 3. Simpan struk aktif ke localStorage
+    // 2. Simpan struk aktif ke localStorage (hanya untuk tampilan struk di browser ini)
     try {
       localStorage.setItem('freonix_last_order', JSON.stringify(summaryData));
     } catch (err) {
@@ -360,7 +352,7 @@ export default function Checkout() {
     setSavedOrder(summaryData);
     setIsSuccess(true);
 
-    // 4. Buka WhatsApp
+    // 3. Buka WhatsApp
     window.open(waUrl, '_blank');
   };
 

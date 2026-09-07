@@ -104,7 +104,7 @@ export default function AdminSettings() {
 
   // Export JSON Backup
   const handleExportBackup = () => {
-    const backupData = localStorage.getItem('freonix_database_v1');
+    const backupData = localStorage.getItem('freonix_database_v3');
     if (!backupData) {
       showToast('Database kosong, tidak ada data untuk diekspor.', 'error');
       return;
@@ -130,10 +130,10 @@ export default function AdminSettings() {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target.result);
-        if (!parsed.products || !parsed.orders || !parsed.settings) {
+        if (!parsed.products && !parsed.settings) {
           throw new Error('Format file JSON tidak valid untuk database Freonix');
         }
-        localStorage.setItem('freonix_database_v1', JSON.stringify(parsed));
+        localStorage.setItem('freonix_database_v3', JSON.stringify(parsed));
         window.dispatchEvent(new CustomEvent('freonix_db_updated', { detail: { action: 'RESTORE_BACKUP' } }));
         showToast('Database berhasil dipulihkan dari file backup!');
       } catch (err) {
@@ -338,6 +338,19 @@ export default function AdminSettings() {
                 <div><strong>Status:</strong> {supabaseStatus.message}</div>
                 <div><strong>Tabel Supabase:</strong> <span className="font-mono text-stone-700">products, categories, orders, store_settings, notifications, audit_logs</span></div>
                 <div><strong>Storage Bucket:</strong> <span className="font-mono text-stone-700">freonix-uploads</span> (Public)</div>
+              </div>
+
+              <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between">
+                <span className="text-[11px] text-stone-500">File Schema & Migrasi Database:</span>
+                <a
+                  href="/SUPABASE_SCHEMA.sql"
+                  download="SUPABASE_SCHEMA.sql"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-300 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 text-xs font-bold transition-all shadow-2xs"
+                  title="Unduh file SQL untuk dieksekusi di Supabase SQL Editor"
+                >
+                  <Download size={13} className="text-[#8B5742]" />
+                  <span>Download SUPABASE_SCHEMA.sql</span>
+                </a>
               </div>
             </div>
           </div>

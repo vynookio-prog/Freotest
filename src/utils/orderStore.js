@@ -1,46 +1,37 @@
 // src/utils/orderStore.js
-// Centralized order store & state management for FREONIX (Cleaned)
+// Centralized order store & state management for FREONIX (Integrated with db.js & Supabase)
+
+import { db } from './db';
 
 const STORAGE_KEY = 'freonix_orders_v2';
 
-// Inisialisasi awal kosong bersih (tidak ada dummy orders)
-const INITIAL_MOCK_ORDERS = [];
-
-// Bersihkan cache storage versi lama
-try {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('freonix_orders_db');
-  }
-} catch (e) {}
-
 /**
- * Mengambil semua pesanan dari database localStorage
+ * Mengambil semua pesanan dari database terpadu
  */
 export function getAllOrders() {
+  const orders = db.getOrders();
+  if (Array.isArray(orders) && orders.length > 0) {
+    return orders;
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_ORDERS));
-      return INITIAL_MOCK_ORDERS;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : INITIAL_MOCK_ORDERS;
+    return raw ? JSON.parse(raw) : [];
   } catch (err) {
-    console.error('Gagal mengambil orders:', err);
-    return INITIAL_MOCK_ORDERS;
+    return [];
   }
 }
 
 /**
- * Menambahkan pesanan baru ke database (disimpan di urutan paling atas)
+ * Menambahkan pesanan baru ke database
  */
 export function addOrder(orderData) {
   try {
-    const orders = getAllOrders();
-    const filtered = orders.filter(o => o.orderId !== orderData.orderId);
-    const updated = [orderData, ...filtered];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return updated;
+    const existing = db.getOrderById(orderData.orderId || orderData.id);
+    if (existing) {
+      return getAllOrders();
+    }
+    db.createOrder(orderData);
+    return getAllOrders();
   } catch (err) {
     console.error('Gagal menyimpan pesanan baru:', err);
     return getAllOrders();
@@ -52,32 +43,8 @@ export function addOrder(orderData) {
  */
 export function updateOrderStatus(orderId, newStatus) {
   try {
-    const orders = getAllOrders();
-    const updated = orders.map(order => {
-      if (order.orderId === orderId) {
-        return {
-          ...order,
-          paymentStatus: newStatus,
-          orderStatus: newStatus === 'SUCCESS' ? 'Processing' : order.orderStatus
-        };
-      }
-      return order;
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
-    // Sinkronkan ke struk lokal pelanggan jika ini pesanan aktif mereka
-    try {
-      const activeRaw = localStorage.getItem('freonix_last_order');
-      if (activeRaw) {
-        const active = JSON.parse(activeRaw);
-        if (active.orderId === orderId) {
-          active.paymentStatus = newStatus;
-          localStorage.setItem('freonix_last_order', JSON.stringify(active));
-        }
-      }
-    } catch (e) {}
-
-    return updated;
+    db.updatePaymentStatus(orderId, newStatus);
+    return getAllOrders();
   } catch (err) {
     console.error('Gagal memperbarui status pesanan:', err);
     return getAllOrders();
@@ -89,10 +56,8 @@ export function updateOrderStatus(orderId, newStatus) {
  */
 export function deleteOrder(orderId) {
   try {
-    const orders = getAllOrders();
-    const updated = orders.filter(o => o.orderId !== orderId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return updated;
+    db.deleteOrder(orderId);
+    return getAllOrders();
   } catch (err) {
     console.error('Gagal menghapus pesanan:', err);
     return getAllOrders();
@@ -100,7 +65,7 @@ export function deleteOrder(orderId) {
 }
 
 /**
- * Menghitung metrik ringkasan
+ * Menghitung metrik ringkasan pesanan
  */
 export function getOrderStats() {
   const orders = getAllOrders();
@@ -131,11 +96,11 @@ export function exportOrdersToCSV(orders = getAllOrders()) {
   const headers = ['Order ID', 'Waktu', 'Nama', 'Kelas', 'Metode Bayar', 'Status Bayar', 'Rincian Menu', 'Total Harga', 'Catatan', 'Link Bukti Transfer'];
 
   const rows = orders.map(o => [
-    `"${o.orderId}"`,
+    `"${o.orderId || o.id}"`,
     `"${o.orderTime}"`,
     `"${o.name}"`,
     `"${o.kelas}"`,
-    `"${o.paymentMethod.toUpperCase()}"`,
+    `"${(o.paymentMethod || 'qris').toUpperCase()}"`,
     `"${o.paymentStatus}"`,
     `"${(o.items || []).map(i => `${i.name} (x${i.qty})`).join('; ')}"`,
     `"${o.totalHarga}"`,

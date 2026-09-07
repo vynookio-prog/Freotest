@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Store, 
@@ -15,10 +15,13 @@ import {
   Sparkles, 
   Activity, 
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Database,
+  RefreshCw
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useDb } from '../../utils/useDb';
+import { checkSupabaseHealth } from '../../utils/supabase';
 
 export default function AdminSettings() {
   const db = useDb();
@@ -37,6 +40,48 @@ export default function AdminSettings() {
   const [toast, setToast] = useState(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [supabaseStatus, setSupabaseStatus] = useState({
+    connected: false,
+    loading: true,
+    message: 'Memeriksa status koneksi Supabase...'
+  });
+  const [isSyncingSupabase, setIsSyncingSupabase] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    checkSupabaseHealth().then(res => {
+      if (isMounted) {
+        setSupabaseStatus({
+          connected: res.connected,
+          schemaReady: res.schemaReady,
+          status: res.status,
+          loading: false,
+          message: res.message
+        });
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleSyncSupabase = async () => {
+    setIsSyncingSupabase(true);
+    try {
+      await db.syncNow();
+      const res = await checkSupabaseHealth();
+      setSupabaseStatus({
+        connected: res.connected,
+        schemaReady: res.schemaReady,
+        status: res.status,
+        loading: false,
+        message: res.message
+      });
+      showToast('Sinkronisasi database Supabase berhasil!');
+    } catch (err) {
+      showToast('Gagal sinkronisasi Supabase: ' + err.message, 'error');
+    } finally {
+      setIsSyncingSupabase(false);
+    }
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -250,6 +295,52 @@ export default function AdminSettings() {
               </button>
             </div>
           </form>
+
+          {/* Supabase Cloud Database Integration */}
+          <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/60">
+              <h2 className="text-base font-extrabold text-[#5D3A29] flex items-center gap-2">
+                <Database size={18} className="text-[#8B5742]" />
+                Integrasi Database Supabase
+              </h2>
+              <button
+                type="button"
+                onClick={handleSyncSupabase}
+                disabled={isSyncingSupabase}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5D3A29] hover:bg-[#8B5742] text-white text-xs font-bold transition-all disabled:opacity-50"
+              >
+                <RefreshCw size={13} className={isSyncingSupabase ? 'animate-spin' : ''} />
+                {isSyncingSupabase ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-stone-700">Status Koneksi:</span>
+                <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 ${
+                  supabaseStatus.status === 'success'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : supabaseStatus.status === 'warning'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-rose-100 text-rose-800'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    supabaseStatus.status === 'success' ? 'bg-emerald-500 animate-pulse' :
+                    supabaseStatus.status === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
+                  }`} />
+                  {supabaseStatus.status === 'success' ? 'Supabase Live' :
+                   supabaseStatus.status === 'warning' ? 'Terkoneksi (Menunggu Schema SQL)' : 'Terputus / Periksa Config'}
+                </span>
+              </div>
+
+              <div className="text-[11px] text-stone-500 space-y-1">
+                <div><strong>Project URL:</strong> <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-stone-700 font-mono">https://wvsyzexwmhyckbemuced.supabase.co</code></div>
+                <div><strong>Status:</strong> {supabaseStatus.message}</div>
+                <div><strong>Tabel Supabase:</strong> <span className="font-mono text-stone-700">products, categories, orders, store_settings, notifications, audit_logs</span></div>
+                <div><strong>Storage Bucket:</strong> <span className="font-mono text-stone-700">freonix-uploads</span> (Public)</div>
+              </div>
+            </div>
+          </div>
 
           {/* Backup & Restore Section */}
           <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] space-y-4">

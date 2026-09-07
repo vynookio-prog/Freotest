@@ -20,6 +20,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useDb } from '../utils/useDb';
 import { addOrder } from '../utils/orderStore';
+import { uploadToSupabaseStorage } from '../utils/supabase';
 
 export default function Checkout() {
   const db = useDb();
@@ -131,6 +132,17 @@ export default function Checkout() {
   };
 
   const uploadToCdn = async (file) => {
+    // 1. Coba upload ke Supabase Storage terlebih dahulu
+    try {
+      const sbResult = await uploadToSupabaseStorage(file, 'payment_proofs');
+      if (sbResult.success && sbResult.url) {
+        return sbResult.url;
+      }
+    } catch (e) {
+      console.warn('Supabase storage upload fallback...', e);
+    }
+
+    // 2. Fallback cadangan ke Litterbox CDN
     const litterboxFormData = new FormData();
     litterboxFormData.append('reqtype', 'fileupload');
     litterboxFormData.append('time', '72h');
@@ -161,7 +173,7 @@ export default function Checkout() {
         return json.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
       }
     }
-    throw new Error('Gagal mengunggah foto ke CDN publik');
+    throw new Error('Gagal mengunggah foto bukti transfer');
   };
 
   const handleFileChange = async (e) => {

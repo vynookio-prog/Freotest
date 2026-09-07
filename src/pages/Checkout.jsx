@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDb } from '../utils/useDb';
-import { uploadToFirebaseStorage } from '../utils/firebase';
+import { uploadToSupabaseStorage } from '../utils/supabase';
 
 export default function Checkout() {
   const db = useDb();
@@ -50,6 +50,7 @@ export default function Checkout() {
   const [uploadError, setUploadError] = useState(null);
   const [imgError, setImgError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   // Restore order state from localStorage
   const [savedOrder, setSavedOrder] = useState(() => {
@@ -131,14 +132,14 @@ export default function Checkout() {
   };
 
   const uploadToCdn = async (file) => {
-    // 1. Coba upload ke Firebase Storage terlebih dahulu
+    // 1. Coba upload ke Supabase Storage (bucket: freonix-uploads)
     try {
-      const fbResult = await uploadToFirebaseStorage(file, 'payment_proofs');
-      if (fbResult.success && fbResult.url) {
-        return fbResult.url;
+      const sbResult = await uploadToSupabaseStorage(file, 'payment_proofs');
+      if (sbResult.success && sbResult.url) {
+        return sbResult.url;
       }
     } catch (e) {
-      console.warn('Firebase storage upload fallback...', e);
+      console.warn('Supabase storage upload fallback...', e);
     }
 
     // 2. Fallback cadangan ke Litterbox CDN
@@ -216,6 +217,8 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+    setSubmitError(null);
 
     if (settings.storeStatus === 'closed') {
       alert('Mohon maaf, sesi pre-order saat ini sedang ditutup oleh panitia.');
@@ -335,14 +338,19 @@ export default function Checkout() {
       waUrl
     };
 
-    // 1. Simpan ke Firebase via database terpadu (db.js) - otomatis potong stok & buat notifikasi
+    setIsLoading(true);
+
+    // 1. Simpan ke Supabase via database terpadu (db.js) - otomatis potong stok & simpan pesanan
     try {
       await db.createOrder(summaryData);
     } catch (err) {
       console.error('db.createOrder error:', err);
+      setIsLoading(false);
+      setSubmitError(`Gagal menyimpan pesanan ke Supabase: ${err.message || 'Terjadi kesalahan sistem'}. Pastikan tabel Supabase sudah aktif dan koneksi internet stabil.`);
+      return;
     }
 
-    // 2. Simpan struk aktif ke localStorage (hanya untuk tampilan struk di browser ini)
+    // 2. Simpan struk aktif ke localStorage (hanya untuk tampilan struk pelanggan di browser ini)
     try {
       localStorage.setItem('freonix_last_order', JSON.stringify(summaryData));
     } catch (err) {
@@ -351,6 +359,7 @@ export default function Checkout() {
 
     setSavedOrder(summaryData);
     setIsSuccess(true);
+    setIsLoading(false);
 
     // 3. Buka WhatsApp
     window.open(waUrl, '_blank');
@@ -960,6 +969,17 @@ export default function Checkout() {
             </div>
           </div>
 
+          {/* Submit Error Alert */}
+          {submitError && (
+            <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-3 shadow-xs animate-fade-in">
+              <AlertCircle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-bold text-rose-900 mb-0.5">Gagal Menyimpan Pesanan</strong>
+                <span className="leading-relaxed">{submitError}</span>
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={isLoading || isUploadingProof || settings.storeStatus === 'closed' || activeProducts.length === 0}
@@ -976,7 +996,9 @@ export default function Checkout() {
                 <Loader2 size={18} className="animate-spin" /> Mengunggah Bukti Pembayaran...
               </span>
             ) : isLoading ? (
-              <span className="font-bold">Memproses...</span>
+              <span className="font-bold flex items-center gap-2">
+                <Loader2 size={18} className="animate-spin" /> Menyimpan Pesanan ke Supabase...
+              </span>
             ) : (
               <>
                 <ShoppingBag className="w-5 h-5" />

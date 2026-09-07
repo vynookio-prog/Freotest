@@ -3,7 +3,7 @@ import { db } from './db';
 
 /**
  * Custom React Hook yang otomatis re-render saat database FREONIX berubah.
- * Termasuk auto-fetch orders dari Firebase saat pertama kali mount.
+ * Termasuk auto-fetch orders dari Supabase saat pertama kali mount.
  */
 export function useDb() {
   const [version, setVersion] = useState(0);
@@ -30,7 +30,7 @@ export function useDb() {
     };
   }, [refresh]);
 
-  // Auto-fetch orders dari Firebase saat pertama kali mount
+  // Auto-fetch orders dari Supabase saat pertama kali mount
   useEffect(() => {
     let isMounted = true;
     db.fetchOrders()

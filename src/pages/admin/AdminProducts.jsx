@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useDb } from '../../utils/useDb';
-import { uploadToFirebaseStorage } from '../../utils/firebase';
+import { uploadToSupabaseStorage } from '../../utils/supabase';
 
 export default function AdminProducts() {
   const db = useDb();
@@ -96,16 +96,16 @@ export default function AdminProducts() {
 
     setIsUploadingImage(true);
     try {
-      // 1. Coba unggah ke Firebase Storage
+      // 1. Coba unggah ke Supabase Storage (bucket: freonix-uploads)
       try {
-        const fbResult = await uploadToFirebaseStorage(file, 'products');
-        if (fbResult.success && fbResult.url) {
-          setFormData(prev => ({ ...prev, image: fbResult.url }));
+        const sbResult = await uploadToSupabaseStorage(file, 'products');
+        if (sbResult.success && sbResult.url) {
+          setFormData(prev => ({ ...prev, image: sbResult.url }));
           setIsUploadingImage(false);
           return;
         }
       } catch (err) {
-        console.warn('Firebase storage product upload fallback...', err);
+        console.warn('Supabase storage product upload fallback...', err);
       }
 
       // 2. Unggah ke CDN Litterbox

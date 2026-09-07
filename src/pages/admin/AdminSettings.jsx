@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useDb } from '../../utils/useDb';
-import { checkFirebaseHealth } from '../../utils/firebase';
+import { checkSupabaseHealth } from '../../utils/supabase';
 
 export default function AdminSettings() {
   const db = useDb();
@@ -40,46 +40,46 @@ export default function AdminSettings() {
   const [toast, setToast] = useState(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [firebaseStatus, setFirebaseStatus] = useState({
+  const [supabaseStatus, setSupabaseStatus] = useState({
     connected: false,
     loading: true,
-    message: 'Memeriksa status koneksi Firebase...'
+    message: 'Memeriksa status koneksi Supabase...'
   });
-  const [isSyncingFirebase, setIsSyncingFirebase] = useState(false);
+  const [isSyncingSupabase, setIsSyncingSupabase] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    checkFirebaseHealth().then(res => {
+    checkSupabaseHealth().then(res => {
       if (isMounted) {
-        setFirebaseStatus({
+        setSupabaseStatus({
           connected: res.connected,
+          schemaReady: res.schemaReady,
           status: res.status,
           loading: false,
-          message: res.message,
-          projectId: res.projectId
+          message: res.message
         });
       }
     });
     return () => { isMounted = false; };
   }, []);
 
-  const handleSyncFirebase = async () => {
-    setIsSyncingFirebase(true);
+  const handleSyncSupabase = async () => {
+    setIsSyncingSupabase(true);
     try {
       await db.syncNow();
-      const res = await checkFirebaseHealth();
-      setFirebaseStatus({
+      const res = await checkSupabaseHealth();
+      setSupabaseStatus({
         connected: res.connected,
+        schemaReady: res.schemaReady,
         status: res.status,
         loading: false,
-        message: res.message,
-        projectId: res.projectId
+        message: res.message
       });
-      showToast('Sinkronisasi database Firebase berhasil!');
+      showToast('Sinkronisasi database Supabase berhasil!');
     } catch (err) {
-      showToast('Gagal sinkronisasi Firebase: ' + err.message, 'error');
+      showToast('Gagal sinkronisasi Supabase: ' + err.message, 'error');
     } finally {
-      setIsSyncingFirebase(false);
+      setIsSyncingSupabase(false);
     }
   };
 
@@ -296,21 +296,21 @@ export default function AdminSettings() {
             </div>
           </form>
 
-          {/* Firebase Cloud Database & Storage Integration */}
+          {/* Supabase Database & Storage Integration */}
           <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/60">
               <h2 className="text-base font-extrabold text-[#5D3A29] flex items-center gap-2">
                 <Database size={18} className="text-[#8B5742]" />
-                Integrasi Backend Firebase
+                Integrasi Backend Supabase
               </h2>
               <button
                 type="button"
-                onClick={handleSyncFirebase}
-                disabled={isSyncingFirebase}
+                onClick={handleSyncSupabase}
+                disabled={isSyncingSupabase}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5D3A29] hover:bg-[#8B5742] text-white text-xs font-bold transition-all disabled:opacity-50"
               >
-                <RefreshCw size={13} className={isSyncingFirebase ? 'animate-spin' : ''} />
-                {isSyncingFirebase ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
+                <RefreshCw size={13} className={isSyncingSupabase ? 'animate-spin' : ''} />
+                {isSyncingSupabase ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
               </button>
             </div>
 
@@ -318,38 +318,38 @@ export default function AdminSettings() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-stone-700">Status Koneksi:</span>
                 <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 ${
-                  firebaseStatus.status === 'success'
+                  supabaseStatus.status === 'success'
                     ? 'bg-emerald-100 text-emerald-800'
-                    : firebaseStatus.status === 'warning'
+                    : supabaseStatus.status === 'warning'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-rose-100 text-rose-800'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${
-                    firebaseStatus.status === 'success' ? 'bg-emerald-500 animate-pulse' :
-                    firebaseStatus.status === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
+                    supabaseStatus.status === 'success' ? 'bg-emerald-500 animate-pulse' :
+                    supabaseStatus.status === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
                   }`} />
-                  {firebaseStatus.status === 'success' ? 'Firebase Firestore Live' :
-                   firebaseStatus.status === 'warning' ? 'Terkoneksi' : 'Terputus / Periksa .env'}
+                  {supabaseStatus.status === 'success' ? 'Supabase Live & Ready' :
+                   supabaseStatus.status === 'warning' ? 'Terkoneksi (Tabel Belum Siap)' : 'Terputus / Periksa .env'}
                 </span>
               </div>
 
               <div className="text-[11px] text-stone-500 space-y-1">
-                <div><strong>Project ID:</strong> <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-stone-700 font-mono">{firebaseStatus.projectId || 'Belum Dikonfigurasi'}</code></div>
-                <div><strong>Status:</strong> {firebaseStatus.message}</div>
-                <div><strong>Firestore Collections:</strong> <span className="font-mono text-stone-700">products, categories, orders, store_settings, notifications, audit_logs</span></div>
-                <div><strong>Layanan:</strong> <span className="font-mono text-stone-700">Cloud Firestore, Firebase Storage, Firebase Auth (Spark Plan Free)</span></div>
+                <div><strong>Project URL:</strong> <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-stone-700 font-mono">https://wvsyzexwmhyckbemuced.supabase.co</code></div>
+                <div><strong>Status:</strong> {supabaseStatus.message}</div>
+                <div><strong>Tabel Supabase:</strong> <span className="font-mono text-stone-700">orders, products, categories, store_settings, notifications, audit_logs</span></div>
+                <div><strong>Storage Bucket:</strong> <span className="font-mono text-stone-700">freonix-uploads</span></div>
               </div>
 
               <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between">
-                <span className="text-[11px] text-stone-500">Security Rules Firestore:</span>
+                <span className="text-[11px] text-stone-500">Database Schema SQL:</span>
                 <a
-                  href="/firestore.rules"
-                  download="firestore.rules"
+                  href="/SUPABASE_SCHEMA.sql"
+                  download="SUPABASE_SCHEMA.sql"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-300 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 text-xs font-bold transition-all shadow-2xs"
-                  title="Unduh file Firestore Security Rules"
+                  title="Unduh file SQL Migration untuk Supabase SQL Editor"
                 >
                   <Download size={13} className="text-[#8B5742]" />
-                  <span>Download firestore.rules</span>
+                  <span>Download SUPABASE_SCHEMA.sql</span>
                 </a>
               </div>
             </div>

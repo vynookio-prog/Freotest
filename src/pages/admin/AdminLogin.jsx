@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, User, KeyRound, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { loginAdmin } from '../../utils/firebase';
+import { ShieldCheck, User, KeyRound, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { loginAdmin } from '../../utils/supabase';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -9,6 +9,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,13 +23,21 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setError('');
+    setIsLoading(true);
 
-    const res = await loginAdmin(username, password, rememberMe);
-    if (res.success) {
-      navigate('/admin', { replace: true });
-    } else {
-      setError(res.error || 'Username atau password yang Anda masukkan salah.');
+    try {
+      const res = await loginAdmin(username, password, rememberMe);
+      if (res.success) {
+        navigate('/admin', { replace: true });
+      } else {
+        setError(res.error || 'Username atau password yang Anda masukkan salah.');
+      }
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan sistem saat menghubungi Supabase Auth.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,9 +125,17 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3.5 rounded-2xl font-bold uppercase tracking-wider text-xs shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_8px_25px_rgba(139,87,66,0.45)] transition-all active:scale-98"
+              disabled={isLoading}
+              className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] disabled:opacity-60 text-white py-3.5 rounded-2xl font-bold uppercase tracking-wider text-xs shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_8px_25px_rgba(139,87,66,0.45)] transition-all active:scale-98"
             >
-              Masuk ke Dashboard
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Memverifikasi Akun Supabase...</span>
+                </>
+              ) : (
+                <span>Masuk ke Dashboard</span>
+              )}
             </button>
           </form>
 

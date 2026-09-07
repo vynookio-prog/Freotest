@@ -19,7 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useDb } from '../../utils/useDb';
-import { logoutAdmin } from '../../utils/firebase';
+import { logoutAdmin } from '../../utils/supabase';
 
 export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

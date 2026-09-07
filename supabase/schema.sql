@@ -116,77 +116,76 @@ ALTER TABLE public.orders REPLICA IDENTITY FULL;
 ALTER TABLE public.products REPLICA IDENTITY FULL;
 ALTER TABLE public.categories REPLICA IDENTITY FULL;
 
--- Policy Categories
+-- Policy Categories: Publik dapat melihat menu, hanya Admin (authenticated) yang dapat mengubah
 DROP POLICY IF EXISTS "Allow public read categories" ON public.categories;
 CREATE POLICY "Allow public read categories" ON public.categories FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Allow authenticated manage categories" ON public.categories;
 DROP POLICY IF EXISTS "Allow public insert categories" ON public.categories;
-CREATE POLICY "Allow public insert categories" ON public.categories FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public update categories" ON public.categories;
-CREATE POLICY "Allow public update categories" ON public.categories FOR UPDATE USING (true) WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public delete categories" ON public.categories;
-CREATE POLICY "Allow public delete categories" ON public.categories FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated insert categories" ON public.categories FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated update categories" ON public.categories FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated delete categories" ON public.categories FOR DELETE TO authenticated USING (true);
 
--- Policy Products
+-- Policy Products: Publik dapat melihat menu produk, hanya Admin yang dapat mengubah/menghapus
 DROP POLICY IF EXISTS "Allow public read products" ON public.products;
 CREATE POLICY "Allow public read products" ON public.products FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Allow authenticated manage products" ON public.products;
 DROP POLICY IF EXISTS "Allow public insert products" ON public.products;
-CREATE POLICY "Allow public insert products" ON public.products FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public update products" ON public.products;
-CREATE POLICY "Allow public update products" ON public.products FOR UPDATE USING (true) WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public delete products" ON public.products;
-CREATE POLICY "Allow public delete products" ON public.products FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated insert products" ON public.products FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated update products" ON public.products FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated delete products" ON public.products FOR DELETE TO authenticated USING (true);
 
--- Policy Orders
+-- Policy Orders: Pelanggan (anon/publik) dapat checkout INSERT pesanan.
+-- Hanya Admin (authenticated) yang memiliki akses SELECT, UPDATE status, dan DELETE pesanan.
 DROP POLICY IF EXISTS "Allow public read orders" ON public.orders;
-CREATE POLICY "Allow public read orders" ON public.orders FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Allow public insert orders" ON public.orders;
-CREATE POLICY "Allow public insert orders" ON public.orders FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public update orders" ON public.orders;
-CREATE POLICY "Allow public update orders" ON public.orders FOR UPDATE USING (true) WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public delete orders" ON public.orders;
-CREATE POLICY "Allow public delete orders" ON public.orders FOR DELETE USING (true);
+DROP POLICY IF EXISTS "Allow customer insert orders" ON public.orders;
+DROP POLICY IF EXISTS "Allow admin read orders" ON public.orders;
+DROP POLICY IF EXISTS "Allow admin update orders" ON public.orders;
+DROP POLICY IF EXISTS "Allow admin delete orders" ON public.orders;
 
--- Policy Store Settings
+-- 1. Pelanggan dapat membuat pesanan baru
+CREATE POLICY "Allow customer insert orders" ON public.orders FOR INSERT WITH CHECK (true);
+
+-- 2. Admin yang login dapat melihat, mengupdate status, dan menghapus pesanan
+CREATE POLICY "Allow admin read orders" ON public.orders FOR SELECT TO authenticated USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow admin update orders" ON public.orders FOR UPDATE TO authenticated USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Allow admin delete orders" ON public.orders FOR DELETE TO authenticated USING (auth.role() = 'authenticated');
+
+-- Policy Store Settings: Publik dapat membaca pengaturan toko, hanya Admin yang dapat mengubah
 DROP POLICY IF EXISTS "Allow public read store_settings" ON public.store_settings;
 CREATE POLICY "Allow public read store_settings" ON public.store_settings FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow public insert store_settings" ON public.store_settings;
-CREATE POLICY "Allow public insert store_settings" ON public.store_settings FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public update store_settings" ON public.store_settings;
-CREATE POLICY "Allow public update store_settings" ON public.store_settings FOR UPDATE USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow authenticated manage store_settings" ON public.store_settings;
+CREATE POLICY "Allow authenticated insert store_settings" ON public.store_settings FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated update store_settings" ON public.store_settings FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
--- Policy Notifications
+-- Policy Notifications: Admin authenticated dapat membaca dan mengelola notifikasi
 DROP POLICY IF EXISTS "Allow public read notifications" ON public.notifications;
-CREATE POLICY "Allow public read notifications" ON public.notifications FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Allow public insert notifications" ON public.notifications;
-CREATE POLICY "Allow public insert notifications" ON public.notifications FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public update notifications" ON public.notifications;
-CREATE POLICY "Allow public update notifications" ON public.notifications FOR UPDATE USING (true) WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public delete notifications" ON public.notifications;
-CREATE POLICY "Allow public delete notifications" ON public.notifications FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated read notifications" ON public.notifications FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow insert notifications" ON public.notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow authenticated update notifications" ON public.notifications FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated delete notifications" ON public.notifications FOR DELETE TO authenticated USING (true);
 
--- Policy Audit Logs
+-- Policy Audit Logs: Hanya Admin yang dapat membaca log audit
 DROP POLICY IF EXISTS "Allow public read audit_logs" ON public.audit_logs;
-CREATE POLICY "Allow public read audit_logs" ON public.audit_logs FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Allow public insert audit_logs" ON public.audit_logs;
-CREATE POLICY "Allow public insert audit_logs" ON public.audit_logs FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Allow public delete audit_logs" ON public.audit_logs;
-CREATE POLICY "Allow public delete audit_logs" ON public.audit_logs FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated read audit_logs" ON public.audit_logs FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow insert audit_logs" ON public.audit_logs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow authenticated delete audit_logs" ON public.audit_logs FOR DELETE TO authenticated USING (true);
 
 -- ==============================================================================
 -- REALTIME REPLICATION SETUP
@@ -342,3 +341,16 @@ ON CONFLICT (id) DO UPDATE SET
     tools = EXCLUDED.tools,
     nutrition = EXCLUDED.nutrition;
 
+-- ==============================================================================
+-- AKTIVASI & KONFIRMASI OTOMATIS EMAIL ADMIN (auth.users)
+-- ==============================================================================
+-- Jika user admin@freonix.com sudah terdaftar di Supabase Auth,
+-- pastikan email langsung terverifikasi tanpa menunggu klik link konfirmasi.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
+    UPDATE auth.users
+    SET email_confirmed_at = now()
+    WHERE email = 'admin@freonix.com';
+  END IF;
+END $$;

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo } from 'react';
 import { 
   PlusCircle, 
@@ -8,10 +10,9 @@ import {
   AlertCircle,
   Package
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
-import { useDb } from '../../utils/useDb';
+import { useDb } from '../../../lib/useDb';
 
-export default function AdminCategories() {
+export default function AdminCategoriesPage() {
   const db = useDb();
   const categories = useMemo(() => db.getCategories(), [db]);
   const products = useMemo(() => db.getProducts(), [db]);
@@ -50,7 +51,7 @@ export default function AdminCategories() {
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
@@ -61,14 +62,14 @@ export default function AdminCategories() {
 
     try {
       if (editingCategory) {
-        db.updateCategory(editingCategory.id, {
+        await db.updateCategory(editingCategory.id, {
           name: formData.name.trim(),
           slug: formData.slug.trim() || formData.name.toLowerCase().replace(/\s+/g, '-'),
           description: formData.description.trim(),
           status: formData.status
         });
       } else {
-        db.addCategory({
+        await db.addCategory({
           name: formData.name.trim(),
           slug: formData.slug.trim() || formData.name.toLowerCase().replace(/\s+/g, '-'),
           description: formData.description.trim(),
@@ -81,7 +82,7 @@ export default function AdminCategories() {
     }
   };
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     // Integrity check
     const inUse = products.some(p => p.categoryId === id);
     if (inUse) {
@@ -91,7 +92,7 @@ export default function AdminCategories() {
 
     if (window.confirm(`Hapus kategori "${name}"?`)) {
       try {
-        db.deleteCategory(id);
+        await db.deleteCategory(id);
       } catch (err) {
         alert(err.message || 'Gagal menghapus kategori.');
       }
@@ -99,95 +100,93 @@ export default function AdminCategories() {
   };
 
   return (
-    <AdminLayout title="Manajemen Kategori">
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-black text-[#5D3A29]">Kategori Menu</h2>
-            <p className="text-xs text-stone-500 mt-0.5">
-              Atur pengelompokan menu kuliner yang tampil pada filter katalog website.
-            </p>
-          </div>
-
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_8px_25px_rgba(139,87,66,0.45)] transition-all active:scale-95"
-          >
-            <PlusCircle size={16} /> Tambah Kategori
-          </button>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-[#5D3A29]">Kategori Menu</h2>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Atur pengelompokan menu kuliner yang tampil pada filter katalog website.
+          </p>
         </div>
 
-        {/* Categories Table Card */}
-        <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white/90 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-stone-200/60 bg-stone-100/40 text-stone-400 font-bold uppercase text-[10px] tracking-wider">
-                  <th className="py-3.5 px-5">Nama Kategori</th>
-                  <th className="py-3.5 px-4">Slug</th>
-                  <th className="py-3.5 px-4">Deskripsi</th>
-                  <th className="py-3.5 px-4">Jumlah Produk</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-5 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-200/50">
-                {categories.map((cat) => {
-                  const productCount = products.filter(p => p.categoryId === cat.id).length;
+        <button
+          onClick={openAddModal}
+          className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_8px_25px_rgba(139,87,66,0.45)] transition-all active:scale-95 cursor-pointer"
+        >
+          <PlusCircle size={16} /> Tambah Kategori
+        </button>
+      </div>
 
-                  return (
-                    <tr key={cat.id} className="hover:bg-white/60 transition-colors">
-                      <td className="py-4 px-5 font-bold text-[#5D3A29]">
-                        <div className="flex items-center gap-2">
-                          <Layers size={15} className="text-[#8B5742]" />
-                          <span className="text-sm font-black">{cat.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 font-mono text-stone-500 text-[11px]">
-                        {cat.slug}
-                      </td>
-                      <td className="py-4 px-4 text-stone-600 max-w-sm truncate">
-                        {cat.description || '-'}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 font-bold text-[10px]">
-                          <Package size={11} /> {productCount} produk
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                          cat.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-stone-200 text-stone-600'
-                        }`}>
-                          {cat.status === 'active' ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => openEditModal(cat)}
-                            className="p-2 rounded-xl bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80 shadow-2xs transition-all"
-                            title="Edit Kategori"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(cat.id, cat.name)}
-                            className="p-2 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-stone-200/80 shadow-2xs transition-all"
-                            title="Hapus Kategori"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      {/* Categories Table Card */}
+      <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white/90 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-stone-200/60 bg-stone-100/40 text-stone-400 font-bold uppercase text-[10px] tracking-wider">
+                <th className="py-3.5 px-5">Nama Kategori</th>
+                <th className="py-3.5 px-4">Slug</th>
+                <th className="py-3.5 px-4">Deskripsi</th>
+                <th className="py-3.5 px-4">Jumlah Produk</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-5 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-200/50">
+              {categories.map((cat) => {
+                const productCount = products.filter(p => p.categoryId === cat.id).length;
+
+                return (
+                  <tr key={cat.id} className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-5 font-bold text-[#5D3A29]">
+                      <div className="flex items-center gap-2">
+                        <Layers size={15} className="text-[#8B5742]" />
+                        <span className="text-sm font-black">{cat.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 font-mono text-stone-500 text-[11px]">
+                      {cat.slug}
+                    </td>
+                    <td className="py-4 px-4 text-stone-600 max-w-sm truncate">
+                      {cat.description || '-'}
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 font-bold text-[10px]">
+                        <Package size={11} /> {productCount} produk
+                      </span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                        cat.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-stone-200 text-stone-600'
+                      }`}>
+                        {cat.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEditModal(cat)}
+                          className="p-2 rounded-xl bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80 shadow-2xs transition-all cursor-pointer"
+                          title="Edit Kategori"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cat.id, cat.name)}
+                          className="p-2 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-stone-200/80 shadow-2xs transition-all cursor-pointer"
+                          title="Hapus Kategori"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -207,7 +206,7 @@ export default function AdminCategories() {
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-stone-100 text-stone-500"
+                className="p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -271,13 +270,13 @@ export default function AdminCategories() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold"
+                  className="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white font-bold shadow-sm active:scale-95"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white font-bold shadow-sm active:scale-95 cursor-pointer"
                 >
                   {editingCategory ? 'Simpan Perubahan' : 'Buat Kategori'}
                 </button>
@@ -286,6 +285,6 @@ export default function AdminCategories() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }

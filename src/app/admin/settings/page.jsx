@@ -1,38 +1,33 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Store, 
-  Phone, 
-  Calendar, 
-  Sliders, 
   Save, 
-  RotateCcw, 
+  Sliders, 
   Download, 
   Upload, 
-  Trash2, 
   ShieldAlert, 
-  CheckCircle2, 
   Sparkles, 
   Activity, 
-  FileText,
   AlertTriangle,
   Database,
   RefreshCw
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
-import { useDb } from '../../utils/useDb';
-import { checkSupabaseHealth } from '../../utils/supabase';
+import { useDb } from '../../../lib/useDb';
+import { checkInsforgeHealth } from '../../../lib/insforge';
 
-export default function AdminSettings() {
+export default function AdminSettingsPage() {
   const db = useDb();
   const currentSettings = db.getSettings() || {};
   const auditLogs = db.getAuditLogs() || [];
 
   const [formData, setFormData] = useState({
-    storeName: currentSettings.storeName || 'FREONIX - Kokurikuler Filipina',
+    storeName: currentSettings.storeName || 'FREONIX XII-F1',
     storeStatus: currentSettings.storeStatus || 'open',
     eventDate: currentSettings.eventDate || '2026-09-23',
-    whatsappAdmin: currentSettings.whatsappAdmin || '6287856624994',
+    whatsappAdmin: currentSettings.adminPhone || currentSettings.whatsappAdmin || '6287856624994',
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
     orderPrefix: currentSettings.orderPrefix || 'FRX'
   });
@@ -40,18 +35,18 @@ export default function AdminSettings() {
   const [toast, setToast] = useState(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [supabaseStatus, setSupabaseStatus] = useState({
+  const [insforgeStatus, setInsforgeStatus] = useState({
     connected: false,
     loading: true,
-    message: 'Memeriksa status koneksi Supabase...'
+    message: 'Memeriksa status koneksi InsForge...'
   });
-  const [isSyncingSupabase, setIsSyncingSupabase] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    checkSupabaseHealth().then(res => {
+    checkInsforgeHealth().then(res => {
       if (isMounted) {
-        setSupabaseStatus({
+        setInsforgeStatus({
           connected: res.connected,
           schemaReady: res.schemaReady,
           status: res.status,
@@ -63,23 +58,23 @@ export default function AdminSettings() {
     return () => { isMounted = false; };
   }, []);
 
-  const handleSyncSupabase = async () => {
-    setIsSyncingSupabase(true);
+  const handleSyncInsforge = async () => {
+    setIsSyncing(true);
     try {
       await db.syncNow();
-      const res = await checkSupabaseHealth();
-      setSupabaseStatus({
+      const res = await checkInsforgeHealth();
+      setInsforgeStatus({
         connected: res.connected,
         schemaReady: res.schemaReady,
         status: res.status,
         loading: false,
         message: res.message
       });
-      showToast('Sinkronisasi database Supabase berhasil!');
+      showToast('Sinkronisasi database InsForge berhasil!');
     } catch (err) {
-      showToast('Gagal sinkronisasi Supabase: ' + err.message, 'error');
+      showToast('Gagal sinkronisasi InsForge: ' + err.message, 'error');
     } finally {
-      setIsSyncingSupabase(false);
+      setIsSyncing(false);
     }
   };
 
@@ -96,10 +91,17 @@ export default function AdminSettings() {
     }));
   };
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
-    db.updateSettings(formData);
-    showToast('Pengaturan toko berhasil disimpan!');
+    try {
+      await db.updateSettings({
+        ...formData,
+        adminPhone: formData.whatsappAdmin
+      });
+      showToast('Pengaturan toko berhasil disimpan!');
+    } catch (err) {
+      showToast('Gagal menyimpan: ' + err.message, 'error');
+    }
   };
 
   // Export JSON Backup
@@ -153,11 +155,11 @@ export default function AdminSettings() {
     db.resetToInitial();
     setResetConfirmOpen(false);
     setConfirmText('');
-    showToast('Database berhasil direset ke pengaturan demo default!');
+    showToast('Database berhasil direset ke pengaturan default!');
   };
 
   return (
-    <AdminLayout title="Pengaturan Sistem">
+    <div className="space-y-6 animate-fade-in">
       {/* Toast Alert */}
       {toast && (
         <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 animate-slide-up ${
@@ -171,14 +173,14 @@ export default function AdminSettings() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#5D3A29] flex items-center gap-2.5">
             <Settings size={26} className="text-[#8B5742]" />
             Pengaturan & Konfigurasi Toko
           </h1>
           <p className="text-xs text-stone-500 mt-1">
-            Kelola identitas stan, nomor WhatsApp operasional, kuota stok, dan pemeliharaan database.
+            Kelola identitas stan, nomor WhatsApp operasional, kuota stok, dan pemeliharaan database InsForge.
           </p>
         </div>
       </div>
@@ -206,7 +208,7 @@ export default function AdminSettings() {
                 <button
                   type="button"
                   onClick={() => setFormData(p => ({ ...p, storeStatus: 'open' }))}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     formData.storeStatus === 'open'
                       ? 'bg-green-600 text-white shadow-sm'
                       : 'bg-white text-stone-600 hover:bg-stone-100'
@@ -217,7 +219,7 @@ export default function AdminSettings() {
                 <button
                   type="button"
                   onClick={() => setFormData(p => ({ ...p, storeStatus: 'closed' }))}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     formData.storeStatus === 'closed'
                       ? 'bg-rose-600 text-white shadow-sm'
                       : 'bg-white text-stone-600 hover:bg-stone-100'
@@ -288,7 +290,7 @@ export default function AdminSettings() {
             <div className="pt-3 border-t border-stone-200 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white text-xs font-extrabold hover:shadow-lg transition-all active:scale-95"
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white text-xs font-extrabold hover:shadow-lg transition-all active:scale-95 cursor-pointer"
               >
                 <Save size={15} />
                 Simpan Perubahan
@@ -296,21 +298,21 @@ export default function AdminSettings() {
             </div>
           </form>
 
-          {/* Supabase Database & Storage Integration */}
+          {/* InsForge Database & Storage Integration */}
           <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/60">
               <h2 className="text-base font-extrabold text-[#5D3A29] flex items-center gap-2">
                 <Database size={18} className="text-[#8B5742]" />
-                Integrasi Backend Supabase
+                Integrasi Backend InsForge BaaS
               </h2>
               <button
                 type="button"
-                onClick={handleSyncSupabase}
-                disabled={isSyncingSupabase}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5D3A29] hover:bg-[#8B5742] text-white text-xs font-bold transition-all disabled:opacity-50"
+                onClick={handleSyncInsforge}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5D3A29] hover:bg-[#8B5742] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
               >
-                <RefreshCw size={13} className={isSyncingSupabase ? 'animate-spin' : ''} />
-                {isSyncingSupabase ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
+                <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
+                {isSyncing ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
               </button>
             </div>
 
@@ -318,38 +320,38 @@ export default function AdminSettings() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-stone-700">Status Koneksi:</span>
                 <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 ${
-                  supabaseStatus.status === 'success'
+                  insforgeStatus.status === 'success'
                     ? 'bg-emerald-100 text-emerald-800'
-                    : supabaseStatus.status === 'warning'
+                    : insforgeStatus.status === 'warning'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-rose-100 text-rose-800'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${
-                    supabaseStatus.status === 'success' ? 'bg-emerald-500 animate-pulse' :
-                    supabaseStatus.status === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
+                    insforgeStatus.status === 'success' ? 'bg-emerald-500 animate-pulse' :
+                    insforgeStatus.status === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
                   }`} />
-                  {supabaseStatus.status === 'success' ? 'Supabase Live & Ready' :
-                   supabaseStatus.status === 'warning' ? 'Terkoneksi (Tabel Belum Siap)' : 'Terputus / Periksa .env'}
+                  {insforgeStatus.status === 'success' ? 'InsForge BaaS Live & Ready' :
+                   insforgeStatus.status === 'warning' ? 'Terkoneksi' : 'Terputus / Periksa .env'}
                 </span>
               </div>
 
               <div className="text-[11px] text-stone-500 space-y-1">
-                <div><strong>Project URL:</strong> <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-stone-700 font-mono">https://wvsyzexwmhyckbemuced.supabase.co</code></div>
-                <div><strong>Status:</strong> {supabaseStatus.message}</div>
-                <div><strong>Tabel Supabase:</strong> <span className="font-mono text-stone-700">orders, products, categories, store_settings, notifications, audit_logs</span></div>
+                <div><strong>Project URL:</strong> <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-stone-700 font-mono">https://ie8b79we.ap-southeast.insforge.app</code></div>
+                <div><strong>Status:</strong> {insforgeStatus.message}</div>
+                <div><strong>Tabel InsForge:</strong> <span className="font-mono text-stone-700">orders, products, categories, store_settings, notifications, audit_logs</span></div>
                 <div><strong>Storage Bucket:</strong> <span className="font-mono text-stone-700">freonix-uploads</span></div>
               </div>
 
               <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between">
                 <span className="text-[11px] text-stone-500">Database Schema SQL:</span>
                 <a
-                  href="/SUPABASE_SCHEMA.sql"
-                  download="SUPABASE_SCHEMA.sql"
+                  href="/INSFORGE_SCHEMA.sql"
+                  download="INSFORGE_SCHEMA.sql"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-300 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 text-xs font-bold transition-all shadow-2xs"
-                  title="Unduh file SQL Migration untuk Supabase SQL Editor"
+                  title="Unduh file SQL Migration untuk InsForge PostgreSQL"
                 >
                   <Download size={13} className="text-[#8B5742]" />
-                  <span>Download SUPABASE_SCHEMA.sql</span>
+                  <span>Download INSFORGE_SCHEMA.sql</span>
                 </a>
               </div>
             </div>
@@ -372,7 +374,7 @@ export default function AdminSettings() {
                 <button
                   type="button"
                   onClick={handleExportBackup}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-100 text-xs font-bold transition-all shadow-xs"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-100 text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
                   <Download size={14} className="text-[#8B5742]" />
                   Download Backup JSON
@@ -412,7 +414,7 @@ export default function AdminSettings() {
                 <button
                   type="button"
                   onClick={() => setResetConfirmOpen(true)}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold hover:bg-rose-700 transition-all shadow-xs shrink-0"
+                  className="px-4 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold hover:bg-rose-700 transition-all shadow-xs shrink-0 cursor-pointer"
                 >
                   Reset Database
                 </button>
@@ -460,7 +462,7 @@ export default function AdminSettings() {
               Konfirmasi Reset Database
             </h3>
             <p className="text-center text-xs text-stone-600 mb-4">
-              Apakah Anda yakin ingin menghapus seluruh transaksi, produk kustom, dan mengembalikan data demo default? Tindakan ini <strong>tidak dapat dibatalkan</strong>!
+              Apakah Anda yakin ingin menghapus seluruh transaksi, produk kustom, dan mengembalikan data default awal? Tindakan ini <strong>tidak dapat dibatalkan</strong>!
             </p>
             <div className="mb-4">
               <label className="block text-[11px] font-bold text-stone-600 mb-1 text-center">
@@ -478,7 +480,7 @@ export default function AdminSettings() {
               <button
                 type="button"
                 onClick={() => { setResetConfirmOpen(false); setConfirmText(''); }}
-                className="flex-1 py-2.5 rounded-2xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50"
+                className="flex-1 py-2.5 rounded-2xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50 cursor-pointer"
               >
                 Batal
               </button>
@@ -486,7 +488,7 @@ export default function AdminSettings() {
                 type="button"
                 onClick={handleResetDatabase}
                 disabled={confirmText !== 'RESET'}
-                className="flex-1 py-2.5 rounded-2xl bg-rose-600 disabled:opacity-40 text-white text-xs font-bold hover:bg-rose-700 shadow-md transition-all"
+                className="flex-1 py-2.5 rounded-2xl bg-rose-600 disabled:opacity-40 text-white text-xs font-bold hover:bg-rose-700 shadow-md transition-all cursor-pointer"
               >
                 Reset Sekarang
               </button>
@@ -494,6 +496,6 @@ export default function AdminSettings() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }

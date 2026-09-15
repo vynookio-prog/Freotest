@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Lock } from 'lucide-react';
 
 export default function Footer() {
@@ -48,7 +48,7 @@ export default function Footer() {
         </div>
         <div>
           <Link 
-            to="/admin" 
+            href="/admin" 
             className="inline-flex items-center gap-1.5 text-stone-400 hover:text-[#8B5742] transition-colors py-1 px-2 rounded-lg hover:bg-white/60"
           >
             <Lock size={12} /> Portal Admin

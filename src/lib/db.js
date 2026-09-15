@@ -1,7 +1,7 @@
-// src/utils/db.js
-// FREONIX Unified Database with Supabase as Primary Backend
+// src/lib/db.js
+// FREONIX Unified Database Adapter with InsForge as Primary BaaS Backend
 
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { insforge, isInsforgeConfigured } from './insforge.js';
 
 const DB_KEY = 'freonix_database_v3';
 
@@ -165,7 +165,7 @@ export const INITIAL_DB = {
   auditLogs: []
 };
 
-// --- DATA MAPPERS (Supabase snake_case <-> Application camelCase) ---
+// --- DATA MAPPERS (InsForge snake_case <-> Application camelCase) ---
 
 function mapCategoryFromDb(row) {
   return {
@@ -381,7 +381,7 @@ function loadLocalDb() {
       settings: { ...INITIAL_DB.settings, ...(parsed.settings || {}) },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
       products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : INITIAL_DB.products,
-      orders: [], // Pesanan selalu dimuat langsung dari Supabase, bukan dari localStorage
+      orders: [],
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
     };
@@ -397,8 +397,6 @@ function saveLocalDb(data) {
   cachedDb = data;
   try {
     if (typeof localStorage !== 'undefined') {
-      // Hanya cache pengaturan, kategori, dan produk untuk performa UI offline.
-      // JANGAN menyimpan data pesanan (orders) ke localStorage agar tidak terjadi bias antar-browser.
       const persistentData = {
         settings: data.settings,
         categories: data.categories,
@@ -415,15 +413,17 @@ function saveLocalDb(data) {
 }
 
 // Inisialisasi awal
-loadLocalDb();
+if (typeof window !== 'undefined') {
+  loadLocalDb();
+}
 
-// --- SUPABASE DATA SYNCHRONIZATION ---
+// --- INSFORGE DATA SYNCHRONIZATION ---
 
 let lastCatalogFetchTime = 0;
 const CATALOG_CACHE_TTL = 30000; // 30 seconds debounce
 
-async function fetchCatalog(force = false) {
-  if (!isSupabaseConfigured) return;
+export async function fetchCatalog(force = false) {
+  if (!isInsforgeConfigured) return;
   const now = Date.now();
   if (!force && now - lastCatalogFetchTime < CATALOG_CACHE_TTL) {
     return;
@@ -434,11 +434,11 @@ async function fetchCatalog(force = false) {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    // Fetch Store Settings, Categories, and Products concurrently in a single roundtrip
+    // Fetch Store Settings, Categories, and Products concurrently in parallel
     const [settingsRes, catRes, prodRes] = await Promise.all([
-      supabase.from('store_settings').select('*').eq('id', 'default').maybeSingle(),
-      supabase.from('categories').select('*').order('created_at', { ascending: true }),
-      supabase.from('products').select('*').order('created_at', { ascending: true })
+      insforge.database.from('store_settings').select('*').eq('id', 'default').maybeSingle(),
+      insforge.database.from('categories').select('*').order('created_at', { ascending: true }),
+      insforge.database.from('products').select('*').order('created_at', { ascending: true })
     ]);
 
     if (!settingsRes.error && settingsRes.data) {
@@ -466,7 +466,7 @@ async function fetchCatalog(force = false) {
       saveLocalDb(data);
     }
   } catch (err) {
-    console.warn('Sync catalog with Supabase notice:', err.message);
+    console.warn('Sync catalog with InsForge notice:', err.message);
     syncStatus = {
       lastSync: new Date().toISOString(),
       connected: false,
@@ -475,18 +475,17 @@ async function fetchCatalog(force = false) {
   }
 }
 
-async function fetchAdminData() {
-  if (!isSupabaseConfigured) return;
+export async function fetchAdminData() {
+  if (!isInsforgeConfigured) return;
 
   try {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    // Fetch Orders, Notifications, and Audit Logs concurrently in parallel
     const [ordersRes, notifRes, logsRes] = await Promise.all([
-      supabase.from('orders').select('*').order('created_at', { ascending: false }),
-      supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30),
-      supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50)
+      insforge.database.from('orders').select('*').order('created_at', { ascending: false }),
+      insforge.database.from('notifications').select('*').order('created_at', { ascending: false }).limit(30),
+      insforge.database.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50)
     ]);
 
     if (!ordersRes.error && Array.isArray(ordersRes.data)) {
@@ -508,19 +507,17 @@ async function fetchAdminData() {
       saveLocalDb(data);
     }
   } catch (err) {
-    console.warn('Sync admin data with Supabase notice:', err.message);
+    console.warn('Sync admin data with InsForge notice:', err.message);
   }
 }
 
-async function fetchFromSupabase() {
-  if (!isSupabaseConfigured || isSyncing) return;
+export async function fetchFromInsforge() {
+  if (!isInsforgeConfigured || isSyncing) return;
   isSyncing = true;
 
   try {
-    // 1. Always sync public catalog
     await fetchCatalog();
 
-    // 2. Only sync admin data if an admin session is active
     const isAdmin = typeof window !== 'undefined' && (
       sessionStorage.getItem('freonix_admin_auth') === 'true' ||
       localStorage.getItem('freonix_admin_auth') === 'true'
@@ -534,119 +531,9 @@ async function fetchFromSupabase() {
   }
 }
 
-// --- SETUP SUPABASE REALTIME SUBSCRIPTIONS ---
-let publicRealtimeChannel = null;
-let adminRealtimeChannel = null;
-
-function setupRealtime() {
-  if (!isSupabaseConfigured || typeof window === 'undefined' || publicRealtimeChannel) return;
-
-  try {
-    // Public channel: only subscribe to store_settings, categories, and products
-    publicRealtimeChannel = supabase
-      .channel('freonix_public_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
-        if (payload.new && payload.new.id === 'default') {
-          const data = loadLocalDb();
-          data.settings = { ...data.settings, ...mapSettingsFromDb(payload.new) };
-          saveLocalDb(data);
-        }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, payload => {
-        const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapCategoryFromDb(payload.new);
-          if (!data.categories.some(c => c.id === item.id)) {
-            data.categories.push(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapCategoryFromDb(payload.new);
-          data.categories = data.categories.map(c => c.id === item.id ? item : c);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.categories = data.categories.filter(c => c.id !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
-        const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapProductFromDb(payload.new);
-          if (!data.products.some(p => p.id === item.id)) {
-            data.products.push(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapProductFromDb(payload.new);
-          data.products = data.products.map(p => p.id === item.id ? item : p);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.products = data.products.filter(p => p.id !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      .subscribe();
-  } catch (err) {
-    console.warn('Public realtime subscription notice:', err.message);
-  }
-}
-
-export function setupAdminRealtime() {
-  if (!isSupabaseConfigured || typeof window === 'undefined' || adminRealtimeChannel) return () => {};
-
-  try {
-    adminRealtimeChannel = supabase
-      .channel('freonix_admin_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-        const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapOrderFromDb(payload.new);
-          if (!data.orders.some(o => o.orderId === item.orderId)) {
-            data.orders.unshift(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapOrderFromDb(payload.new);
-          data.orders = data.orders.map(o => o.orderId === item.orderId ? item : o);
-          saveLocalDb(data);
-        } else if (payload.eventType === 'DELETE') {
-          data.orders = data.orders.filter(o => o.orderId !== payload.old.id);
-          saveLocalDb(data);
-        }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, payload => {
-        const data = loadLocalDb();
-        if (payload.eventType === 'INSERT') {
-          const item = mapNotificationFromDb(payload.new);
-          if (!data.notifications.some(n => n.id === item.id)) {
-            data.notifications.unshift(item);
-            saveLocalDb(data);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const item = mapNotificationFromDb(payload.new);
-          data.notifications = data.notifications.map(n => n.id === item.id ? item : n);
-          saveLocalDb(data);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      if (adminRealtimeChannel) {
-        supabase.removeChannel(adminRealtimeChannel);
-        adminRealtimeChannel = null;
-      }
-    };
-  } catch (err) {
-    console.warn('Admin realtime subscription notice:', err.message);
-    return () => {};
-  }
-}
-
-// Mulai sinkronisasi katalog dan realtime jika di browser
+// Mulai sinkronisasi awal di browser
 if (typeof window !== 'undefined') {
-  fetchFromSupabase();
-  setupRealtime();
+  fetchFromInsforge();
 }
 
 // --- DB INTERFACE EXPORT ---
@@ -660,7 +547,7 @@ export const db = {
     return syncStatus;
   },
   async syncNow() {
-    await fetchFromSupabase();
+    await fetchFromInsforge();
     return syncStatus;
   },
   resetToInitial() {
@@ -672,23 +559,6 @@ export const db = {
       }
     } catch (e) {}
 
-    // Reset ke Supabase secara async jika tabel sudah dibuat
-    if (isSupabaseConfigured) {
-      (async () => {
-        try {
-          await supabase.from('store_settings').upsert(mapSettingsToDb(fresh.settings));
-          for (const cat of fresh.categories) {
-            await supabase.from('categories').upsert(mapCategoryToDb(cat));
-          }
-          for (const prod of fresh.products) {
-            await supabase.from('products').upsert(mapProductToDb(prod));
-          }
-        } catch (e) {
-          console.warn('Gagal sinkron reset ke Supabase:', e);
-        }
-      })();
-    }
-
     this.addAuditLog('RESET_DATABASE', 'Database direset ke kondisi awal dengan menu standar');
     return fresh;
   },
@@ -697,20 +567,19 @@ export const db = {
   getSettings() {
     return loadLocalDb().settings;
   },
-  updateSettings(newSettings) {
+  async updateSettings(newSettings) {
     const data = loadLocalDb();
     data.settings = { ...data.settings, ...newSettings, updatedAt: new Date().toISOString() };
     saveLocalDb(data);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('store_settings')
-        .upsert(mapSettingsToDb(data.settings))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateSettings warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateSettings err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        const payload = mapSettingsToDb(data.settings);
+        // Note: InsForge inserts/upserts require array
+        await insforge.database.from('store_settings').update(payload).eq('id', 'default');
+      } catch (err) {
+        console.warn('InsForge updateSettings err:', err);
+      }
     }
 
     this.addAuditLog('UPDATE_SETTINGS', 'Memperbarui pengaturan sistem toko');
@@ -727,7 +596,7 @@ export const db = {
   getCategoryById(id) {
     return loadLocalDb().categories.find(c => c.id === id || c.slug === id);
   },
-  createCategory(cat) {
+  async createCategory(cat) {
     const data = loadLocalDb();
     const slug = (cat.slug || cat.name).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const newCat = {
@@ -742,24 +611,21 @@ export const db = {
     data.categories.push(newCat);
     saveLocalDb(data);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('categories')
-        .upsert(mapCategoryToDb(newCat))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase createCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase createCategory err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database.from('categories').insert([mapCategoryToDb(newCat)]);
+      } catch (err) {
+        console.warn('InsForge createCategory err:', err);
+      }
     }
 
     this.addAuditLog('CREATE_CATEGORY', `Membuat kategori: ${newCat.name}`);
     return newCat;
   },
-  addCategory(cat) {
+  async addCategory(cat) {
     return this.createCategory(cat);
   },
-  updateCategory(id, updates) {
+  async updateCategory(id, updates) {
     const data = loadLocalDb();
     data.categories = data.categories.map(c => {
       if (c.id === id || c.slug === id) {
@@ -780,22 +646,18 @@ export const db = {
     saveLocalDb(data);
     const updated = data.categories.find(c => c.id === id);
 
-    // Kirim ke Supabase
-    if (isSupabaseConfigured && updated) {
-      supabase
-        .from('categories')
-        .update(mapCategoryToDb(updated))
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateCategory err:', err));
+    if (isInsforgeConfigured && updated) {
+      try {
+        await insforge.database.from('categories').update(mapCategoryToDb(updated)).eq('id', id);
+      } catch (err) {
+        console.warn('InsForge updateCategory err:', err);
+      }
     }
 
     this.addAuditLog('UPDATE_CATEGORY', `Memperbarui kategori ID ${id}`);
     return updated;
   },
-  deleteCategory(id) {
+  async deleteCategory(id) {
     const data = loadLocalDb();
     const inUse = data.products.some(p => p.categoryId === id);
     if (inUse) {
@@ -805,16 +667,12 @@ export const db = {
     data.categories = data.categories.filter(c => c.id !== id);
     saveLocalDb(data);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('categories')
-        .delete()
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase deleteCategory warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase deleteCategory err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database.from('categories').delete().eq('id', id);
+      } catch (err) {
+        console.warn('InsForge deleteCategory err:', err);
+      }
     }
 
     this.addAuditLog('DELETE_CATEGORY', `Menghapus kategori: ${cat?.name || id}`);
@@ -838,7 +696,7 @@ export const db = {
       (id === '3' && (p.id === 'halo-halo' || p.slug === 'halo-halo'))
     );
   },
-  createProduct(prod) {
+  async createProduct(prod) {
     const data = loadLocalDb();
     const slug = (prod.slug || prod.name).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     
@@ -874,24 +732,21 @@ export const db = {
     data.products.push(newProd);
     saveLocalDb(data);
 
-    // Simpan ke Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('products')
-        .upsert(mapProductToDb(newProd))
-        .then(({ error }) => {
-          if (error) console.warn('Supabase createProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase createProduct err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database.from('products').insert([mapProductToDb(newProd)]);
+      } catch (err) {
+        console.warn('InsForge createProduct err:', err);
+      }
     }
 
     this.addAuditLog('ADD_PRODUCT', `Menambahkan produk baru: ${newProd.name}`);
     return newProd;
   },
-  addProduct(prod) {
+  async addProduct(prod) {
     return this.createProduct(prod);
   },
-  updateProduct(id, updates) {
+  async updateProduct(id, updates) {
     const data = loadLocalDb();
     const cat = updates.categoryId ? data.categories.find(c => c.id === updates.categoryId) : null;
 
@@ -914,43 +769,35 @@ export const db = {
     saveLocalDb(data);
     const updated = data.products.find(p => p.id === id);
 
-    // Kirim perubahan ke Supabase
-    if (isSupabaseConfigured && updated) {
-      supabase
-        .from('products')
-        .update(mapProductToDb(updated))
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase updateProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase updateProduct err:', err));
+    if (isInsforgeConfigured && updated) {
+      try {
+        await insforge.database.from('products').update(mapProductToDb(updated)).eq('id', id);
+      } catch (err) {
+        console.warn('InsForge updateProduct err:', err);
+      }
     }
 
     this.addAuditLog('UPDATE_PRODUCT', `Memperbarui produk ID ${id}`);
     return updated;
   },
-  deleteProduct(id) {
+  async deleteProduct(id) {
     const data = loadLocalDb();
     const prod = data.products.find(p => p.id === id);
     data.products = data.products.filter(p => p.id !== id);
     saveLocalDb(data);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      supabase
-        .from('products')
-        .delete()
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase deleteProduct warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase deleteProduct err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database.from('products').delete().eq('id', id);
+      } catch (err) {
+        console.warn('InsForge deleteProduct err:', err);
+      }
     }
 
     this.addAuditLog('DELETE_PRODUCT', `Menghapus produk: ${prod?.name || id}`);
     return true;
   },
-  adjustStock(id, delta) {
+  async adjustStock(id, delta) {
     const data = loadLocalDb();
     let updatedProd = null;
     data.products = data.products.map(p => {
@@ -964,18 +811,14 @@ export const db = {
 
     saveLocalDb(data);
 
-    if (isSupabaseConfigured && updatedProd) {
-      supabase
-        .from('products')
-        .update({ stock: updatedProd.stock, updated_at: updatedProd.updatedAt })
-        .eq('id', updatedProd.id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase adjustStock warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase adjustStock err:', err));
+    if (isInsforgeConfigured && updatedProd) {
+      try {
+        await insforge.database.from('products').update({ stock: updatedProd.stock, updated_at: updatedProd.updatedAt }).eq('id', updatedProd.id);
+      } catch (err) {
+        console.warn('InsForge adjustStock err:', err);
+      }
     }
 
-    // Cek jika low stock
     const threshold = data.settings.lowStockThreshold || 5;
     if (updatedProd && updatedProd.stock <= threshold && updatedProd.stock > 0) {
       this.addNotification({
@@ -999,14 +842,14 @@ export const db = {
     return cachedDb?.orders || [];
   },
   async fetchOrders() {
-    if (!isSupabaseConfigured) return cachedDb?.orders || [];
-    const { data, error } = await supabase
+    if (!isInsforgeConfigured) return cachedDb?.orders || [];
+    const { data, error } = await insforge.database
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.warn('Gagal mengambil orders dari Supabase:', error.message);
+      console.warn('Gagal mengambil orders dari InsForge:', error.message);
       throw error;
     }
     const mapped = (data || []).map(mapOrderFromDb);
@@ -1019,9 +862,9 @@ export const db = {
     return mapped;
   },
   async getOrderByIdAsync(id) {
-    if (isSupabaseConfigured) {
+    if (isInsforgeConfigured) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await insforge.database
           .from('orders')
           .select('*')
           .eq('id', id)
@@ -1030,7 +873,7 @@ export const db = {
           return mapOrderFromDb(data);
         }
       } catch (e) {
-        console.warn('Supabase getOrderByIdAsync error:', e);
+        console.warn('InsForge getOrderByIdAsync error:', e);
       }
     }
     return this.getOrderById(id);
@@ -1055,46 +898,48 @@ export const db = {
       updatedAt: new Date().toISOString()
     };
 
-    // 1. Kurangi stok produk secara otomatis di database Supabase
+    // 1. Kurangi stok produk secara otomatis di database InsForge
     for (const item of (newOrder.items || [])) {
       const p = data.products.find(prod => prod.id === item.id || prod.name === item.name);
       if (p) {
         p.stock = Math.max(0, (p.stock || 0) - (item.qty || 1));
         p.updatedAt = new Date().toISOString();
-        if (isSupabaseConfigured) {
+        if (isInsforgeConfigured) {
           try {
-            await supabase.from('products').update({ stock: p.stock, updated_at: p.updatedAt }).eq('id', p.id);
+            await insforge.database.from('products').update({ stock: p.stock, updated_at: p.updatedAt }).eq('id', p.id);
           } catch (e) {
-            console.warn('Supabase stock update error:', e);
+            console.warn('InsForge stock update error:', e);
           }
         }
       }
     }
 
-    // 2. SIMPAN KE SUPABASE SEBAGAI DATABASE UTAMA
-    if (isSupabaseConfigured) {
+    // 2. Simpan ke InsForge (Array payload)
+    if (isInsforgeConfigured) {
       const orderPayload = mapOrderToDb(newOrder);
-      const { error } = await supabase
+      const { error } = await insforge.database
         .from('orders')
-        .insert(orderPayload);
+        .insert([orderPayload]);
 
       if (error) {
-        console.error('Supabase createOrder error:', error);
-        throw new Error(error.message);
+        console.error('InsForge createOrder error:', error);
+        throw new Error(error.message || JSON.stringify(error));
       }
     }
 
-    // Simpan ke in-memory cache sementara untuk tab aktif
     data.orders = [newOrder, ...(data.orders || []).filter(o => o.orderId !== orderId)];
     saveLocalDb(data);
 
-    // Buat notifikasi pesanan baru
-    this.addNotification({
-      title: '🔔 Pesanan Baru Diterima',
-      message: `Pesanan #${newOrder.orderId} dari ${newOrder.name} (${newOrder.kelas}) senilai Rp ${Number(newOrder.totalHarga).toLocaleString('id-ID')}.`,
-      type: 'order'
-    });
-    this.addAuditLog('CREATE_ORDER', `Pesanan #${newOrder.orderId} dibuat oleh ${newOrder.name}`);
+    try {
+      await this.addNotification({
+        title: '🔔 Pesanan Baru Diterima',
+        message: `Pesanan #${newOrder.orderId} dari ${newOrder.name} (${newOrder.kelas}) senilai Rp ${Number(newOrder.totalHarga).toLocaleString('id-ID')}.`,
+        type: 'order'
+      });
+      await this.addAuditLog('CREATE_ORDER', `Pesanan #${newOrder.orderId} dibuat oleh ${newOrder.name}`);
+    } catch (e) {
+      console.warn('Background notification notice:', e);
+    }
 
     return newOrder;
   },
@@ -1121,9 +966,8 @@ export const db = {
       return o;
     });
 
-    // Update di Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
+    if (isInsforgeConfigured) {
+      const { error } = await insforge.database
         .from('orders')
         .update({
           order_status: updatedOrder ? updatedOrder.orderStatus : newStatus,
@@ -1133,7 +977,7 @@ export const db = {
         .eq('id', orderId);
 
       if (error) {
-        console.error('Supabase updateOrderStatus error:', error);
+        console.error('InsForge updateOrderStatus error:', error);
         throw new Error(error.message);
       }
     }
@@ -1160,7 +1004,6 @@ export const db = {
       return o;
     });
 
-    // Sinkronkan ke local user jika sama
     try {
       if (typeof localStorage !== 'undefined') {
         const activeRaw = localStorage.getItem('freonix_last_order');
@@ -1174,9 +1017,8 @@ export const db = {
       }
     } catch (e) {}
 
-    // Update di Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
+    if (isInsforgeConfigured) {
+      const { error } = await insforge.database
         .from('orders')
         .update({
           payment_status: newPaymentStatus,
@@ -1187,7 +1029,7 @@ export const db = {
         .eq('id', orderId);
 
       if (error) {
-        console.error('Supabase updatePaymentStatus error:', error);
+        console.error('InsForge updatePaymentStatus error:', error);
         throw new Error(error.message);
       }
     }
@@ -1200,15 +1042,14 @@ export const db = {
     const data = loadLocalDb();
     data.orders = (data.orders || []).filter(o => o.orderId !== orderId && o.id !== orderId);
 
-    // Hapus dari Supabase
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
+    if (isInsforgeConfigured) {
+      const { error } = await insforge.database
         .from('orders')
         .delete()
         .eq('id', orderId);
 
       if (error) {
-        console.error('Supabase deleteOrder error:', error);
+        console.error('InsForge deleteOrder error:', error);
         throw new Error(error.message);
       }
     }
@@ -1253,7 +1094,7 @@ export const db = {
   getNotifications() {
     return loadLocalDb().notifications;
   },
-  addNotification(notif) {
+  async addNotification(notif) {
     const data = loadLocalDb();
     const newNotif = {
       id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -1265,48 +1106,46 @@ export const db = {
     data.notifications.unshift(newNotif);
     saveLocalDb(data);
 
-    // Simpan ke Supabase jika ada sesi admin
-    if (isSupabaseConfigured) {
-      supabase.auth.getSession().then(({ data: authData }) => {
-        if (authData?.session) {
-          supabase
-            .from('notifications')
-            .insert(mapNotificationToDb(newNotif))
-            .catch(err => console.warn('Supabase addNotification err:', err));
-        }
-      }).catch(() => {});
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database
+          .from('notifications')
+          .insert([mapNotificationToDb(newNotif)]);
+      } catch (err) {
+        console.warn('InsForge addNotification err:', err);
+      }
     }
   },
-  markNotificationRead(id) {
+  async markNotificationRead(id) {
     const data = loadLocalDb();
     data.notifications = data.notifications.map(n => n.id === id ? { ...n, read: true } : n);
     saveLocalDb(data);
 
-    if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.warn('Supabase markNotificationRead warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase markNotificationRead err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database
+          .from('notifications')
+          .update({ read: true })
+          .eq('id', id);
+      } catch (err) {
+        console.warn('InsForge markNotificationRead err:', err);
+      }
     }
   },
-  clearNotifications() {
+  async clearNotifications() {
     const data = loadLocalDb();
     data.notifications = [];
     saveLocalDb(data);
 
-    if (isSupabaseConfigured) {
-      supabase
-        .from('notifications')
-        .delete()
-        .neq('id', '')
-        .then(({ error }) => {
-          if (error) console.warn('Supabase clearNotifications warning:', error.message);
-        })
-        .catch(err => console.warn('Supabase clearNotifications err:', err));
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database
+          .from('notifications')
+          .delete()
+          .neq('id', '');
+      } catch (err) {
+        console.warn('InsForge clearNotifications err:', err);
+      }
     }
   },
 
@@ -1314,7 +1153,7 @@ export const db = {
   getAuditLogs() {
     return loadLocalDb().auditLogs;
   },
-  addAuditLog(action, details, actor = 'Admin') {
+  async addAuditLog(action, details, actor = 'Admin') {
     const data = loadLocalDb();
     const newLog = {
       id: `log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -1328,16 +1167,14 @@ export const db = {
     if (data.auditLogs.length > 100) data.auditLogs = data.auditLogs.slice(0, 100);
     saveLocalDb(data);
 
-    // Simpan ke Supabase jika ada sesi admin
-    if (isSupabaseConfigured) {
-      supabase.auth.getSession().then(({ data: authData }) => {
-        if (authData?.session) {
-          supabase
-            .from('audit_logs')
-            .insert(mapAuditLogToDb(newLog))
-            .catch(err => console.warn('Supabase addAuditLog err:', err));
-        }
-      }).catch(() => {});
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database
+          .from('audit_logs')
+          .insert([mapAuditLogToDb(newLog)]);
+      } catch (err) {
+        console.warn('InsForge addAuditLog err:', err);
+      }
     }
   },
 

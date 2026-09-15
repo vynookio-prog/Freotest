@@ -1,9 +1,11 @@
+'use client';
+
 import React from 'react';
 import { ShoppingBag, FileText, Sparkles, AlertCircle, Package } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import FAQ from '../components/FAQ';
-import CountdownTimer from '../components/CountdownTimer';
-import { useDb } from '../utils/useDb';
+import Link from 'next/link';
+import FAQ from '../../../components/FAQ';
+import CountdownTimer from '../../../components/CountdownTimer';
+import { useDb } from '../../../lib/useDb';
 
 export default function Products() {
   const db = useDb();
@@ -51,7 +53,7 @@ export default function Products() {
               Seluruh menu makanan lama telah dihapus dari database. Anda dapat menambahkan menu produk baru kapan saja melalui portal Admin.
             </p>
             <Link
-              to="/admin/products"
+              href="/admin/products"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white text-xs font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95"
             >
               Tambah Menu di Admin →
@@ -65,52 +67,51 @@ export default function Products() {
               return (
                 <div 
                   key={item.id}
-                  className="bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white/80 overflow-hidden shadow-[0_12px_40px_rgba(93,58,41,0.06)] hover:shadow-[0_20px_50px_rgba(93,58,41,0.12)] hover:-translate-y-1.5 transition-all duration-500 flex flex-col group relative"
+                  className="bg-white/75 backdrop-blur-md rounded-[2rem] border border-white/80 overflow-hidden shadow-[0_8px_30px_rgba(93,58,41,0.06)] hover:shadow-[0_16px_40px_rgba(93,58,41,0.12)] hover:-translate-y-1 transition-transform transition-shadow duration-200 flex flex-col justify-between group relative"
                 >
-                  {/* Subtle top rim highlight */}
                   <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none z-10" />
 
-                  <div className="relative h-60 w-full overflow-hidden bg-stone-100/50 p-2">
-                    <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
-                      <picture>
-                        <source srcSet={item.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          width="380"
-                          height="240"
-                          loading={index === 0 ? "eager" : "lazy"}
-                          fetchPriority={index === 0 ? "high" : "auto"}
-                          decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700" 
-                        />
-                      </picture>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
-                      
-                      {/* PO Status Pill */}
-                      <div className="absolute top-3 right-3">
-                        {settings.storeStatus === 'closed' ? (
-                          <span className="bg-rose-500/90 text-white backdrop-blur-md text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
-                            PO Ditutup
-                          </span>
-                        ) : (
-                          <span className="bg-emerald-600/90 text-white backdrop-blur-md border border-emerald-400/40 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            Open PO
-                          </span>
+                  <div>
+                    <div className="relative h-60 w-full overflow-hidden bg-stone-100/50 p-2">
+                      <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
+                        <picture>
+                          <source srcSet={item.image ? item.image.replace(/\.jpg$/, '.webp') : ''} type="image/webp" />
+                          <img 
+                            src={item.image} 
+                            alt={item.name} 
+                            width="380"
+                            height="240"
+                            loading={index === 0 ? "eager" : "lazy"}
+                            fetchPriority={index === 0 ? "high" : "auto"}
+                            decoding="async"
+                            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700" 
+                          />
+                        </picture>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
+                        
+                        {/* PO Status Pill */}
+                        <div className="absolute top-3 right-3">
+                          {settings.storeStatus === 'closed' ? (
+                            <span className="bg-rose-500/90 text-white backdrop-blur-md text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
+                              PO Ditutup
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-600/90 text-white backdrop-blur-md border border-emerald-400/40 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                              Open PO
+                            </span>
+                          )}
+                        </div>
+
+                        {item.categoryName && (
+                          <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                            {item.categoryName}
+                          </div>
                         )}
                       </div>
-
-                      {item.categoryName && (
-                        <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                          {item.categoryName}
-                        </div>
-                      )}
                     </div>
-                  </div>
 
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div>
+                    <div className="p-6">
                       <div className="flex items-baseline justify-between mb-2">
                         <h3 className="text-xl font-bold text-[#5D3A29]">
                           {item.name}
@@ -120,33 +121,33 @@ export default function Products() {
                         </span>
                       </div>
                       <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed mb-6 line-clamp-3">
-                        {item.desc}
+                        {item.desc || item.description}
                       </p>
                     </div>
+                  </div>
 
-                    <div className="flex flex-col gap-2.5">
+                  <div className="p-6 pt-0 flex flex-col gap-2.5">
+                    <Link 
+                      href={`/product/${item.slug || item.id}`}
+                      className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-[#8B5742] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm border border-white/90 backdrop-blur-md"
+                    >
+                      <FileText size={16} />
+                      Detail & Gizi
+                    </Link>
+
+                    {settings.storeStatus === 'closed' ? (
+                      <div className="w-full py-3 rounded-xl bg-stone-200/80 text-stone-500 font-bold text-xs uppercase tracking-wider text-center cursor-not-allowed">
+                        PO Ditutup
+                      </div>
+                    ) : (
                       <Link 
-                        to={`/product/${item.slug || item.id}`}
-                        className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-[#8B5742] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm border border-white/90 backdrop-blur-md"
+                        href="/checkout"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-[0_4px_16px_rgba(139,87,66,0.3)] hover:shadow-[0_6px_22px_rgba(139,87,66,0.45)]"
                       >
-                        <FileText size={16} />
-                        Detail & Gizi
+                        <ShoppingBag size={16} />
+                        Pesan Sekarang
                       </Link>
-
-                      {settings.storeStatus === 'closed' ? (
-                        <div className="w-full py-3 rounded-xl bg-stone-200/80 text-stone-500 font-bold text-xs uppercase tracking-wider text-center cursor-not-allowed">
-                          PO Ditutup
-                        </div>
-                      ) : (
-                        <Link 
-                          to="/checkout"
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-[0_4px_16px_rgba(139,87,66,0.3)] hover:shadow-[0_6px_22px_rgba(139,87,66,0.45)]"
-                        >
-                          <ShoppingBag size={16} />
-                          Pesan Sekarang
-                        </Link>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               );

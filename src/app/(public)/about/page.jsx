@@ -1,6 +1,11 @@
 import React from 'react';
 import { Info, ExternalLink } from 'lucide-react';
 
+export const metadata = {
+  title: 'FREONIX - Tentang Kami | Kelas Sains XII-F1',
+  description: 'Profil & filosofi keluarga besar kelas sains XII-F1. Future Ready Twelve One and Only.',
+};
+
 export default function About() {
   return (
     <section className="py-12 px-4 sm:px-6">
@@ -42,7 +47,7 @@ export default function About() {
               <a 
                 href="https://www.instagram.com/freonix__?igsi=YzA1MDF4amhva3Qx" 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noreferrer" 
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-[#5D3A29] text-xs font-bold transition-all shadow-xs border border-white/80 active:scale-95"
               >
                 <ExternalLink size={14} className="text-[#8B5742]" /> Instagram Resmi
@@ -50,7 +55,7 @@ export default function About() {
               <a 
                 href="https://www.tiktok.com/@duabelasefsatu1?_r=1&_t=ZS-98ZVLY09Qxh" 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noreferrer" 
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-[#5D3A29] text-xs font-bold transition-all shadow-xs border border-white/80 active:scale-95"
               >
                 <ExternalLink size={14} className="text-[#8B5742]" /> TikTok Resmi

@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ChefHat, Activity, Info, CheckCircle2, Sparkles, Droplets, Box, Image as ImageIcon, ShoppingBag, Package } from 'lucide-react';
-import Product3DViewer from '../components/Product3DViewer';
-import { useDb } from '../utils/useDb';
+'use client';
 
-export default function ProductDetail() {
-  const { id } = useParams();
+import React, { use, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, ChefHat, Activity, Info, CheckCircle2, Sparkles, Droplets, Box, Image as ImageIcon, ShoppingBag, Package } from 'lucide-react';
+import Product3DViewer from '../../../../components/Product3DViewer';
+import { useDb } from '../../../../lib/useDb';
+
+export default function ProductDetailPage({ params }) {
+  const resolvedParams = use(params);
+  const id = resolvedParams?.id;
   const db = useDb();
   const [viewMode, setViewMode] = useState('photo');
 
-  // Scroll to top on mount for smooth experience
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Lookup in DB
   const product = db.getProductById(id);
 
   if (!product) {
@@ -28,7 +29,7 @@ export default function ProductDetail() {
           Menu produk ini belum terdaftar atau telah dihapus dari database.
         </p>
         <Link 
-          to="/products" 
+          href="/products" 
           className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8B5742] text-white text-xs font-bold shadow-md hover:bg-[#5D3A29] transition-all"
         >
           <ArrowLeft size={14} /> Kembali ke Menu Produk
@@ -59,22 +60,21 @@ export default function ProductDetail() {
     ];
 
   return (
-    <div className="pb-16 bg-[#FAFAF9] min-h-[80vh] relative overflow-hidden opacity-0 animate-fade-in">
+    <div className="pb-16 bg-[#FAFAF9] min-h-[80vh] relative overflow-hidden animate-fade-in">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#DDA15E]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#8B5742]/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-4">
         <Link 
-          to="/products" 
-          className="inline-flex items-center gap-2 text-[#8B5742] font-bold hover:text-white hover:bg-[#8B5742] transition-all duration-300 mb-8 bg-white shadow-sm border border-[#8B5742]/20 px-5 py-2.5 rounded-full text-sm hover:shadow-md opacity-0 animate-slide-right group"
-          style={{ animationDelay: '0.1s' }}
+          href="/products" 
+          className="inline-flex items-center gap-2 text-[#8B5742] font-bold hover:text-white hover:bg-[#8B5742] transition-all duration-300 mb-8 bg-white shadow-sm border border-[#8B5742]/20 px-5 py-2.5 rounded-full text-sm hover:shadow-md animate-slide-right group"
         >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> 
           Kembali ke Menu
         </Link>
         
-        <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/50 opacity-0 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/50 animate-slide-up">
           {/* Kolom Visual Makanan (3D & Foto) */}
           <div className="md:w-5/12 p-3 sm:p-5 flex flex-col justify-between bg-stone-900/5 border-b md:border-b-0 md:border-r border-stone-200/60">
             {/* View Mode Switcher */}
@@ -116,7 +116,7 @@ export default function ProductDetail() {
               ) : (
                 <div className="relative w-full h-[380px] sm:h-[420px] rounded-3xl overflow-hidden shadow-lg group">
                   <picture>
-                    <source srcSet={product.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                    <source srcSet={product.image ? product.image.replace(/\.jpg$/, '.webp') : ''} type="image/webp" />
                     <img 
                       src={product.image} 
                       alt={product.name} 
@@ -130,7 +130,6 @@ export default function ProductDetail() {
                   </picture>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
 
-                  {/* Tombol Shortcut Lihat 3D di Atas Foto */}
                   <div className="absolute top-4 right-4 z-10">
                     <button
                       type="button"
@@ -167,7 +166,7 @@ export default function ProductDetail() {
             {/* Pesan Sekarang Action */}
             <div className="mt-4">
               <Link
-                to="/checkout"
+                href="/checkout"
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
               >
                 <ShoppingBag size={16} />
@@ -181,18 +180,18 @@ export default function ProductDetail() {
             <Droplets className="absolute top-10 right-10 text-stone-100 w-32 h-32 -z-10 rotate-12 opacity-50" />
             
             {/* Deskripsi */}
-            <div className="mb-10 opacity-0 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+            <div className="mb-10 animate-slide-up">
               <h3 className="text-xl font-bold text-[#5D3A29] mb-4 flex items-center gap-2">
                 <Info size={22} className="text-[#DDA15E]" /> Deskripsi Singkat
               </h3>
               <p className="text-stone-700 leading-relaxed bg-white/50 backdrop-blur-xl p-6 rounded-2xl border border-white/80 shadow-xs relative overflow-hidden">
                 <span className="absolute left-0 top-0 w-1.5 h-full bg-gradient-to-b from-[#DDA15E] to-[#8B5742]"></span>
-                {product.desc || 'Tidak ada deskripsi tambahan.'}
+                {product.desc || product.description || 'Tidak ada deskripsi tambahan.'}
               </p>
             </div>
 
             {/* Nilai Gizi */}
-            <div className="mb-10 opacity-0 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <div className="mb-10 animate-slide-up">
               <h3 className="text-xl font-bold text-[#5D3A29] mb-4 flex items-center gap-2">
                 <Activity size={22} className="text-[#DDA15E]" /> Estimasi Nilai Gizi
               </h3>
@@ -207,7 +206,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Alat dan Bahan */}
-            <div className="opacity-0 animate-slide-up" style={{ animationDelay: '0.7s' }}>
+            <div className="animate-slide-up">
               <h3 className="text-xl font-bold text-[#5D3A29] mb-4 flex items-center gap-2">
                 <ChefHat size={22} className="text-[#DDA15E]" /> Alat & Bahan
               </h3>

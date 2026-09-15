@@ -1,5 +1,10 @@
 import React from 'react';
 
+export const metadata = {
+  title: 'FREONIX - Galeri Dokumentasi',
+  description: 'Jejak kehangatan, dinamika belajar, dan proses persiapan proyek kokurikuler kelas XII-F1 Sains.',
+};
+
 export default function Gallery() {
   return (
     <section className="py-12 px-4 sm:px-6">

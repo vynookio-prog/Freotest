@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { RotateCw, Play, Pause, Sparkles } from 'lucide-react';
 
@@ -17,12 +19,10 @@ export default function Product3DViewer({ image, name, price }) {
   const lastRotation = useRef({ x: 10, y: 0 });
   const animFrameRef = useRef(null);
 
-  // Keep isAutoRotateRef in sync with state
   useEffect(() => {
     isAutoRotateRef.current = isAutoRotate;
   }, [isAutoRotate]);
 
-  // Apply CSS transforms directly to avoid React virtual DOM diffing on every frame
   const applyTransforms = (rotX, rotY) => {
     if (turntableRef.current) {
       turntableRef.current.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
@@ -36,13 +36,12 @@ export default function Product3DViewer({ image, name, price }) {
     }
   };
 
-  // High-performance 60fps loop on compositor thread
   useEffect(() => {
     let lastTime = performance.now();
 
     const loop = (currentTime) => {
-      if (isAutoRotateRef.current && !isDraggingRef.current) {
-        const delta = currentTime - lastTime;
+      if (!document.hidden && isAutoRotateRef.current && !isDraggingRef.current) {
+        const delta = Math.min(currentTime - lastTime, 50); // Cap delta to avoid huge jumps
         rotationYRef.current = (rotationYRef.current + delta * 0.04) % 360;
         applyTransforms(rotationXRef.current, rotationYRef.current);
       }
@@ -56,7 +55,6 @@ export default function Product3DViewer({ image, name, price }) {
     };
   }, []);
 
-  // Mouse & Touch event handlers
   const handleStart = (clientX, clientY) => {
     isDraggingRef.current = true;
     if (!hasInteracted) setHasInteracted(true);
@@ -81,17 +79,14 @@ export default function Product3DViewer({ image, name, price }) {
     isDraggingRef.current = false;
   };
 
-  // Toggle Auto-rotate
   const toggleAutoRotate = () => {
     setIsAutoRotate(prev => !prev);
   };
 
   return (
     <div className="relative w-full h-[380px] sm:h-[420px] flex flex-col items-center justify-center select-none overflow-hidden bg-gradient-to-b from-[#3D251A] via-[#2A1810] to-[#1F120C] rounded-3xl p-4">
-      {/* Background Ambience Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(221,161,94,0.2)_0%,_transparent_70%)] pointer-events-none" />
 
-      {/* Top Header Controls */}
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#DDA15E]/30 text-white text-xs font-semibold">
           <Sparkles size={13} className="text-[#DDA15E] animate-pulse" />
@@ -113,7 +108,6 @@ export default function Product3DViewer({ image, name, price }) {
         </button>
       </div>
 
-      {/* 3D Interactive Stage */}
       <div
         className="relative w-64 h-64 sm:w-72 sm:h-72 cursor-grab active:cursor-grabbing flex items-center justify-center"
         style={{ perspective: 1000 }}
@@ -133,14 +127,12 @@ export default function Product3DViewer({ image, name, price }) {
         }}
         onTouchEnd={handleEnd}
       >
-        {/* Dynamic Floor Shadow */}
         <div
           ref={floorShadowRef}
           className="absolute bottom-2 w-48 h-12 bg-black/60 rounded-full blur-xl pointer-events-none will-change-transform"
           style={{ transform: 'scale(1)' }}
         />
 
-        {/* 3D Floating Platter / Turntable */}
         <div
           ref={turntableRef}
           className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full will-change-transform"
@@ -149,12 +141,10 @@ export default function Product3DViewer({ image, name, price }) {
             transform: 'rotateX(10deg) rotateY(0deg)'
           }}
         >
-          {/* Outer Pedestal Plate */}
           <div className="absolute inset-0 rounded-full p-2 bg-gradient-to-tr from-[#8B5742] via-[#DDA15E] to-[#F5EBE0] shadow-2xl border-2 border-[#DDA15E]/40 flex items-center justify-center">
-            {/* Food Image Container with 3D Depth */}
             <div className="relative w-full h-full rounded-full overflow-hidden shadow-inner border border-stone-800/40 bg-stone-900">
               <picture>
-                <source srcSet={image.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                <source srcSet={image ? image.replace(/\.jpg$/, '.webp') : ''} type="image/webp" />
                 <img
                   src={image}
                   alt={name}
@@ -165,7 +155,6 @@ export default function Product3DViewer({ image, name, price }) {
                   draggable="false"
                 />
               </picture>
-              {/* Dynamic Glare Reflection Overlay */}
               <div
                 ref={glareRef}
                 className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none will-change-transform"
@@ -176,7 +165,6 @@ export default function Product3DViewer({ image, name, price }) {
         </div>
       </div>
 
-      {/* Bottom Floating Notification */}
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none z-20">
         <div className="text-white/80 text-[11px] font-medium flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
           <RotateCw size={12} className="text-[#DDA15E] animate-spin" style={{ animationDuration: '4s' }} />

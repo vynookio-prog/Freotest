@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-import { useDb } from '../utils/useDb';
+import { useDb } from '../lib/useDb';
 
 // Helper untuk mendapatkan timestamp target dalam zona waktu Jakarta (WIB / UTC+7)
 function getTargetTimestampJakarta(targetInput, defaultEventDate) {

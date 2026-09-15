@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, User, KeyRound, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
-import { loginAdmin } from '../../utils/supabase';
+'use client';
 
-export default function AdminLogin() {
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ShieldCheck, User, KeyRound, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { loginAdmin } from '../../../lib/insforge';
+
+export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
-    // If URL contains ?force=true or ?logout=true, clear any stale session
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('force') === 'true' || params.get('logout') === 'true') {
@@ -21,15 +23,14 @@ export default function AdminLogin() {
         localStorage.removeItem('freonix_admin_auth');
         return;
       }
-    }
 
-    // If already logged in, go to dashboard
-    const isAuth = sessionStorage.getItem('freonix_admin_auth') === 'true' || 
-                   localStorage.getItem('freonix_admin_auth') === 'true';
-    if (isAuth) {
-      navigate('/admin', { replace: true });
+      const isAuth = sessionStorage.getItem('freonix_admin_auth') === 'true' || 
+                     localStorage.getItem('freonix_admin_auth') === 'true';
+      if (isAuth) {
+        router.replace('/admin');
+      }
     }
-  }, [navigate]);
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,12 +41,12 @@ export default function AdminLogin() {
     try {
       const res = await loginAdmin(username, password, rememberMe);
       if (res.success) {
-        navigate('/admin', { replace: true });
+        router.replace('/admin');
       } else {
         setError(res.error || 'Username atau password yang Anda masukkan salah.');
       }
     } catch (err) {
-      setError(err.message || 'Terjadi kesalahan sistem saat menghubungi Supabase Auth.');
+      setError(err.message || 'Terjadi kesalahan sistem saat otentikasi.');
     } finally {
       setIsLoading(false);
     }
@@ -108,40 +109,41 @@ export default function AdminLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan password admin"
+                  placeholder="••••••••"
                   className="w-full pl-11 pr-11 py-3 rounded-2xl border border-white/90 bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#DDA15E]/60 text-sm shadow-xs transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus:outline-none"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-stone-600">
+            <div className="flex items-center justify-between text-xs pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-stone-600">
                 <input 
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-[#8B5742] rounded"
+                  className="rounded text-[#8B5742] focus:ring-[#DDA15E]"
                 />
-                <span>Ingat saya di perangkat ini</span>
+                <span>Ingat Sesi Saya</span>
               </label>
+              <span className="text-stone-400 text-[11px]">InsForge Auth Secured</span>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] disabled:opacity-60 text-white py-3.5 rounded-2xl font-bold uppercase tracking-wider text-xs shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_8px_25px_rgba(139,87,66,0.45)] transition-all active:scale-98"
+              className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(139,87,66,0.3)] hover:shadow-[0_10px_25px_rgba(139,87,66,0.45)] transition-all active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>Memverifikasi Akun Supabase...</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Memverifikasi...</span>
                 </>
               ) : (
                 <span>Masuk ke Dashboard</span>
@@ -149,12 +151,12 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-stone-200/50 text-center">
+          <div className="mt-8 text-center pt-6 border-t border-stone-200/50">
             <Link 
-              to="/"
-              className="text-xs text-stone-500 hover:text-[#5D3A29] font-semibold transition-colors"
+              href="/"
+              className="text-xs font-bold text-stone-500 hover:text-[#5D3A29] transition-colors"
             >
-              ← Kembali ke Website Pelanggan
+              ← Kembali ke Beranda Utama
             </Link>
           </div>
         </div>

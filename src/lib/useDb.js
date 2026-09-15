@@ -1,18 +1,23 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
-import { db } from './db';
+import { db, fetchFromInsforge } from './db';
 
 /**
  * Custom React Hook yang otomatis re-render saat database FREONIX berubah.
- * Termasuk auto-fetch orders dari Supabase saat pertama kali mount.
+ * Termasuk auto-fetch data dari InsForge saat pertama kali mount.
  */
 export function useDb() {
-  const [version, setVersion] = useState(0);
+  const [, setVersion] = useState(0);
 
   const refresh = useCallback(() => {
     setVersion(v => v + 1);
   }, []);
 
   useEffect(() => {
+    // Sinkronisasi data awal
+    fetchFromInsforge();
+
     // Event listener untuk update dalam tab yang sama
     window.addEventListener('freonix_db_updated', refresh);
 

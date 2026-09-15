@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
@@ -5,19 +7,13 @@ import {
   ShoppingBag, 
   DollarSign, 
   Phone, 
-  GraduationCap, 
-  ExternalLink, 
-  MessageSquare, 
-  Clock, 
   Eye, 
   X,
-  Sparkles,
-  ChevronRight
+  MessageSquare
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
-import { useDb } from '../../utils/useDb';
+import { useDb } from '../../../lib/useDb';
 
-export default function AdminCustomers() {
+export default function AdminCustomersPage() {
   const db = useDb();
   const [customers, setCustomers] = useState(db.getCustomers() || []);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,9 +64,9 @@ export default function AdminCustomers() {
   };
 
   return (
-    <AdminLayout title="Database Pelanggan">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#5D3A29] flex items-center gap-2.5">
             <Users size={26} className="text-[#8B5742]" />
@@ -83,7 +79,7 @@ export default function AdminCustomers() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] uppercase font-extrabold text-stone-400">Total Pelanggan Unik</span>
@@ -123,7 +119,7 @@ export default function AdminCustomers() {
       </div>
 
       {/* Search Filter */}
-      <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] mb-6">
+      <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)]">
         <div className="relative">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
@@ -136,7 +132,7 @@ export default function AdminCustomers() {
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -191,7 +187,7 @@ export default function AdminCustomers() {
                           href={getWhatsAppLink(c.phone, c.name)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-green-700 hover:text-green-800 font-semibold"
+                          className="inline-flex items-center gap-1 text-green-700 hover:text-green-800 font-semibold cursor-pointer"
                         >
                           <Phone size={12} />
                           {c.phone}
@@ -214,7 +210,7 @@ export default function AdminCustomers() {
                     <td className="py-3.5 px-4 text-center">
                       <button
                         onClick={() => setSelectedCustomer(c)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 font-bold text-[11px] shadow-xs transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 font-bold text-[11px] shadow-xs transition-colors cursor-pointer"
                       >
                         <Eye size={13} />
                         Lihat Riwayat
@@ -262,7 +258,7 @@ export default function AdminCustomers() {
 
               <button 
                 onClick={() => setSelectedCustomer(null)}
-                className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100"
+                className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -327,7 +323,7 @@ export default function AdminCustomers() {
                   href={getWhatsAppLink(selectedCustomer.phone, selectedCustomer.name)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-all shadow-md"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-all shadow-md cursor-pointer"
                 >
                   <MessageSquare size={15} />
                   Kirim Pesan WhatsApp
@@ -336,7 +332,7 @@ export default function AdminCustomers() {
 
               <button
                 onClick={() => setSelectedCustomer(null)}
-                className="px-5 py-2.5 rounded-2xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200 transition-all"
+                className="px-5 py-2.5 rounded-2xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200 transition-all cursor-pointer"
               >
                 Tutup
               </button>
@@ -344,6 +340,6 @@ export default function AdminCustomers() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }

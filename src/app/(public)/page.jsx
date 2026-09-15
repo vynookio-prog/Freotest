@@ -1,6 +1,11 @@
 import React from 'react';
 import { Utensils, ImageIcon, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+
+export const metadata = {
+  title: 'FREONIX - Beranda | Sajian Kuliner Khas Filipina',
+  description: 'Selamat datang di etalase resmi FREONIX. Temukan karya kebersamaan serta sajian kuliner khas Filipina proyek kokurikuler kelas XII-F1 Sains.',
+};
 
 export default function Home() {
   return (
@@ -17,7 +22,7 @@ export default function Home() {
         <div className="flex justify-center mb-6">
           <div className="relative p-3 rounded-full bg-white/50 backdrop-blur-xl border border-white/80 shadow-md">
             <img 
-              src="https://cdn.phototourl.com/free/2026-09-02-4a88c19c-cba9-4d03-8a00-53eab79ada72.png" 
+              src="/logo-freonix.png" 
               alt="FREONIX Logo" 
               width="128"
               height="128"
@@ -42,14 +47,14 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link 
-            to="/products"
+            href="/products"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-[0_8px_24px_rgba(139,87,66,0.35)] hover:shadow-[0_12px_30px_rgba(139,87,66,0.5)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all"
           >
             <Utensils size={18} />
             Produk Kokurikuler
           </Link>
           <Link 
-            to="/gallery"
+            href="/gallery"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/70 hover:bg-white text-[#5D3A29] border border-white/90 px-8 py-3.5 rounded-full font-bold text-sm shadow-sm hover:shadow active:scale-95 transition-all backdrop-blur-md"
           >
             <ImageIcon size={18} />

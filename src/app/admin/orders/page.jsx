@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   ShoppingCart, 
@@ -21,10 +23,9 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
-import { useDb } from '../../utils/useDb';
+import { useDb } from '../../../lib/useDb';
 
-export default function AdminOrders() {
+export default function AdminOrdersPage() {
   const db = useDb();
   const [orders, setOrders] = useState(db.getOrders() || []);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +39,7 @@ export default function AdminOrders() {
       setOrders(fetched || []);
     } catch (err) {
       console.warn('Gagal fetch orders:', err.message);
-      setFetchError(err.message || 'Gagal memuat pesanan dari Supabase');
+      setFetchError(err.message || 'Gagal memuat pesanan dari InsForge');
       setOrders(db.getOrders() || []);
     } finally {
       setIsLoading(false);
@@ -228,7 +229,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <AdminLayout title="Manajemen Pesanan">
+    <div className="space-y-6 animate-fade-in">
       {/* Toast Alert */}
       {toast && (
         <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 animate-slide-up ${
@@ -244,7 +245,7 @@ export default function AdminOrders() {
       )}
 
       {/* Header with quick metrics */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#5D3A29] flex items-center gap-2.5">
             <ShoppingCart size={26} className="text-[#8B5742]" />
@@ -260,11 +261,11 @@ export default function AdminOrders() {
             onClick={async () => {
               setIsRefreshing(true);
               await loadOrders();
-              showToast('Data pesanan berhasil disinkronkan dari Supabase!');
+              showToast('Data pesanan berhasil disinkronkan dari InsForge!');
             }}
             disabled={isRefreshing}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95 disabled:opacity-50"
-            title="Muat ulang data pesanan langsung dari Supabase"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
+            title="Muat ulang data pesanan langsung dari InsForge"
           >
             <RotateCcw size={15} className={`text-[#8B5742] ${isRefreshing ? 'animate-spin' : ''}`} />
             <span>{isRefreshing ? 'Menyinkronkan...' : 'Segarkan'}</span>
@@ -272,7 +273,7 @@ export default function AdminOrders() {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/80 border border-stone-200/80 text-[#5D3A29] text-xs font-bold hover:bg-white transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             <Download size={15} className="text-[#8B5742]" />
             Ekspor CSV
@@ -280,34 +281,20 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Supabase Notice Banner if any */}
+      {/* InsForge Notice Banner if any */}
       {fetchError && (
-        <div className="mb-6 p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
+        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <div className="font-bold mb-1">Pemberitahuan Database Supabase</div>
+            <div className="font-bold mb-1">Pemberitahuan Database InsForge</div>
             <p className="text-amber-800 leading-relaxed">
               {fetchError}
             </p>
-            {fetchError.includes('schema cache') || fetchError.includes('PGRST205') || fetchError.includes('does not exist') ? (
-              <p className="text-amber-950 font-medium mt-1.5 bg-amber-100/70 p-2.5 rounded-xl">
-                💡 Tabel <strong>orders</strong> belum dibuat di Supabase. Salin isi skrip <code>SUPABASE_SCHEMA.sql</code> lalu jalankan (Run) di <strong>Supabase SQL Editor</strong>.
-              </p>
-            ) : null}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="/SUPABASE_SCHEMA.sql"
-              download="SUPABASE_SCHEMA.sql"
-              className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
-              title="Unduh file database schema SQL untuk Supabase"
-            >
-              <Download size={13} className="text-amber-700" />
-              <span>Download Schema</span>
-            </a>
             <button
               onClick={loadOrders}
-              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs active:scale-95 transition-all shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               Coba Lagi
             </button>
@@ -316,10 +303,10 @@ export default function AdminOrders() {
       )}
 
       {/* Quick Action Badges / KPI Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           onClick={() => { setPaymentFilter('qris_pending'); setStatusFilter('all'); }}
-          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
             paymentFilter === 'qris_pending'
               ? 'bg-amber-500/15 border-amber-400/80 ring-2 ring-amber-400/30'
               : 'bg-white/60 border-white/80 hover:bg-white/90'
@@ -336,7 +323,7 @@ export default function AdminOrders() {
 
         <button
           onClick={() => { setStatusFilter('Pending'); setPaymentFilter('all'); }}
-          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
             statusFilter === 'Pending'
               ? 'bg-blue-500/15 border-blue-400/80 ring-2 ring-blue-400/30'
               : 'bg-white/60 border-white/80 hover:bg-white/90'
@@ -353,7 +340,7 @@ export default function AdminOrders() {
 
         <button
           onClick={() => { setStatusFilter('Processing'); setPaymentFilter('all'); }}
-          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
             statusFilter === 'Processing'
               ? 'bg-purple-500/15 border-purple-400/80 ring-2 ring-purple-400/30'
               : 'bg-white/60 border-white/80 hover:bg-white/90'
@@ -370,7 +357,7 @@ export default function AdminOrders() {
 
         <button
           onClick={() => { setStatusFilter('Completed'); setPaymentFilter('all'); }}
-          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
             statusFilter === 'Completed'
               ? 'bg-emerald-500/15 border-emerald-400/80 ring-2 ring-emerald-400/30'
               : 'bg-white/60 border-white/80 hover:bg-white/90'
@@ -387,7 +374,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] mb-6 flex flex-col md:flex-row items-center gap-3">
+      <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] flex flex-col md:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
@@ -400,7 +387,7 @@ export default function AdminOrders() {
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -420,7 +407,7 @@ export default function AdminOrders() {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 statusFilter === tab.id
                   ? 'bg-[#5D3A29] text-white shadow-sm'
                   : 'bg-white/60 text-stone-600 hover:bg-white/90'
@@ -435,7 +422,7 @@ export default function AdminOrders() {
         <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
-          className="w-full md:w-auto px-3 py-2.5 rounded-2xl bg-white/80 border border-stone-200/70 text-xs font-bold text-stone-700 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30"
+          className="w-full md:w-auto px-3 py-2.5 rounded-2xl bg-white/80 border border-stone-200/70 text-xs font-bold text-stone-700 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 cursor-pointer"
         >
           <option value="all">Semua Pembayaran</option>
           <option value="qris_pending">⚠️ QRIS (Pending Cek)</option>
@@ -499,7 +486,7 @@ export default function AdminOrders() {
                         </div>
                         {order.notes && (
                           <div className="text-[10px] text-amber-800 italic mt-1 bg-amber-50/80 px-2 py-0.5 rounded-lg border border-amber-200/50 max-w-[200px] truncate" title={order.notes}>
-                            "{order.notes}"
+                            &ldquo;{order.notes}&rdquo;
                           </div>
                         )}
                       </td>
@@ -537,7 +524,7 @@ export default function AdminOrders() {
                           {proofImg ? (
                             <button
                               onClick={() => setLightboxImage(proofImg)}
-                              className="relative group w-8 h-8 rounded-lg overflow-hidden border border-stone-300/80 shadow-xs hover:ring-2 hover:ring-[#8B5742] transition-all"
+                              className="relative group w-8 h-8 rounded-lg overflow-hidden border border-stone-300/80 shadow-xs hover:ring-2 hover:ring-[#8B5742] transition-all cursor-pointer"
                               title="Klik untuk perbesar bukti transfer"
                             >
                               <img 
@@ -570,7 +557,7 @@ export default function AdminOrders() {
                             </span>
                             <button
                               onClick={() => handleVerifyPayment(order.orderId, 'SUCCESS')}
-                              className="p-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs active:scale-95 transition-all"
+                              className="p-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs active:scale-95 transition-all cursor-pointer"
                               title="Verifikasi Pembayaran LUNAS"
                             >
                               <Check size={12} />
@@ -610,7 +597,7 @@ export default function AdminOrders() {
                           {/* Detail Modal */}
                           <button
                             onClick={() => setSelectedOrder(order)}
-                            className="p-1.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 transition-colors shadow-xs"
+                            className="p-1.5 rounded-xl bg-white border border-stone-200 text-stone-700 hover:text-[#5D3A29] hover:bg-stone-50 transition-colors shadow-xs cursor-pointer"
                             title="Lihat Detail Pesanan"
                           >
                             <Eye size={14} />
@@ -632,7 +619,7 @@ export default function AdminOrders() {
                           {/* Delete Order */}
                           <button
                             onClick={() => setDeleteConfirmId(order.orderId)}
-                            className="p-1.5 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-xs"
+                            className="p-1.5 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-xs cursor-pointer"
                             title="Hapus Pesanan"
                           >
                             <Trash2 size={14} />
@@ -665,7 +652,7 @@ export default function AdminOrders() {
               </h4>
               <button 
                 onClick={() => setLightboxImage(null)}
-                className="p-1 rounded-full text-stone-400 hover:text-stone-700"
+                className="p-1 rounded-full text-stone-400 hover:text-stone-700 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -691,7 +678,7 @@ export default function AdminOrders() {
               </a>
               <button
                 onClick={() => setLightboxImage(null)}
-                className="px-4 py-2 rounded-xl bg-[#5D3A29] text-white text-xs font-bold hover:bg-[#8B5742]"
+                className="px-4 py-2 rounded-xl bg-[#5D3A29] text-white text-xs font-bold hover:bg-[#8B5742] cursor-pointer"
               >
                 Tutup
               </button>
@@ -727,7 +714,7 @@ export default function AdminOrders() {
               </div>
               <button 
                 onClick={() => setSelectedOrder(null)}
-                className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100"
+                className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -760,7 +747,7 @@ export default function AdminOrders() {
               {selectedOrder.notes && (
                 <div className="mt-3 pt-3 border-t border-stone-200/60 text-xs">
                   <span className="text-stone-400 block text-[11px]">Catatan Khusus:</span>
-                  <p className="font-medium text-amber-900 italic mt-0.5">"{selectedOrder.notes}"</p>
+                  <p className="font-medium text-amber-900 italic mt-0.5">&ldquo;{selectedOrder.notes}&rdquo;</p>
                 </div>
               )}
             </div>
@@ -807,7 +794,7 @@ export default function AdminOrders() {
                     {selectedOrder.paymentStatus === 'PENDING' ? (
                       <button
                         onClick={() => handleVerifyPayment(selectedOrder.orderId, 'SUCCESS')}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm cursor-pointer"
                       >
                         <CheckCircle2 size={14} />
                         Verifikasi Lunas Sekarang
@@ -856,7 +843,7 @@ export default function AdminOrders() {
 
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-5 py-2.5 rounded-2xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200 transition-all"
+                className="px-5 py-2.5 rounded-2xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200 transition-all cursor-pointer"
               >
                 Tutup
               </button>
@@ -881,13 +868,13 @@ export default function AdminOrders() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 py-2.5 rounded-2xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50"
+                className="flex-1 py-2.5 rounded-2xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50 cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={() => handleDeleteOrder(deleteConfirmId)}
-                className="flex-1 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md"
+                className="flex-1 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md cursor-pointer"
               >
                 Hapus
               </button>
@@ -895,6 +882,6 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }

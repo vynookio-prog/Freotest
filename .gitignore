@@ -6,6 +6,8 @@ node_modules/
 # Production build
 dist/
 dist-ssr/
+.next/
+out/
 
 # Vite / Rollup cache
 .vite/

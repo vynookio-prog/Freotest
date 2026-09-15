@@ -1,27 +1,23 @@
 {
   "name": "freonix-website",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "FREONIX Pre-Order & Culinary Catalog built with Next.js and InsForge",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.115.0",
+    "@insforge/sdk": "^1.5.2",
+    "canvas-confetti": "^1.9.4",
     "lucide-react": "^1.39.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.3"
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.1.1",
-    "vite": "^8.2.2"
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "3.4.17"
   }
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
@@ -17,12 +19,11 @@ import {
   Phone,
   Sparkles
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useDb } from '../utils/useDb';
-import { mapOrderFromDb } from '../utils/db';
-import { uploadToSupabaseStorage, supabase, isSupabaseConfigured } from '../utils/supabase';
+import Link from 'next/link';
+import { useDb } from '../../../lib/useDb';
+import { uploadToInsforgeStorage, isInsforgeConfigured } from '../../../lib/insforge';
 
-export default function Checkout() {
+export default function CheckoutPage() {
   const db = useDb();
   const activeProducts = db.getActiveProducts() || [];
   const settings = db.getSettings() || {};
@@ -55,6 +56,7 @@ export default function Checkout() {
 
   // Restore order state from localStorage
   const [savedOrder, setSavedOrder] = useState(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem('freonix_last_order');
       return saved ? JSON.parse(saved) : null;
@@ -64,10 +66,10 @@ export default function Checkout() {
   });
 
   const [isSuccess, setIsSuccess] = useState(() => {
+    if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('freonix_last_order');
   });
 
-  // Targeted live order state for receipt
   const [liveOrder, setLiveOrder] = useState(null);
 
   useEffect(() => {
@@ -79,29 +81,12 @@ export default function Checkout() {
       if (isMounted && order) setLiveOrder(order);
     });
 
-    if (isSupabaseConfigured) {
-      const channel = supabase
-        .channel(`receipt_live_${orderId}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`
-        }, payload => {
-          if (isMounted && payload.new) {
-            setLiveOrder(mapOrderFromDb(payload.new));
-          }
-        })
-        .subscribe();
-
-      return () => {
-        isMounted = false;
-        supabase.removeChannel(channel);
-      };
-    }
+    return () => {
+      isMounted = false;
+    };
   }, [savedOrder?.orderId, db]);
 
-  // Dynamically sync order with db/live state so real-time status update shows immediately on receipt
+  // Dynamically sync order with db/live state
   const currentDbOrder = liveOrder || (savedOrder ? db.getOrderById(savedOrder.orderId) : null);
   const orderSummary = currentDbOrder ? {
     ...savedOrder,
@@ -160,17 +145,17 @@ export default function Checkout() {
   };
 
   const uploadToCdn = async (file) => {
-    // 1. Coba upload ke Supabase Storage (bucket: freonix-uploads)
+    // 1. Coba upload ke InsForge Storage (bucket: freonix-uploads)
     try {
-      const sbResult = await uploadToSupabaseStorage(file, 'payment_proofs');
-      if (sbResult.success && sbResult.url) {
-        return sbResult.url;
+      const ifResult = await uploadToInsforgeStorage(file, 'payment_proofs');
+      if (ifResult.success && ifResult.url) {
+        return ifResult.url;
       }
     } catch (e) {
-      console.warn('Supabase storage upload fallback...', e);
+      console.warn('InsForge storage upload fallback...', e);
     }
 
-    // 2. Fallback cadangan ke Litterbox CDN
+    // 2. Fallback cadangan ke Litterbox CDN jika offline / tanpa koneksi BaaS
     const litterboxFormData = new FormData();
     litterboxFormData.append('reqtype', 'fileupload');
     litterboxFormData.append('time', '72h');
@@ -233,7 +218,6 @@ export default function Checkout() {
     }
   };
 
-  // Calculations
   const calculateTotal = () => {
     return activeProducts.reduce((sum, p) => {
       const qty = quantities[p.id] || 0;
@@ -295,7 +279,6 @@ export default function Checkout() {
 
     const paymentStatusText = 'PENDING';
 
-    // Format items list
     const orderItems = activeProducts
       .filter(p => (quantities[p.id] || 0) > 0)
       .map(p => ({
@@ -306,8 +289,7 @@ export default function Checkout() {
         total: quantities[p.id] * p.price
       }));
 
-    // Format WhatsApp message
-    const adminPhone = settings.whatsappAdmin || '6287856624994';
+    const adminPhone = settings.adminPhone || settings.whatsappAdmin || '6287856624994';
     let textMessage = `Halo Admin, saya ingin memesan produk kuliner ${settings.storeName || 'FREONIX'}.\n\n`;
     textMessage += `*NO. PESANAN:* #${orderId}\n`;
     textMessage += `*STATUS PEMBAYARAN:* ${isQris ? '⏳ PAYMENT PENDING (Sedang dalam pengecekan bukti transfer QRIS oleh Admin)' : '⏳ PAYMENT PENDING (Bayar Tunai di Stand saat Pengambilan)'}\n`;
@@ -359,17 +341,15 @@ export default function Checkout() {
 
     setIsLoading(true);
 
-    // 1. Simpan ke Supabase via database terpadu (db.js) - otomatis potong stok & simpan pesanan
     try {
       await db.createOrder(summaryData);
     } catch (err) {
       console.error('db.createOrder error:', err);
       setIsLoading(false);
-      setSubmitError(`Gagal menyimpan pesanan ke Supabase: ${err.message || 'Terjadi kesalahan sistem'}. Pastikan tabel Supabase sudah aktif dan koneksi internet stabil.`);
+      setSubmitError(`Gagal menyimpan pesanan ke InsForge: ${err.message || 'Terjadi kesalahan sistem'}.`);
       return;
     }
 
-    // 2. Simpan struk aktif ke localStorage (hanya untuk tampilan struk pelanggan di browser ini)
     try {
       localStorage.setItem('freonix_last_order', JSON.stringify(summaryData));
     } catch (err) {
@@ -380,7 +360,6 @@ export default function Checkout() {
     setIsSuccess(true);
     setIsLoading(false);
 
-    // 3. Buka WhatsApp
     window.open(waUrl, '_blank');
   };
 
@@ -410,29 +389,26 @@ export default function Checkout() {
     setQuantities(resetQty);
   };
 
-  // --- RENDER DIGITAL RECEIPT ---
+  // --- DIGITAL RECEIPT ---
   if (isSuccess && orderSummary) {
     const isQrisOrder = orderSummary.paymentMethod === 'qris';
     const isVerifiedSuccess = orderSummary.paymentStatus === 'SUCCESS';
 
     return (
       <div className="py-12 px-4 sm:px-6 max-w-lg mx-auto animate-fade-in">
-        {/* Apple Liquid Glass Digital Receipt Card */}
         <div className="bg-white/70 backdrop-blur-2xl border border-white/90 rounded-[2.5rem] p-6 sm:p-8 shadow-[0_24px_70px_rgba(93,58,41,0.12)] relative overflow-hidden print:shadow-none print:border print:border-stone-300">
-          {/* Top Specular Rim */}
           <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
           {/* Receipt Header */}
           <div className="text-center pb-6 border-b border-stone-200/50">
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 ${
               isVerifiedSuccess 
-                ? 'bg-green-500/15 border border-green-500/30 text-green-600 animate-bounce' 
+                ? 'bg-green-500/15 border border-green-500/30 text-green-600' 
                 : 'bg-amber-500/15 border border-amber-500/30 text-amber-600'
             }`}>
               <CheckCircle className="w-8 h-8" />
             </div>
             
-            {/* Live Synchronized Payment Status Badge */}
             <div className="mb-2">
               {isVerifiedSuccess ? (
                 <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-800 text-xs font-black uppercase tracking-wider shadow-sm">
@@ -511,7 +487,7 @@ export default function Checkout() {
             </span>
           </div>
 
-          {/* Bukti Pembayaran QRIS Thumbnail jika ada */}
+          {/* Bukti Pembayaran QRIS */}
           {(orderSummary.paymentProofImage || orderSummary.paymentProofUrl) && (
             <div className="py-3 border-t border-stone-200/50 mb-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#8B5742] block mb-2">
@@ -521,7 +497,7 @@ export default function Checkout() {
                 {imgError ? (
                   <div className="py-4 px-2 flex flex-col items-center justify-center text-center">
                     <ImageIcon className="w-8 h-8 text-[#8B5742]/50 mb-1.5" />
-                    <p className="text-xs font-bold text-[#5D3A29]">Bukti Transfer Terlampir via Cloud CDN</p>
+                    <p className="text-xs font-bold text-[#5D3A29]">Bukti Transfer Terlampir via Cloud Storage</p>
                     <p className="text-[11px] text-stone-500 mt-0.5">Tautan bukti pembayaran telah dilampirkan ke WhatsApp Admin</p>
                   </div>
                 ) : (
@@ -541,7 +517,7 @@ export default function Checkout() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 hover:bg-white text-[11px] font-bold text-[#8B5742] hover:text-[#5D3A29] border border-stone-200/60 shadow-xs transition-all"
                   >
-                    <ExternalLink size={12} /> Buka Bukti Foto (Link CDN)
+                    <ExternalLink size={12} /> Buka Bukti Foto (Link InsForge Storage)
                   </a>
                 </div>
               )}
@@ -588,7 +564,7 @@ export default function Checkout() {
               Buat Pesanan Baru
             </button>
             <Link 
-              to="/products"
+              href="/products"
               className="w-full text-center text-xs font-bold text-stone-500 hover:text-[#5D3A29] py-1 transition-colors"
             >
               ← Kembali ke Menu Produk
@@ -599,11 +575,10 @@ export default function Checkout() {
     );
   }
 
-  // --- RENDER CHECKOUT FORM ---
+  // --- CHECKOUT FORM ---
   return (
     <section className="py-12 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto">
-        {/* Closed Store Alert */}
         {settings.storeStatus === 'closed' && (
           <div className="mb-8 p-4 rounded-3xl bg-rose-500/10 backdrop-blur-xl border border-rose-500/30 text-rose-900 flex items-center gap-3">
             <AlertCircle size={22} className="text-rose-600 shrink-0" />
@@ -626,7 +601,6 @@ export default function Checkout() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/80 p-6 sm:p-10 shadow-[0_20px_60px_rgba(93,58,41,0.08)] relative overflow-hidden">
-          {/* Top specular rim */}
           <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
           {/* Data Diri */}
@@ -687,7 +661,7 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Rincian Menu Produk Dinamis dari Database */}
+          {/* Rincian Menu Produk */}
           <div className="mb-8">
             <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider border-b border-stone-200/50 pb-3 mb-5">
               Rincian Menu Produk
@@ -779,14 +753,13 @@ export default function Checkout() {
             />
           </div>
 
-          {/* Metode Pembayaran (QRIS vs Cash) */}
+          {/* Metode Pembayaran */}
           <div className="mb-8">
             <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider border-b border-stone-200/50 pb-3 mb-4">
               Pilih Metode Pembayaran
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {/* Opsi QRIS */}
               <label 
                 className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
                   formData.paymentMethod === 'qris'
@@ -813,7 +786,6 @@ export default function Checkout() {
                 </div>
               </label>
 
-              {/* Opsi Cash */}
               <label 
                 className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
                   formData.paymentMethod === 'cash'
@@ -841,188 +813,115 @@ export default function Checkout() {
               </label>
             </div>
 
-            {/* Kotak Tampilan QRIS & Upload Bukti jika QRIS dipilih */}
             {formData.paymentMethod === 'qris' && (
               <div className="p-5 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/90 shadow-sm animate-fade-in space-y-4">
-                {/* Kartu QRIS Dummy */}
                 <div className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs text-center max-w-sm mx-auto">
                   <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
-                    <img 
-                      src="https://images.seeklogo.com/logo-png/39/2/quick-response-code-indonesia-standard-qris-logo-png_seeklogo-391791.png" 
-                      alt="Logo QRIS" 
-                      className="h-6 object-contain"
-                    />
-                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">NMID: ID102026FREONIX</span>
+                    <span className="text-xs font-black text-[#5D3A29]">QRIS NASIONAL</span>
+                    <span className="text-[10px] font-bold text-stone-400">NMID: ID1020038849201</span>
                   </div>
-
-                  <h3 className="font-black text-sm text-[#5D3A29] mb-1">{settings.storeName || 'FREONIX STAND'}</h3>
-                  <p className="text-[11px] text-stone-500 mb-3">Kuliner Stand Kokurikuler</p>
-
-                  {/* QR Code Canvas/Image */}
-                  <div className="p-3 bg-white rounded-xl border border-stone-200 inline-block shadow-inner mb-3">
+                  <div className="bg-stone-50 p-4 rounded-xl inline-block border border-stone-100 mb-2">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=FREONIX-ORDER-QRIS-NOMINAL-${calculateTotal()}`}
-                      alt="QRIS Barcode" 
-                      className="w-40 h-40 object-contain mx-auto"
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=00020101021126570014ID.LINKAJA.WWW01189360091100203884902150000000000000000303UMI51440014ID.DANA.WWW02150000000000000000303UMI52045812530336054${calculateTotal() || 1000}5802ID5914FREONIX%20OFFICIAL6007JAKARTA61051234062070703A016304`} 
+                      alt="QR Code QRIS FREONIX" 
+                      width="200"
+                      height="200"
+                      className="mx-auto"
                     />
                   </div>
-
-                  <div className="text-xs font-bold text-[#8B5742] bg-[#DDA15E]/15 py-1.5 px-3 rounded-lg border border-[#DDA15E]/30">
-                    Nominal: Rp {calculateTotal().toLocaleString('id-ID')}
-                  </div>
-                  <p className="text-[10px] text-stone-400 mt-2">
-                    Dapat di-scan dengan GoPay, OVO, Dana, ShopeePay, BCA Mobile, dll.
+                  <p className="text-xs font-black text-[#8B5742]">
+                    Total: Rp {calculateTotal().toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-[11px] text-stone-500 mt-0.5">
+                    Scan via BCA, Mandiri, BRI, Dana, GoPay, OVO, atau ShopeePay
                   </p>
                 </div>
 
-                {/* Input Upload Bukti Transfer */}
-                <div className="pt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] flex items-center gap-1">
-                      Upload Bukti Transfer QRIS <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full">
-                      Wajib Diisi (QRIS)
-                    </span>
-                  </div>
+                {/* Upload Bukti Pembayaran */}
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
+                    <span>Unggah Bukti Transfer QRIS <span className="text-red-500 font-bold">*</span></span>
+                    <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">Wajib untuk QRIS</span>
+                  </label>
                   
-                  <div className="flex flex-col sm:flex-row items-center gap-3">
-                    <label className={`flex-1 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed transition-all group ${
-                      isUploadingProof 
-                        ? 'border-stone-300 bg-stone-100 cursor-not-allowed text-stone-400' 
-                        : !paymentProof
-                          ? 'border-red-300 hover:border-red-500 bg-red-50/20 cursor-pointer'
-                          : 'border-green-400/80 hover:border-green-600 bg-green-50/30 cursor-pointer'
-                    }`}>
-                      {isUploadingProof ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin text-[#8B5742]" />
-                          <span className="text-xs font-semibold text-stone-600">Mengunggah ke server CDN...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={16} className="text-[#8B5742] group-hover:scale-110 transition-transform" />
-                          <span className="text-xs font-semibold text-stone-600">
-                            {paymentProof ? 'Ganti Foto Bukti' : 'Pilih Foto / Screenshot Bukti Transfer'}
-                          </span>
-                        </>
-                      )}
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        disabled={isUploadingProof}
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-
-                    {paymentProof && (
-                      <div className="relative w-16 h-12 rounded-xl overflow-hidden border border-white shadow-xs shrink-0 bg-stone-100">
+                  <div className="relative border-2 border-dashed border-stone-300 hover:border-[#DDA15E] rounded-2xl p-4 text-center transition-colors bg-white/40">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    
+                    {isUploadingProof ? (
+                      <div className="flex flex-col items-center justify-center py-4">
+                        <Loader2 className="w-8 h-8 animate-spin text-[#8B5742] mb-2" />
+                        <span className="text-xs font-bold text-[#5D3A29]">Sedang mengunggah ke InsForge Storage...</span>
+                      </div>
+                    ) : paymentProof ? (
+                      <div className="flex items-center justify-center gap-3">
                         <img 
                           src={paymentProof} 
-                          alt="Preview Bukti" 
-                          className="w-full h-full object-cover"
+                          alt="Thumbnail Bukti Transfer" 
+                          className="w-14 h-14 object-cover rounded-xl border border-white shadow-xs" 
                         />
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 size={14} /> Foto bukti siap dilampirkan
+                          </span>
+                          <span className="text-[10px] text-stone-400 block">Klik di sini jika ingin mengganti file gambar</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-2">
+                        <Upload className="w-6 h-6 text-[#8B5742] mb-1" />
+                        <span className="text-xs font-bold text-[#5D3A29]">Klik untuk pilih gambar bukti transfer</span>
+                        <span className="text-[10px] text-stone-400 mt-0.5">Format: JPG, PNG, atau WebP</span>
                       </div>
                     )}
                   </div>
-
-                  {/* Pengingat Jika Belum Upload Bukti */}
-                  {!paymentProof && (
-                    <div className="mt-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-900 text-xs animate-fade-in">
-                      <AlertCircle size={15} className="shrink-0 text-amber-600" />
-                      <span>Anda <strong>wajib</strong> mengunggah screenshot bukti transfer QRIS agar pesanan dapat diproses.</span>
-                    </div>
-                  )}
-
-                  {/* Status Sukses Upload CDN */}
-                  {paymentProofUrl && !isUploadingProof && (
-                    <div className="mt-3 p-3 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-start gap-2.5 animate-fade-in">
-                      <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
-                      <div className="text-xs">
-                        <p className="font-bold text-green-800">Bukti berhasil diunggah & diverifikasi!</p>
-                        <p className="text-green-700 text-[11px] mt-0.5">
-                          Link foto publik siap dilampirkan otomatis ke pesan WhatsApp Admin.
-                        </p>
-                        <a 
-                          href={paymentProofUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="inline-flex items-center gap-1 text-[11px] text-green-900 font-bold underline mt-1"
-                        >
-                          <ExternalLink size={11} /> Cek Tautan Gambar
-                        </a>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status Error Upload */}
                   {uploadError && (
-                    <div className="mt-3 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2 text-rose-800 text-xs animate-fade-in">
-                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                      <p>{uploadError}</p>
-                    </div>
+                    <p className="text-[11px] text-amber-700 mt-1.5 font-medium">{uploadError}</p>
                   )}
-
-                  <p className="text-[11px] text-stone-500 mt-2">
-                    * Pembayaran QRIS mewajibkan lampiran bukti screenshot agar Admin dapat langsung memverifikasi status pembayaran lunas.
-                  </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Total & Submit */}
-          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-xs mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[#5D3A29]/80 text-xs font-bold uppercase tracking-wider">Total Item Dipesan</span>
-              <span className="font-extrabold text-[#5D3A29]">{totalItemCount} item</span>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t border-stone-200/40">
-              <span className="text-[#5D3A29] font-bold text-sm">Total Estimasi Harga</span>
-              <span className="text-2xl font-black text-[#8B5742]">Rp {calculateTotal().toLocaleString('id-ID')}</span>
-            </div>
-          </div>
-
-          {/* Submit Error Alert */}
+          {/* Submit Error Banner */}
           {submitError && (
-            <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-3 shadow-xs animate-fade-in">
-              <AlertCircle size={18} className="text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block font-bold text-rose-900 mb-0.5">Gagal Menyimpan Pesanan</strong>
-                <span className="leading-relaxed">{submitError}</span>
-              </div>
+            <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-800 text-xs flex items-start gap-2.5">
+              <AlertCircle size={16} className="text-red-600 shrink-0 mt-0.5" />
+              <span>{submitError}</span>
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isLoading || isUploadingProof || settings.storeStatus === 'closed' || activeProducts.length === 0}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] disabled:opacity-50 text-white py-4 rounded-2xl font-bold uppercase tracking-wider transition-all duration-200 shadow-[0_8px_24px_rgba(139,87,66,0.35)] hover:shadow-[0_12px_30px_rgba(139,87,66,0.5)] active:scale-98"
-          >
-            {activeProducts.length === 0 ? (
-              <span className="font-bold flex items-center gap-2">
-                <ShoppingBag size={18} /> Belum Ada Menu untuk Dipesan
+          {/* Ringkasan Total & Submit Button */}
+          <div className="pt-4 border-t border-stone-200/50">
+            <div className="flex justify-between items-center mb-6">
+              <span className="font-bold text-sm text-[#5D3A29]">Total Tagihan</span>
+              <span className="text-2xl font-black text-[#8B5742]">
+                Rp {calculateTotal().toLocaleString('id-ID')}
               </span>
-            ) : settings.storeStatus === 'closed' ? (
-              <span className="font-bold">Pre-Order Ditutup</span>
-            ) : isUploadingProof ? (
-              <span className="font-bold flex items-center gap-2">
-                <Loader2 size={18} className="animate-spin" /> Mengunggah Bukti Pembayaran...
-              </span>
-            ) : isLoading ? (
-              <span className="font-bold flex items-center gap-2">
-                <Loader2 size={18} className="animate-spin" /> Menyimpan Pesanan ke Supabase...
-              </span>
-            ) : (
-              <>
-                <ShoppingBag className="w-5 h-5" />
-                {formData.paymentMethod === 'qris' 
-                  ? (paymentProof ? 'Konfirmasi Bayar QRIS & Kirim WA' : 'Wajib Upload Bukti QRIS Terlebih Dahulu') 
-                  : 'Pesan & Bayar Tunai di Stand'}
-              </>
-            )}
-          </button>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || settings.storeStatus === 'closed'}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-wider shadow-[0_8px_25px_rgba(139,87,66,0.35)] hover:shadow-[0_12px_32px_rgba(139,87,66,0.5)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Memproses Pesanan...</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={18} />
+                  <span>Kirim Pesanan & Dapatkan Struk</span>
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </section>

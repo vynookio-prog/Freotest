@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Package, 
@@ -13,35 +16,47 @@ import {
   Menu, 
   X, 
   ShieldCheck, 
-  Check, 
-  AlertTriangle, 
   Clock, 
   Sparkles
 } from 'lucide-react';
-import { useDb } from '../../utils/useDb';
-import { setupAdminRealtime } from '../../utils/db';
-import { logoutAdmin } from '../../utils/supabase';
+import { useDb } from '../../lib/useDb';
+import { logoutAdmin } from '../../lib/insforge';
 
 export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [isClient, setIsClient] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
   const db = useDb();
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Auth Guard
-  const isAuthenticated = sessionStorage.getItem('freonix_admin_auth') === 'true' || 
-                          localStorage.getItem('freonix_admin_auth') === 'true';
+  const isAuthenticated = isClient && (
+    sessionStorage.getItem('freonix_admin_auth') === 'true' || 
+    localStorage.getItem('freonix_admin_auth') === 'true'
+  );
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const unsub = setupAdminRealtime();
-      return () => unsub();
+    if (isClient && !isAuthenticated && pathname !== '/admin/login') {
+      router.replace('/admin/login');
     }
-  }, [isAuthenticated]);
+  }, [isClient, isAuthenticated, pathname, router]);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+  // Jika di halaman login, tampilkan langsung tanpa layout admin
+  if (pathname === '/admin/login') {
+    return children;
+  }
+
+  if (!isClient || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8B5742]" />
+      </div>
+    );
   }
 
   const notifications = db.getNotifications() || [];
@@ -50,7 +65,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
 
   const handleLogout = async () => {
     await logoutAdmin();
-    navigate('/admin/login', { replace: true });
+    router.replace('/admin/login');
   };
 
   const navItems = [
@@ -63,8 +78,8 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
   ];
 
   const isNavActive = (item) => {
-    if (item.exact) return location.pathname === item.path;
-    return location.pathname.startsWith(item.path);
+    if (item.exact) return pathname === item.path;
+    return pathname.startsWith(item.path);
   };
 
   return (
@@ -73,7 +88,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
       <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#DDA15E]/15 blur-[120px] pointer-events-none -z-10" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#8B5742]/10 blur-[140px] pointer-events-none -z-10" />
 
-      {/* Desktop Sidebar (Apple Liquid Glass VisionOS) */}
+      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-white/80 bg-white/60 backdrop-blur-2xl p-5 sticky top-0 h-screen z-30 shadow-[4px_0_24px_rgba(93,58,41,0.03)]">
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-2 pb-6 border-b border-stone-200/60 mb-6">
@@ -94,10 +109,10 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                href={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
                   active
-                    ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white shadow-[0_4px_16px_rgba(139,87,66,0.25)] -translate-r-0.5'
+                    ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white shadow-[0_4px_16px_rgba(139,87,66,0.25)]'
                     : 'text-stone-600 hover:text-[#5D3A29] hover:bg-white/70'
                 }`}
               >
@@ -136,9 +151,8 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white/60 backdrop-blur-xl border-b border-white/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xs">
+        <header className="sticky top-0 z-20 bg-white/60 backdrop-blur-xl border-b border-white/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
-            {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="lg:hidden p-2 rounded-xl text-stone-600 hover:bg-white/80 active:scale-95"
@@ -149,12 +163,11 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Quick link to customer website */}
             <Link
-              to="/"
+              href="/"
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/70 hover:bg-white text-stone-600 hover:text-[#5D3A29] border border-white/90 text-xs font-semibold shadow-2xs transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/70 hover:bg-white text-stone-600 hover:text-[#5D3A29] border border-white/90 text-xs font-semibold shadow-xs transition-all"
             >
               <ExternalLink size={13} />
               <span>Lihat Website</span>
@@ -164,7 +177,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
             <div className="relative">
               <button
                 onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className="relative p-2.5 rounded-xl bg-white/70 hover:bg-white text-stone-600 hover:text-[#5D3A29] border border-white/90 shadow-2xs transition-all active:scale-95"
+                className="relative p-2.5 rounded-xl bg-white/70 hover:bg-white text-stone-600 hover:text-[#5D3A29] border border-white/90 shadow-xs transition-all active:scale-95"
                 title="Notifikasi"
               >
                 <Bell size={17} />
@@ -175,7 +188,6 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
                 )}
               </button>
 
-              {/* Notification Dropdown Card */}
               {notifDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/90 p-4 shadow-2xl z-50 animate-fade-in">
                   <div className="flex items-center justify-between pb-3 border-b border-stone-200/60 mb-3">
@@ -250,7 +262,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded-full text-stone-500 hover:bg-stone-100"
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600"
                 >
                   <X size={20} />
                 </button>
@@ -263,15 +275,15 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
                   return (
                     <Link
                       key={item.path}
-                      to={item.path}
+                      href={item.path}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
                         active
-                          ? 'bg-[#5D3A29] text-white shadow-sm'
+                          ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white shadow-md'
                           : 'text-stone-600 hover:bg-stone-100'
                       }`}
                     >
-                      <Icon size={18} />
+                      <Icon size={17} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -279,22 +291,17 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
               </nav>
             </div>
 
-            <div className="pt-4 border-t border-stone-200 space-y-2">
-              <Link
-                to="/"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-700"
-              >
-                <ExternalLink size={14} /> Lihat Website
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold"
-              >
-                <LogOut size={14} /> Keluar (Logout)
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200/50"
+            >
+              <LogOut size={16} />
+              <span>Keluar (Logout)</span>
+            </button>
           </div>
-          <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
         </div>
       )}
     </div>

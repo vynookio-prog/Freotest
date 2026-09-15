@@ -183,10 +183,8 @@ export default function AIChatWidget() {
           >
             <div className="relative">
               <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-inner group-hover:rotate-12 transition-transform">
-                <Sparkles size={16} className="text-[#FFDE9E] animate-pulse" />
+                <Sparkles size={16} className="text-[#FFDE9E]" />
               </div>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-[#5D3A29] rounded-full animate-ping" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-[#5D3A29] rounded-full" />
             </div>
             <div className="text-left hidden sm:block">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#FFDE9E] block leading-none">
@@ -214,7 +212,6 @@ export default function AIChatWidget() {
                 <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-xs">
                   <Bot size={20} className="text-[#FFDE9E]" />
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#5D3A29] rounded-full" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">

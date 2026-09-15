@@ -17,6 +17,50 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/menu',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/menu-dan-gizi',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/menu-gizi',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/gizi',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/detail-gizi',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/product',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/produk',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/products/:id',
+        destination: '/product/:id',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

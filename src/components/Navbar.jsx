@@ -30,12 +30,16 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  const isActive = (path) => pathname === path;
+  const isActive = (path) => {
+    if (path === '/') return pathname === '/';
+    if (path === '/products') return pathname.startsWith('/product');
+    return pathname.startsWith(path);
+  };
 
   const navLinks = [
     { path: '/', label: 'Beranda' },
     { path: '/about', label: 'Tentang Kelas' },
-    { path: '/products', label: 'Produk Kokurikuler' },
+    { path: '/products', label: 'Menu & Gizi' },
     { path: '/gallery', label: 'Galeri' },
   ];
 

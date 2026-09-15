@@ -51,7 +51,7 @@ export default function Home() {
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-[0_8px_24px_rgba(139,87,66,0.35)] hover:shadow-[0_12px_30px_rgba(139,87,66,0.5)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all"
           >
             <Utensils size={18} />
-            Produk Kokurikuler
+            Menu & Gizi Kokurikuler
           </Link>
           <Link 
             href="/gallery"

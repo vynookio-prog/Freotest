@@ -29,13 +29,13 @@ export default function Products() {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-md border border-white/80 text-[#8B5742] text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
             <Sparkles size={14} />
-            Katalog Makanan & Minuman
+            Katalog Kuliner & Informasi Gizi
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#5D3A29] mb-4">
-            Produk Kokurikuler
+            Menu & Nilai Gizi
           </h2>
           <p className="text-[#4B5563] text-sm sm:text-base mb-6">
-            Pilihan hidangan hasil olahan higienis dan lezat oleh siswa-siswi FREONIX. Pesan sekarang sebelum kuota PO penuh!
+            Pilihan sajian kuliner khas Filipina olahan siswa-siswi FREONIX XII-F1 Sains. Higienis, lezat, bernutrisi terukur, dan siap dipesan!
           </p>
           <div className="flex justify-center">
             <CountdownTimer />
@@ -120,19 +120,34 @@ export default function Products() {
                           {formattedPrice}
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed mb-6 line-clamp-3">
+                      <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed mb-4 line-clamp-2">
                         {item.desc || item.description}
                       </p>
+
+                      {/* Mini Nutrition Pills */}
+                      {Array.isArray(item.nutrition) && item.nutrition.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          {item.nutrition.slice(0, 3).map((nut, nIdx) => (
+                            <span 
+                              key={nIdx} 
+                              className="text-[10px] font-bold bg-[#8B5742]/5 text-[#5D3A29] px-2 py-0.5 rounded-full border border-[#8B5742]/15 flex items-center gap-1"
+                            >
+                              <span className="text-[#8B5742]">{nut.label}:</span>
+                              <span>{nut.value}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="p-6 pt-0 flex flex-col gap-2.5">
                     <Link 
-                      href={`/product/${item.slug || item.id}`}
-                      className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-[#8B5742] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm border border-white/90 backdrop-blur-md"
+                      href={`/product/${encodeURIComponent(item.slug || item.id)}`}
+                      className="w-full flex items-center justify-center gap-2 bg-white/90 hover:bg-white text-[#5D3A29] hover:text-[#8B5742] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-xs hover:shadow-md border border-stone-200/80 backdrop-blur-md group/btn"
                     >
-                      <FileText size={16} />
-                      Detail & Gizi
+                      <FileText size={15} className="text-[#8B5742] group-hover/btn:scale-110 transition-transform" />
+                      Lihat Menu & Gizi
                     </Link>
 
                     {settings.storeStatus === 'closed' ? (

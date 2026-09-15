@@ -687,14 +687,55 @@ export const db = {
     return loadLocalDb().products.filter(p => p.status === 'active');
   },
   getProductById(id) {
-    const prods = loadLocalDb().products;
-    return prods.find(p => 
-      p.id === id || 
-      p.slug === id ||
-      (id === '1' && (p.id === 'kwek-kwek' || p.slug === 'kwek-kwek')) ||
-      (id === '2' && (p.id === 'chicken-adobo' || p.slug === 'chicken-adobo')) ||
-      (id === '3' && (p.id === 'halo-halo' || p.slug === 'halo-halo'))
+    if (!id) return null;
+    const prods = loadLocalDb().products || [];
+    const cleanId = String(id).trim().toLowerCase();
+    const decodedId = decodeURIComponent(cleanId).toLowerCase();
+    const normalized = decodedId.replace(/[^a-z0-9]/g, '');
+
+    // 1. Direct or decoded match on id or slug
+    let found = prods.find(p => 
+      p.id?.toLowerCase() === cleanId || 
+      p.slug?.toLowerCase() === cleanId ||
+      p.id?.toLowerCase() === decodedId ||
+      p.slug?.toLowerCase() === decodedId
     );
+    if (found) return found;
+
+    // 2. Normalized alphanumeric match (ignores hyphens, underscores, spaces)
+    if (normalized) {
+      found = prods.find(p => {
+        const pIdNorm = (p.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const pSlugNorm = (p.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const pNameNorm = (p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pIdNorm === normalized || pSlugNorm === normalized || pNameNorm === normalized;
+      });
+      if (found) return found;
+    }
+
+    // 3. Number or common shortcuts
+    if (cleanId === '1' || cleanId.startsWith('kwek')) {
+      return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[0];
+    }
+    if (cleanId === '2' || cleanId.includes('chicken') || cleanId.includes('adobo')) {
+      return prods.find(p => p.id === 'chicken-adobo' || p.slug === 'chicken-adobo') || prods[1];
+    }
+    if (cleanId === '3' || cleanId.includes('halo')) {
+      return prods.find(p => p.id === 'halo-halo' || p.slug === 'halo-halo') || prods[2];
+    }
+
+    const num = parseInt(cleanId, 10);
+    if (!isNaN(num) && num >= 1 && num <= prods.length) {
+      return prods[num - 1];
+    }
+
+    // 4. Substring search if user typed partial name
+    found = prods.find(p => 
+      (p.id && cleanId.includes(p.id.toLowerCase())) ||
+      (p.slug && cleanId.includes(p.slug.toLowerCase())) ||
+      (p.name && cleanId.includes(p.name.toLowerCase()))
+    );
+    return found || null;
   },
   async createProduct(prod) {
     const data = loadLocalDb();

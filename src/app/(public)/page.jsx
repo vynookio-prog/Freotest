@@ -1,6 +1,7 @@
 import React from 'react';
 import { Utensils, ImageIcon, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon } from '../../components/SocialIcons';
 
 export const metadata = {
   title: 'FREONIX - Beranda | Sajian Kuliner Khas Filipina',
@@ -60,6 +61,50 @@ export default function Home() {
             <ImageIcon size={18} />
             Lihat Galeri
           </Link>
+        </div>
+
+        {/* Media Sosial FREONIX dengan Logo di Atas Tulisan */}
+        <div className="mt-10 pt-8 border-t border-stone-200/50">
+          <p className="text-[11px] font-extrabold text-[#8B5742] uppercase tracking-wider mb-4">
+            Terhubung Bersama Kami
+          </p>
+          <div className="flex items-center justify-center gap-3 sm:gap-5">
+            <a 
+              href="https://www.instagram.com/freonix__?igsi=YzA1MDF4amhva3Qx" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-[#5D3A29] hover:text-[#E1306C] border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[80px]"
+            >
+              <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-[#E1306C] group-hover:scale-115 transition-all duration-200">
+                <InstagramIcon size={20} />
+              </div>
+              <span className="text-[11px] font-bold">Instagram</span>
+            </a>
+
+            <a 
+              href="https://www.tiktok.com/@duabelasefsatu1?_r=1&_t=ZS-98ZVLY09Qxh" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-[#5D3A29] hover:text-black border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[80px]"
+            >
+              <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-black group-hover:scale-115 transition-all duration-200">
+                <TikTokIcon size={19} />
+              </div>
+              <span className="text-[11px] font-bold">TikTok</span>
+            </a>
+
+            <a 
+              href="https://wa.link/ewddmf" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-[#5D3A29] hover:text-emerald-600 border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[80px]"
+            >
+              <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-emerald-600 group-hover:scale-115 transition-all duration-200">
+                <WhatsAppIcon size={20} />
+              </div>
+              <span className="text-[11px] font-bold">WhatsApp</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>

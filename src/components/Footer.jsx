@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
+import { InstagramIcon, TikTokIcon, WhatsAppIcon } from './SocialIcons';
 
 export default function Footer() {
   return (
@@ -15,30 +16,39 @@ export default function Footer() {
             Kelas Sains XII-F1 • "FUTURE READY TWELVE ONE AND ONLY"
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 text-xs">
+        <div className="flex items-center justify-center md:justify-end gap-3 sm:gap-4">
           <a 
             href="https://www.instagram.com/freonix__?igsi=YzA1MDF4amhva3Qx" 
             target="_blank" 
             rel="noreferrer" 
-            className="flex items-center gap-2 bg-white/70 hover:bg-white text-[#5D3A29] px-4 py-2 rounded-full border border-white/90 shadow-xs hover:shadow transition-all font-semibold active:scale-95"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white/70 hover:bg-white text-[#5D3A29] hover:text-[#E1306C] px-4 py-2.5 rounded-2xl border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[76px]"
           >
-            Instagram
+            <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-[#E1306C] group-hover:scale-115 transition-all duration-200">
+              <InstagramIcon size={20} />
+            </div>
+            <span className="text-[11px] font-bold">Instagram</span>
           </a>
           <a 
             href="https://www.tiktok.com/@duabelasefsatu1?_r=1&_t=ZS-98ZVLY09Qxh" 
             target="_blank" 
             rel="noreferrer" 
-            className="flex items-center gap-2 bg-white/70 hover:bg-white text-[#5D3A29] px-4 py-2 rounded-full border border-white/90 shadow-xs hover:shadow transition-all font-semibold active:scale-95"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white/70 hover:bg-white text-[#5D3A29] hover:text-black px-4 py-2.5 rounded-2xl border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[76px]"
           >
-            TikTok
+            <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-black group-hover:scale-115 transition-all duration-200">
+              <TikTokIcon size={19} />
+            </div>
+            <span className="text-[11px] font-bold">TikTok</span>
           </a>
           <a 
             href="https://wa.link/ewddmf" 
             target="_blank" 
             rel="noreferrer" 
-            className="flex items-center gap-2 bg-white/70 hover:bg-white text-[#5D3A29] px-4 py-2 rounded-full border border-white/90 shadow-xs hover:shadow transition-all font-semibold active:scale-95"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white/70 hover:bg-white text-[#5D3A29] hover:text-emerald-600 px-4 py-2.5 rounded-2xl border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[76px]"
           >
-            WhatsApp
+            <div className="w-6 h-6 flex items-center justify-center text-[#8B5742] group-hover:text-emerald-600 group-hover:scale-115 transition-all duration-200">
+              <WhatsAppIcon size={20} />
+            </div>
+            <span className="text-[11px] font-bold">WhatsApp</span>
           </a>
         </div>
       </div>

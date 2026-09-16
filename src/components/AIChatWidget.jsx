@@ -19,7 +19,7 @@ import Link from 'next/link';
 const QUICK_PROMPTS = [
   { label: '🍽️ Rekomendasi Favorit', text: 'Apa menu rekomendasi paling favorit dari FREONIX?' },
   { label: '💪 Tinggi Protein', text: 'Menu apa yang paling tinggi protein dan cocok untuk menambah energi?' },
-  { label: '🧪 Sains Chicken Adobo', text: 'Apa penjelasan sains di balik rasa dan teknik memasak Chicken Adobo khas Filipina?' },
+  { label: '🧪 Sains Turon & Buko', text: 'Apa penjelasan sains di balik pembuatan Turon karamel dan kesegaran Buko Coklat khas Filipina?' },
   { label: '💳 Cara Pesan & Bayar', text: 'Bagaimana cara pre-order dan metode pembayaran apa saja yang tersedia?' }
 ];
 

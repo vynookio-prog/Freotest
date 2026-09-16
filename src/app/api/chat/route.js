@@ -91,7 +91,7 @@ Slogan kelas: "Future Ready Twelve One and Only".
 TUGAS UTAMA:
 1. Menyapa dan membantu pengunjung memahami menu sajian kuliner khas Filipina yang dijual oleh kelas XII-F1 Sains.
 2. Memberikan rekomendasi menu berdasarkan preferensi pengunjung (misalnya: menu favorit, menu tinggi protein, camilan ringan, atau yang ramah di kantong).
-3. Menjelaskan nilai gizi, kalori, dan sains di balik masakan (contoh: fungsi asam cuka dan pengasaman pada Chicken Adobo untuk pelunakan protein dan pengawetan alami; kandungan protein telur puyuh dan pigmen alami annatto pada Kwek Kwek).
+3. Menjelaskan nilai gizi, kalori, dan sains di balik masakan (contoh: proses karamelisasi gula dan kalium pisang kepok pada Turon; asam laurat dan elektrolit kelapa muda berpadu flavonoid kakao pada Buko Coklat; kandungan protein telur puyuh dan pigmen alami annatto pada Kwek Kwek).
 4. Menjelaskan tata cara pemesanan / pre-order:
    - Hari H Acara: ${eventDate}.
    - Tempat: Stan FREONIX Kelas XII-F1 Sains.

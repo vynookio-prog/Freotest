@@ -83,81 +83,78 @@ export const INITIAL_DB = {
       updatedAt: '2026-09-06T12:00:00.000Z'
     },
     {
-      id: 'chicken-adobo',
-      slug: 'chicken-adobo',
-      name: 'Chicken Adobo',
-      categoryId: 'cat-2',
-      categoryName: 'Makanan Utama',
-      price: 15000,
+      id: 'turon',
+      slug: 'turon',
+      name: 'Turon',
+      categoryId: 'cat-1',
+      categoryName: 'Makanan Ringan',
+      price: 5000,
       discountPrice: 0,
-      stock: 28,
+      stock: 40,
       unit: 'porsi',
       status: 'active',
-      desc: 'Hidangan nasional Filipina berupa potongan ayam yang dimasak perlahan dalam campuran kecap asin, cuka, bawang putih, dan merica hitam hingga meresap sempurna.',
-      image: '/produk-chicken-adobo.jpg',
-      waLink: 'https://wa.link/y1k3hz',
+      desc: 'Camilan lumpia manis khas Filipina berupa pisang kepok dan irisan nangka matang berbalut gula karamel renyah, digulung dengan kulit lumpia lalu digoreng keemasan hingga garing dan legit.',
+      image: '/produk-turon.jpg',
+      waLink: 'https://wa.link/kdmsu4',
       ingredients: [
-        'Daging ayam segar (potong sedang)',
-        'Kecap asin pekat',
-        'Cuka putih / cuka aren',
-        'Bawang putih (geprek kasar)',
-        'Biji lada hitam utuh',
-        'Daun salam kering (Bay leaves)',
-        'Sedikit gula pasir',
-        'Air & Minyak goreng'
+        'Pisang kepok matang pilihan (Saba)',
+        'Irisan nangka manis segar (Langka)',
+        'Kulit lumpia tipis & renyah (Spring roll wrapper)',
+        'Gula palem / brown sugar murni (karamelisasi)',
+        'Minyak goreng nabati berkualitas',
+        'Larutan perekat tepung maizena'
       ],
       tools: [
-        'Pisau daging',
-        'Talenan tebal',
-        'Panci atau Wajan tertutup',
-        'Spatula kayu'
+        'Wajan penggorengan / deep fryer',
+        'Penjepit makanan tahan panas',
+        'Saringan & rak peniris minyak food grade',
+        'Talenan & pisau higienis',
+        'Kemasan kertas food grade'
       ],
       nutrition: [
-        { label: 'Kalori', value: '250 kkal' },
-        { label: 'Protein', value: '25 g' },
-        { label: 'Lemak', value: '12 g' },
-        { label: 'Karbohidrat', value: '5 g' }
+        { label: 'Kalori', value: '195 kkal' },
+        { label: 'Karbohidrat', value: '38 g' },
+        { label: 'Lemak', value: '5 g' },
+        { label: 'Protein', value: '2.5 g' }
       ],
-      updatedAt: '2026-09-06T12:00:00.000Z'
+      updatedAt: '2026-09-16T02:00:00.000Z'
     },
     {
-      id: 'halo-halo',
-      slug: 'halo-halo',
-      name: 'Halo-Halo',
+      id: 'buko-coklat',
+      slug: 'buko-coklat',
+      name: 'Buko Coklat',
       categoryId: 'cat-3',
       categoryName: 'Minuman & Dessert',
-      price: 5000,
+      price: 10000,
       discountPrice: 0,
       stock: 35,
       unit: 'cup',
       status: 'active',
-      desc: 'Pencuci mulut es serut ikonik dari Filipina dengan campuran ube (ubi ungu), susu evaporasi, dan aneka isian menyegarkan.',
-      image: '/produk-halo-halo.jpg',
+      desc: 'Pencuci mulut dingin menyegarkan khas Filipina dengan serutan daging kelapa muda asli (buko), jelly cokelat lembut, nata de coco kenyal, dan siraman saus krim cokelat susu yang manis gurih legit.',
+      image: '/produk-buko-coklat.jpg',
       waLink: 'https://wa.link/ukep08',
       ingredients: [
-        'Es batu kristal',
-        'Susu evaporasi cair',
-        'Ube Halaya (selai ubi ungu)',
-        'Kacang merah manis',
-        'Nata de coco & jelly',
-        'Irisan pisang raja matang',
-        'Nangka manis',
-        'Es krim Ube (opsional)',
-        'Gula aren cair'
+        'Daging kelapa muda segar serut (Buko)',
+        'Jelly cokelat lembut olahan alami',
+        'Nata de coco kenyal menyegarkan',
+        'Susu evaporasi creamy',
+        'Susu kental manis cokelat premium',
+        'Bubuk kakao murni / cokelat leleh',
+        'Es batu kristal higienis'
       ],
       tools: [
-        'Mesin penyerut es / blender es',
-        'Gelas cup plastik saji',
-        'Sendok panjang',
-        'Wadah penyimpanan isian'
+        'Pengerok kelapa muda stainless steril',
+        'Wadah pencampur stainless food grade',
+        'Sendok takar & pengaduk higienis',
+        'Cup dessert anti-tumpah 300ml + sendok'
       ],
       nutrition: [
-        { label: 'Kalori', value: '300 kkal' },
-        { label: 'Protein', value: '8 g' },
-        { label: 'Lemak', value: '6 g' },
-        { label: 'Karbohidrat', value: '55 g' }
+        { label: 'Kalori', value: '215 kkal' },
+        { label: 'Karbohidrat', value: '34 g' },
+        { label: 'Lemak', value: '7 g' },
+        { label: 'Protein', value: '4 g' }
       ],
-      updatedAt: '2026-09-06T12:00:00.000Z'
+      updatedAt: '2026-09-16T02:00:00.000Z'
     }
   ],
   orders: [],
@@ -717,11 +714,11 @@ export const db = {
     if (cleanId === '1' || cleanId.startsWith('kwek')) {
       return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[0];
     }
-    if (cleanId === '2' || cleanId.includes('chicken') || cleanId.includes('adobo')) {
-      return prods.find(p => p.id === 'chicken-adobo' || p.slug === 'chicken-adobo') || prods[1];
+    if (cleanId === '2' || cleanId.includes('turon') || cleanId.includes('chicken') || cleanId.includes('adobo')) {
+      return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods.find(p => p.id === 'chicken-adobo' || p.slug === 'chicken-adobo') || prods[1];
     }
-    if (cleanId === '3' || cleanId.includes('halo')) {
-      return prods.find(p => p.id === 'halo-halo' || p.slug === 'halo-halo') || prods[2];
+    if (cleanId === '3' || cleanId.includes('buko') || cleanId.includes('coklat') || cleanId.includes('halo')) {
+      return prods.find(p => p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods.find(p => p.id === 'halo-halo' || p.slug === 'halo-halo') || prods[2];
     }
 
     const num = parseInt(cleanId, 10);

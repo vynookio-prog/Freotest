@@ -530,7 +530,7 @@ export default function AdminProductsPage() {
                     type="text"
                     value={formData.image}
                     onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="URL gambar atau /produk-adobo.jpg"
+                    placeholder="URL gambar atau /produk-turon.jpg"
                     className="flex-1 px-3.5 py-2 rounded-xl border border-stone-300 bg-white text-xs"
                   />
                   <label className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 cursor-pointer font-bold flex items-center gap-1.5 text-stone-700">

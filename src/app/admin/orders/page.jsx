@@ -21,7 +21,9 @@ import {
   ShieldCheck,
   RotateCcw,
   Check,
-  Loader2
+  Loader2,
+  ArrowUpDown,
+  Layers
 } from 'lucide-react';
 import { useDb } from '../../../lib/useDb';
 
@@ -56,10 +58,11 @@ export default function AdminOrdersPage() {
     return () => window.removeEventListener('freonix_db_updated', handleDbUpdate);
   }, [loadOrders, db]);
 
-  // Filter & Search states
+  // Filter & Search & Sort states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'
   const [paymentFilter, setPaymentFilter] = useState('all'); // 'all', 'PENDING', 'SUCCESS', 'qris_pending', 'cash'
+  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'fifo', 'kelas', 'total_desc', 'total_asc', 'name_asc'
   
   // Modals state
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -72,9 +75,9 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Filtered orders
+  // Filtered and Sorted orders
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
+    const list = orders.filter(order => {
       // Search match
       const query = searchQuery.toLowerCase().trim();
       const matchSearch = !query || 
@@ -97,7 +100,43 @@ export default function AdminOrdersPage() {
 
       return matchSearch && matchStatus && matchPayment;
     });
-  }, [orders, searchQuery, statusFilter, paymentFilter]);
+
+    // Apply Sorting
+    return list.sort((a, b) => {
+      const getTime = (o) => {
+        const t = o.createdAt || o.orderTime;
+        if (!t) return 0;
+        const parsed = new Date(t).getTime();
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
+      if (sortBy === 'newest') {
+        return getTime(b) - getTime(a);
+      }
+      if (sortBy === 'fifo') {
+        // FIFO (First In First Out): Terlama lebih dulu (waktu awal diprioritaskan)
+        return getTime(a) - getTime(b);
+      }
+      if (sortBy === 'kelas') {
+        // Kelompokkan per kelas, lalu urutkan abjad nama
+        const kelasA = (a.kelas || '').trim();
+        const kelasB = (b.kelas || '').trim();
+        const kelasCompare = kelasA.localeCompare(kelasB, undefined, { numeric: true, sensitivity: 'base' });
+        if (kelasCompare !== 0) return kelasCompare;
+        return (a.name || '').localeCompare(b.name || '');
+      }
+      if (sortBy === 'total_desc') {
+        return (Number(b.totalHarga || b.total) || 0) - (Number(a.totalHarga || a.total) || 0);
+      }
+      if (sortBy === 'total_asc') {
+        return (Number(a.totalHarga || a.total) || 0) - (Number(b.totalHarga || b.total) || 0);
+      }
+      if (sortBy === 'name_asc') {
+        return (a.name || '').localeCompare(b.name || '');
+      }
+      return 0;
+    });
+  }, [orders, searchQuery, statusFilter, paymentFilter, sortBy]);
 
   // Statistics
   const pendingQrisCount = orders.filter(o => o.paymentMethod === 'qris' && o.paymentStatus === 'PENDING').length;
@@ -430,7 +469,51 @@ export default function AdminOrdersPage() {
           <option value="PENDING">⏳ Belum Bayar (PENDING)</option>
           <option value="cash">💵 Tunai / Cash</option>
         </select>
+
+        {/* Sort Filter (Opsi 5: FIFO & Pengelompokan Kelas) */}
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
+          <div className="relative w-full md:w-auto">
+            <ArrowUpDown size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B5742] pointer-events-none" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full md:w-auto pl-8 pr-3.5 py-2.5 rounded-2xl bg-white/90 border border-[#8B5742]/30 text-xs font-bold text-[#5D3A29] focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 cursor-pointer shadow-2xs"
+            >
+              <option value="newest">🕒 Waktu: Terbaru Masuk</option>
+              <option value="fifo">⏳ FIFO: Terlama Masuk (Antrean Dapur)</option>
+              <option value="kelas">🏫 Urutkan Berdasarkan Kelas</option>
+              <option value="total_desc">💰 Total Belanja: Terbesar</option>
+              <option value="total_asc">💵 Total Belanja: Terkecil</option>
+              <option value="name_asc">👤 Nama Pemesan (A - Z)</option>
+            </select>
+          </div>
+        </div>
       </div>
+
+      {/* Mode FIFO / Kelas Active Banner */}
+      {sortBy === 'fifo' && (
+        <div className="p-3.5 rounded-2xl bg-[#8B5742]/10 border border-[#8B5742]/20 text-[#5D3A29] text-xs flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-[#8B5742] shrink-0" />
+            <span><strong>Mode FIFO Aktif:</strong> Pesanan diurutkan dari yang paling awal masuk untuk memprioritaskan antrean masak koki stan.</span>
+          </div>
+          <span className="text-[10px] font-black bg-white px-2.5 py-1 rounded-full border border-[#8B5742]/30 text-[#8B5742]">
+            Antrean Awal ➔ Akhir
+          </span>
+        </div>
+      )}
+
+      {sortBy === 'kelas' && (
+        <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200/80 text-indigo-950 text-xs flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <Layers size={16} className="text-indigo-600 shrink-0" />
+            <span><strong>Mode Kelas Aktif:</strong> Pesanan dikelompokkan per ruang kelas untuk mempermudah kurir mengantarkan pesanan serentak.</span>
+          </div>
+          <span className="text-[10px] font-black bg-white px-2.5 py-1 rounded-full border border-indigo-200 text-indigo-700">
+            Dikelompokkan Per Kelas
+          </span>
+        </div>
+      )}
 
       {/* Orders List Table */}
       <div className="bg-white/70 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-[0_8px_32px_rgba(93,58,41,0.04)] overflow-hidden">
@@ -456,7 +539,7 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-200/50">
-                {filteredOrders.map((order) => {
+                {filteredOrders.map((order, orderIndex) => {
                   const proofImg = order.paymentProofUrl || order.paymentProofImage;
                   const isQrisPending = order.paymentMethod === 'qris' && order.paymentStatus === 'PENDING';
 
@@ -466,6 +549,11 @@ export default function AdminOrdersPage() {
                       <td className="py-3.5 px-4">
                         <div className="font-extrabold text-[#5D3A29] flex items-center gap-1.5">
                           <span>#{order.orderId}</span>
+                          {sortBy === 'fifo' && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#8B5742]/15 text-[#8B5742] text-[10px] font-black tracking-wider">
+                              Antrean #{orderIndex + 1}
+                            </span>
+                          )}
                           {isQrisPending && (
                             <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                           )}
@@ -479,7 +567,13 @@ export default function AdminOrdersPage() {
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-stone-800">{order.name}</div>
                         <div className="text-[11px] text-stone-500 flex items-center gap-2 mt-0.5">
-                          <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-700 font-semibold">{order.kelas}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition-colors ${
+                            sortBy === 'kelas'
+                              ? 'bg-indigo-600 text-white shadow-2xs'
+                              : 'bg-stone-100 text-stone-700'
+                          }`}>
+                            {order.kelas}
+                          </span>
                           {order.phone && (
                             <span className="text-[10px] text-stone-400 font-mono">{order.phone}</span>
                           )}

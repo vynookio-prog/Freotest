@@ -34,7 +34,7 @@ export default function CheckoutPage() {
     kelas: '',
     phone: '',
     notes: '',
-    paymentMethod: 'qris' // 'qris' or 'cash'
+    paymentMethod: '' // '' (belum memilih), 'qris', or 'cash'
   });
 
   const [jenjang, setJenjang] = useState(''); // '10', '11', '12'
@@ -42,7 +42,8 @@ export default function CheckoutPage() {
     name: '',
     jenjang: '',
     kelas: '',
-    phone: ''
+    phone: '',
+    paymentMethod: ''
   });
 
   // Generate options untuk kelas berdasarkan jenjang (10E1-10E10, 11F1-11F10, 12F1-12F10)
@@ -144,6 +145,10 @@ export default function CheckoutPage() {
       errors.phone = 'Nomor WhatsApp minimal 10 digit angka (contoh: 08123456789).';
     }
 
+    if (!formData.paymentMethod) {
+      errors.paymentMethod = 'Silakan pilih salah satu metode pembayaran (QRIS atau Tunai).';
+    }
+
     setFormErrors(errors);
     return {
       isValid: Object.keys(errors).length === 0,
@@ -215,6 +220,10 @@ export default function CheckoutPage() {
       ...prev,
       [name]: value
     }));
+    if (name === 'paymentMethod' && formErrors.paymentMethod) {
+      setFormErrors(prev => ({ ...prev, paymentMethod: '' }));
+      setSubmitError(null);
+    }
   };
 
   const handleQtyChange = (productId, delta) => {
@@ -358,7 +367,7 @@ export default function CheckoutPage() {
 
     const { isValid, errors } = validateCustomerData();
     if (!isValid) {
-      const firstError = errors.name || errors.jenjang || errors.kelas || errors.phone;
+      const firstError = errors.name || errors.jenjang || errors.kelas || errors.phone || errors.paymentMethod;
       setSubmitError(firstError);
 
       if (errors.name) {
@@ -369,6 +378,8 @@ export default function CheckoutPage() {
         document.getElementById('input-kelas')?.focus();
       } else if (errors.phone) {
         document.getElementById('input-phone')?.focus();
+      } else if (errors.paymentMethod) {
+        document.getElementById('section-payment-method')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return;
     }
@@ -505,7 +516,15 @@ export default function CheckoutPage() {
       kelas: '',
       phone: '',
       notes: '',
-      paymentMethod: 'qris'
+      paymentMethod: ''
+    });
+    setJenjang('');
+    setFormErrors({
+      name: '',
+      jenjang: '',
+      kelas: '',
+      phone: '',
+      paymentMethod: ''
     });
     const resetQty = {};
     activeProducts.forEach(p => { resetQty[p.id] = 0; });
@@ -982,16 +1001,31 @@ export default function CheckoutPage() {
           </div>
 
           {/* Metode Pembayaran */}
-          <div className="mb-8">
-            <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider border-b border-stone-200/50 pb-3 mb-4">
-              Pilih Metode Pembayaran
-            </h2>
+          <div id="section-payment-method" className="mb-8 scroll-mt-24">
+            <div className="flex items-center justify-between border-b border-stone-200/50 pb-3 mb-4">
+              <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider flex items-center gap-1.5">
+                <span>Pilih Metode Pembayaran</span>
+                <span className="text-red-500 font-bold">*</span>
+              </h2>
+              <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                Wajib Dipilih
+              </span>
+            </div>
+
+            {/* Error Message jika belum pilih metode pembayaran */}
+            {formErrors.paymentMethod && (
+              <p className="mb-3 text-[11px] text-red-600 font-semibold flex items-center gap-1 bg-red-50/90 border border-red-200 p-2.5 rounded-xl">
+                <AlertCircle size={14} className="shrink-0 text-red-600" /> {formErrors.paymentMethod}
+              </p>
+            )}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               <label 
                 className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
                   formData.paymentMethod === 'qris'
                     ? 'bg-white/80 border-[#8B5742] shadow-sm ring-2 ring-[#8B5742]/20'
+                    : formErrors.paymentMethod && !formData.paymentMethod
+                    ? 'bg-red-50/40 border-red-300 ring-1 ring-red-200 hover:bg-white/60'
                     : 'bg-white/40 border-white/80 hover:bg-white/60'
                 }`}
               >
@@ -1018,6 +1052,8 @@ export default function CheckoutPage() {
                 className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
                   formData.paymentMethod === 'cash'
                     ? 'bg-white/80 border-[#8B5742] shadow-sm ring-2 ring-[#8B5742]/20'
+                    : formErrors.paymentMethod && !formData.paymentMethod
+                    ? 'bg-red-50/40 border-red-300 ring-1 ring-red-200 hover:bg-white/60'
                     : 'bg-white/40 border-white/80 hover:bg-white/60'
                 }`}
               >
@@ -1050,7 +1086,9 @@ export default function CheckoutPage() {
                 <span className="text-[11px] text-stone-500 font-medium">
                   {formData.paymentMethod === 'qris' 
                     ? 'Nominal transfer sesuai pesanan' 
-                    : 'Siapkan uang pas saat ambil di stand'}
+                    : formData.paymentMethod === 'cash'
+                    ? 'Siapkan uang pas saat ambil di stand'
+                    : 'Silakan pilih salah satu metode pembayaran di atas'}
                 </span>
               </div>
               <div className="text-right">
@@ -1059,6 +1097,13 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
+
+            {/* Hint jika belum memilih metode pembayaran */}
+            {!formData.paymentMethod && (
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-dashed border-amber-200 text-center text-xs text-amber-900 font-medium animate-fade-in">
+                👆 Silakan pilih salah satu opsi pembayaran di atas (<strong>QRIS</strong> atau <strong>Tunai</strong>) untuk menyelesaikan pesanan.
+              </div>
+            )}
 
             {formData.paymentMethod === 'cash' && (
               <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-stone-200/80 text-[#5D3A29] text-xs font-medium flex items-center gap-3 animate-fade-in shadow-2xs">

@@ -17,6 +17,7 @@ export const INITIAL_DB = {
     storeStatus: 'open',
     orderPrefix: 'FRX',
     qrisImageUrl: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
+    qrisAccountName: 'Jezwu',
     updatedAt: new Date().toISOString()
   },
   categories: [
@@ -293,6 +294,7 @@ function mapSettingsFromDb(row) {
     storeStatus: row.store_status || 'open',
     orderPrefix: row.order_prefix || 'FRX',
     qrisImageUrl: row.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
+    qrisAccountName: row.qris_account_name || 'Jezwu',
     updatedAt: row.updated_at
   };
 }
@@ -309,6 +311,7 @@ function mapSettingsToDb(s) {
     store_status: s.storeStatus || 'open',
     order_prefix: s.orderPrefix || 'FRX',
     qris_image_url: s.qrisImageUrl || s.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
+    qris_account_name: s.qrisAccountName || s.qris_account_name || 'Jezwu',
     updated_at: new Date().toISOString()
   };
 }

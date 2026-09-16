@@ -293,7 +293,7 @@ export default function CheckoutPage() {
     let textMessage = `Halo Admin, saya ingin memesan produk kuliner ${settings.storeName || 'FREONIX'}.\n\n`;
     textMessage += `*NO. PESANAN:* #${orderId}\n`;
     textMessage += `*STATUS PEMBAYARAN:* ${isQris ? '⏳ PAYMENT PENDING (Sedang dalam pengecekan bukti transfer QRIS oleh Admin)' : '⏳ PAYMENT PENDING (Bayar Tunai di Stand saat Pengambilan)'}\n`;
-    textMessage += `*METODE BAYAR:* ${isQris ? 'QRIS' : 'Cash (Tunai di Stand)'}\n\n`;
+    textMessage += `*METODE BAYAR:* ${isQris ? `QRIS (a.n. ${settings.qrisAccountName || 'Jezwu'})` : 'Cash (Tunai di Stand)'}\n\n`;
     
     textMessage += `*DATA PEMESAN*\n`;
     textMessage += `Nama: ${formData.name}\n`;
@@ -786,7 +786,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <span className="font-bold text-sm text-[#5D3A29] block">QRIS (Non-Tunai)</span>
-                    <span className="text-[11px] text-stone-500">Scan barcode & bayar instan</span>
+                    <span className="text-[11px] text-stone-500">Scan QRIS instan (a.n. {settings.qrisAccountName || 'Jezwu'})</span>
                   </div>
                 </div>
               </label>
@@ -822,21 +822,35 @@ export default function CheckoutPage() {
               <div className="p-5 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/90 shadow-sm animate-fade-in space-y-4">
                 <div className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs text-center max-w-sm mx-auto">
                   <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
-                    <span className="text-xs font-black text-[#5D3A29]">QRIS NASIONAL</span>
+                    <div className="text-left">
+                      <span className="text-xs font-black text-[#5D3A29] block">QRIS NASIONAL</span>
+                      <span className="text-[11px] font-bold text-[#8B5742] block">a.n. {settings.qrisAccountName || 'Jezwu'}</span>
+                    </div>
                     <span className="text-[10px] font-bold text-stone-400">NMID: ID1020038849201</span>
                   </div>
                   <div className="bg-white p-3 rounded-2xl inline-block border border-stone-200/80 mb-2 shadow-xs max-w-[280px]">
                     <img 
                       src={settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-16-94ea017f-3d8f-4c0f-b925-6098c503dbd8.jpg'} 
-                      alt="QR Code QRIS FREONIX" 
+                      alt={`QR Code QRIS FREONIX - a.n. ${settings.qrisAccountName || 'Jezwu'}`} 
                       className="mx-auto rounded-xl w-full h-auto max-w-[240px] object-contain"
                     />
                   </div>
+
+                  {/* Highlight Atas Nama */}
+                  <div className="my-2.5 py-1.5 px-3 bg-amber-50/90 border border-amber-200/80 rounded-xl inline-flex items-center gap-1.5 shadow-2xs">
+                    <span className="text-xs text-amber-900 font-bold">
+                      Atas Nama: <span className="font-extrabold text-[#5D3A29]">{settings.qrisAccountName || 'Jezwu'}</span>
+                    </span>
+                  </div>
+
                   <p className="text-xs font-black text-[#8B5742]">
                     Total: Rp {calculateTotal().toLocaleString('id-ID')}
                   </p>
-                  <p className="text-[11px] text-stone-500 mt-0.5">
-                    Scan via BCA, Mandiri, BRI, Dana, GoPay, OVO, atau ShopeePay
+                  <p className="text-[11px] text-stone-600 mt-1 font-medium">
+                    Scan via BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, atau ShopeePay
+                  </p>
+                  <p className="text-[10px] text-stone-400 mt-0.5">
+                    Pastikan nama penerima transfer tertera: <strong>{settings.qrisAccountName || 'Jezwu'}</strong>
                   </p>
                 </div>
 

@@ -29,7 +29,8 @@ export default function AdminSettingsPage() {
     eventDate: currentSettings.eventDate || '2026-09-23',
     whatsappAdmin: currentSettings.adminPhone || currentSettings.whatsappAdmin || '628818578363',
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
-    orderPrefix: currentSettings.orderPrefix || 'FRX'
+    orderPrefix: currentSettings.orderPrefix || 'FRX',
+    qrisAccountName: currentSettings.qrisAccountName || 'Jezwu'
   });
 
   const [toast, setToast] = useState(null);
@@ -283,6 +284,20 @@ export default function AdminSettingsPage() {
                   min="1"
                   required
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  Nama Penerima Akun QRIS (Atas Nama / a.n.)
+                </label>
+                <input
+                  type="text"
+                  name="qrisAccountName"
+                  value={formData.qrisAccountName || ''}
+                  onChange={handleInputChange}
+                  placeholder="Jezwu"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 font-semibold"
                 />
               </div>
             </div>

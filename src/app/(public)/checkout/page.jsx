@@ -332,6 +332,7 @@ export default function CheckoutPage() {
       paymentMethod: formData.paymentMethod,
       paymentStatus: paymentStatusText,
       orderStatus: 'Pending',
+      paymentProof: paymentProof || paymentProofUrl || null,
       paymentProofUrl: paymentProofUrl || null,
       paymentProofImage: paymentProof || paymentProofUrl || null,
       items: orderItems,

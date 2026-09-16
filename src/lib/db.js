@@ -240,6 +240,7 @@ function mapProductToDb(prod) {
 
 export function mapOrderFromDb(row) {
   const id = row.id;
+  const proof = row.payment_proof || row.payment_proof_url || '';
   return {
     id: id,
     orderId: id,
@@ -252,7 +253,8 @@ export function mapOrderFromDb(row) {
     paymentStatus: row.payment_status || 'PENDING',
     orderStatus: row.order_status || 'Pending',
     paymentProof: row.payment_proof || '',
-    paymentProofUrl: row.payment_proof_url || '',
+    paymentProofImage: proof,
+    paymentProofUrl: row.payment_proof_url || (typeof row.payment_proof === 'string' && row.payment_proof.startsWith('http') ? row.payment_proof : ''),
     notes: row.notes || '',
     orderTime: row.order_time || '',
     history: Array.isArray(row.history) ? row.history : [],
@@ -264,6 +266,7 @@ export function mapOrderFromDb(row) {
 
 export function mapOrderToDb(o) {
   const id = o.orderId || o.id;
+  const proof = o.paymentProof || o.paymentProofImage || o.payment_proof || '';
   return {
     id: id,
     name: o.name || '',
@@ -274,8 +277,8 @@ export function mapOrderToDb(o) {
     payment_method: o.paymentMethod || o.payment_method || 'qris',
     payment_status: o.paymentStatus || o.payment_status || 'PENDING',
     order_status: o.orderStatus || o.order_status || 'Pending',
-    payment_proof: o.paymentProof || o.paymentProofImage || o.payment_proof || '',
-    payment_proof_url: o.paymentProofUrl || o.payment_proof_url || '',
+    payment_proof: proof,
+    payment_proof_url: o.paymentProofUrl || o.payment_proof_url || (typeof proof === 'string' && proof.startsWith('http') ? proof : ''),
     notes: o.notes || '',
     order_time: o.orderTime || o.order_time || '',
     history: Array.isArray(o.history) ? o.history : [],

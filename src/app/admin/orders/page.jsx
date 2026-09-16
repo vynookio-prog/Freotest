@@ -540,7 +540,7 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody className="divide-y divide-stone-200/50">
                 {filteredOrders.map((order, orderIndex) => {
-                  const proofImg = order.paymentProofUrl || order.paymentProofImage;
+                  const proofImg = order.paymentProof || order.paymentProofImage || order.paymentProofUrl;
                   const isQrisPending = order.paymentMethod === 'qris' && order.paymentStatus === 'PENDING';
 
                   return (
@@ -617,17 +617,25 @@ export default function AdminOrdersPage() {
                           {/* Proof thumbnail if available */}
                           {proofImg ? (
                             <button
+                              type="button"
                               onClick={() => setLightboxImage(proofImg)}
-                              className="relative group w-8 h-8 rounded-lg overflow-hidden border border-stone-300/80 shadow-xs hover:ring-2 hover:ring-[#8B5742] transition-all cursor-pointer"
-                              title="Klik untuk perbesar bukti transfer"
+                              className="relative group w-9 h-9 rounded-xl overflow-hidden border border-stone-300/80 shadow-xs hover:ring-2 hover:ring-[#8B5742] transition-all cursor-pointer bg-stone-100 flex items-center justify-center shrink-0"
+                              title="Klik untuk perbesar bukti transfer QRIS"
                             >
                               <img 
                                 src={proofImg} 
-                                alt="Bukti" 
+                                alt="Bukti QRIS" 
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
+                                onError={(e) => {
+                                  if (order.paymentProof && e.target.src !== order.paymentProof) {
+                                    e.target.src = order.paymentProof;
+                                  } else if (order.paymentProofUrl && e.target.src !== order.paymentProofUrl) {
+                                    e.target.src = order.paymentProofUrl;
+                                  }
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                                <Eye size={11} />
+                                <Eye size={12} />
                               </div>
                             </button>
                           ) : order.paymentMethod === 'qris' ? (
@@ -756,19 +764,20 @@ export default function AdminOrdersPage() {
               <img 
                 src={lightboxImage} 
                 alt="Bukti Transfer Penuh" 
-                className="max-h-[60vh] w-auto object-contain rounded-xl shadow-md" 
+                className="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-md" 
               />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <a
                 href={lightboxImage}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200"
+                download={`bukti-transfer-${Date.now()}.jpg`}
+                target={lightboxImage.startsWith('http') ? '_blank' : undefined}
+                rel={lightboxImage.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-xs font-bold hover:bg-stone-200 transition-colors cursor-pointer"
               >
                 <ExternalLink size={13} />
-                Buka di Tab Baru
+                {lightboxImage.startsWith('http') ? 'Buka di Tab Baru' : 'Unduh Gambar'}
               </a>
               <button
                 onClick={() => setLightboxImage(null)}
@@ -873,18 +882,32 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* QRIS Proof Image (if any) */}
-            {(selectedOrder.paymentProofUrl || selectedOrder.paymentProofImage) && (
+            {(selectedOrder.paymentProof || selectedOrder.paymentProofImage || selectedOrder.paymentProofUrl) && (
               <div className="mb-4 p-4 rounded-2xl bg-stone-50 border border-stone-200 text-xs">
                 <span className="text-stone-400 block text-[11px] mb-2 font-bold uppercase">Bukti Bayar QRIS:</span>
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={selectedOrder.paymentProofUrl || selectedOrder.paymentProofImage} 
-                    alt="Bukti Transfer" 
-                    className="w-20 h-20 object-cover rounded-xl border border-stone-300 cursor-pointer shadow-sm"
-                    onClick={() => setLightboxImage(selectedOrder.paymentProofUrl || selectedOrder.paymentProofImage)}
-                  />
+                  <div className="relative group w-20 h-20 rounded-xl overflow-hidden border border-stone-300 shadow-sm shrink-0 bg-stone-200 flex items-center justify-center">
+                    <img 
+                      src={selectedOrder.paymentProof || selectedOrder.paymentProofImage || selectedOrder.paymentProofUrl} 
+                      alt="Bukti Transfer" 
+                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => setLightboxImage(selectedOrder.paymentProof || selectedOrder.paymentProofImage || selectedOrder.paymentProofUrl)}
+                      onError={(e) => {
+                        if (selectedOrder.paymentProof && e.target.src !== selectedOrder.paymentProof) {
+                          e.target.src = selectedOrder.paymentProof;
+                        } else if (selectedOrder.paymentProofUrl && e.target.src !== selectedOrder.paymentProofUrl) {
+                          e.target.src = selectedOrder.paymentProofUrl;
+                        }
+                      }}
+                    />
+                    <div 
+                      className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer pointer-events-none"
+                    >
+                      <Eye size={16} />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
-                    <p className="text-stone-600 text-xs">Klik gambar untuk melihat resolusi penuh.</p>
+                    <p className="text-stone-600 text-xs font-medium">Klik foto untuk melihat resolusi penuh di Lightbox.</p>
                     {selectedOrder.paymentStatus === 'PENDING' ? (
                       <button
                         onClick={() => handleVerifyPayment(selectedOrder.orderId, 'SUCCESS')}

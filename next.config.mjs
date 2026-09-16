@@ -15,6 +15,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'cdn.phototourl.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shortpixel.ai',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
     ],
   },
   async redirects() {

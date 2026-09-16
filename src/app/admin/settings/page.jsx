@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
     storeName: currentSettings.storeName || 'FREONIX XII-F1',
     storeStatus: currentSettings.storeStatus || 'open',
     eventDate: currentSettings.eventDate || '2026-09-23',
-    whatsappAdmin: currentSettings.adminPhone || currentSettings.whatsappAdmin || '6287856624994',
+    whatsappAdmin: currentSettings.adminPhone || currentSettings.whatsappAdmin || '628818578363',
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
     orderPrefix: currentSettings.orderPrefix || 'FRX'
   });
@@ -266,7 +266,7 @@ export default function AdminSettingsPage() {
                   value={formData.whatsappAdmin}
                   onChange={handleInputChange}
                   required
-                  placeholder="6287856624994"
+                  placeholder="628818578363"
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 font-mono"
                 />
               </div>

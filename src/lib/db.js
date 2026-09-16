@@ -10,12 +10,13 @@ export const INITIAL_DB = {
   settings: {
     storeName: 'FREONIX XII-F1',
     eventDate: '2026-09-23',
-    eventDateDisplay: '23 September 2026',
-    adminPhone: '6287856624994',
+    eventDateDisplay: 'Bazar Kokurikuler ASEAN — Masakan Filipina',
+    adminPhone: '628818578363',
     currency: 'IDR',
     lowStockThreshold: 5,
     storeStatus: 'open',
     orderPrefix: 'FRX',
+    qrisImageUrl: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     updatedAt: new Date().toISOString()
   },
   categories: [
@@ -51,14 +52,15 @@ export const INITIAL_DB = {
       name: 'Kwek Kwek',
       categoryId: 'cat-1',
       categoryName: 'Makanan Ringan',
-      price: 2000,
+      price: 3000,
       discountPrice: 0,
-      stock: 45,
-      unit: 'pcs',
+      stock: 50,
+      unit: 'tusuk',
       status: 'active',
-      desc: 'Jajanan kaki lima khas Filipina berupa telur puyuh rebus yang dibalut adonan tepung berwarna oranye dan digoreng hingga renyah.',
-      image: '/produk-kwek-kwek.jpg',
-      waLink: 'https://wa.link/kdmsu4',
+      desc: 'Telur puyuh goreng berbalut tepung dengan rempah spesial, renyah di luar lembut di dalam.',
+      description: 'Telur puyuh goreng berbalut tepung dengan rempah spesial, renyah di luar lembut di dalam.',
+      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/kwek-kwek.jpg',
+      waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Telur puyuh (direbus & dikupas)',
         'Tepung terigu & maizena',
@@ -80,7 +82,7 @@ export const INITIAL_DB = {
         { label: 'Lemak', value: '10 g' },
         { label: 'Karbohidrat', value: '8 g' }
       ],
-      updatedAt: '2026-09-06T12:00:00.000Z'
+      updatedAt: '2026-09-16T02:00:00.000Z'
     },
     {
       id: 'turon',
@@ -88,14 +90,15 @@ export const INITIAL_DB = {
       name: 'Turon',
       categoryId: 'cat-1',
       categoryName: 'Makanan Ringan',
-      price: 5000,
+      price: 3000,
       discountPrice: 0,
-      stock: 40,
-      unit: 'porsi',
+      stock: 50,
+      unit: 'piece',
       status: 'active',
-      desc: 'Camilan lumpia manis khas Filipina berupa pisang kepok dan irisan nangka matang berbalut gula karamel renyah, digulung dengan kulit lumpia lalu digoreng keemasan hingga garing dan legit.',
-      image: '/produk-turon.jpg',
-      waLink: 'https://wa.link/kdmsu4',
+      desc: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
+      description: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
+      image: 'https://cdn.shortpixel.ai/spai2/q_lossless+ret_img+to_auto/www.hungryhuy.com/wp-content/uploads/turon-closeup-sq.jpg',
+      waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Pisang kepok matang pilihan (Saba)',
         'Irisan nangka manis segar (Langka)',
@@ -125,14 +128,15 @@ export const INITIAL_DB = {
       name: 'Buko Coklat',
       categoryId: 'cat-3',
       categoryName: 'Minuman & Dessert',
-      price: 10000,
+      price: 6000,
       discountPrice: 0,
-      stock: 35,
+      stock: 50,
       unit: 'cup',
       status: 'active',
-      desc: 'Pencuci mulut dingin menyegarkan khas Filipina dengan serutan daging kelapa muda asli (buko), jelly cokelat lembut, nata de coco kenyal, dan siraman saus krim cokelat susu yang manis gurih legit.',
-      image: '/produk-buko-coklat.jpg',
-      waLink: 'https://wa.link/ukep08',
+      desc: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
+      description: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
+      image: 'https://i.ytimg.com/vi/YJn4WAuAmWA/maxresdefault.jpg',
+      waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Daging kelapa muda segar serut (Buko)',
         'Jelly cokelat lembut olahan alami',
@@ -283,11 +287,12 @@ function mapSettingsFromDb(row) {
     storeName: row.store_name || 'FREONIX XII-F1',
     eventDate: row.event_date || '2026-09-23',
     eventDateDisplay: row.event_date_display || '23 September 2026',
-    adminPhone: row.admin_phone || '6287856624994',
+    adminPhone: row.admin_phone || '628818578363',
     currency: row.currency || 'IDR',
     lowStockThreshold: Number(row.low_stock_threshold) || 5,
     storeStatus: row.store_status || 'open',
     orderPrefix: row.order_prefix || 'FRX',
+    qrisImageUrl: row.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     updatedAt: row.updated_at
   };
 }
@@ -303,6 +308,7 @@ function mapSettingsToDb(s) {
     low_stock_threshold: Number(s.lowStockThreshold) || 5,
     store_status: s.storeStatus || 'open',
     order_prefix: s.orderPrefix || 'FRX',
+    qris_image_url: s.qrisImageUrl || s.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     updated_at: new Date().toISOString()
   };
 }
@@ -355,6 +361,8 @@ function mapAuditLogToDb(l) {
 
 // In-memory cache
 let cachedDb = null;
+let cachedActiveProducts = null;
+let cachedProductsRef = null;
 let isSyncing = false;
 let syncStatus = {
   lastSync: null,
@@ -377,7 +385,9 @@ function loadLocalDb() {
     cachedDb = {
       settings: { ...INITIAL_DB.settings, ...(parsed.settings || {}) },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
-      products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : INITIAL_DB.products,
+      products: Array.isArray(parsed.products) && parsed.products.length > 0 
+        ? parsed.products.filter(p => p.id !== 'chicken-adobo' && p.id !== 'halo-halo' && p.slug !== 'chicken-adobo' && p.slug !== 'halo-halo')
+        : INITIAL_DB.products,
       orders: [],
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
@@ -681,7 +691,13 @@ export const db = {
     return loadLocalDb().products;
   },
   getActiveProducts() {
-    return loadLocalDb().products.filter(p => p.status === 'active');
+    const prods = loadLocalDb().products || [];
+    if (prods === cachedProductsRef && cachedActiveProducts) {
+      return cachedActiveProducts;
+    }
+    cachedProductsRef = prods;
+    cachedActiveProducts = prods.filter(p => p.status === 'active');
+    return cachedActiveProducts;
   },
   getProductById(id) {
     if (!id) return null;
@@ -714,11 +730,11 @@ export const db = {
     if (cleanId === '1' || cleanId.startsWith('kwek')) {
       return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[0];
     }
-    if (cleanId === '2' || cleanId.includes('turon') || cleanId.includes('chicken') || cleanId.includes('adobo')) {
-      return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods.find(p => p.id === 'chicken-adobo' || p.slug === 'chicken-adobo') || prods[1];
+    if (cleanId === '2' || cleanId.includes('turon')) {
+      return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods[1];
     }
-    if (cleanId === '3' || cleanId.includes('buko') || cleanId.includes('coklat') || cleanId.includes('halo')) {
-      return prods.find(p => p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods.find(p => p.id === 'halo-halo' || p.slug === 'halo-halo') || prods[2];
+    if (cleanId === '3' || cleanId.includes('buko') || cleanId.includes('coklat')) {
+      return prods.find(p => p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods[2];
     }
 
     const num = parseInt(cleanId, 10);
@@ -759,7 +775,7 @@ export const db = {
       desc: prod.desc || prod.description || '',
       description: prod.desc || prod.description || '',
       image: prod.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80',
-      waLink: prod.waLink || 'https://wa.link/ewddmf',
+      waLink: prod.waLink || 'https://wa.me/628818578363',
       ingredients: prod.ingredients || [],
       tools: prod.tools || [],
       nutrition: prod.nutrition || [],

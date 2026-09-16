@@ -94,7 +94,7 @@ export default function Home() {
             </a>
 
             <a 
-              href="https://wa.link/ewddmf" 
+              href="https://wa.me/628818578363" 
               target="_blank" 
               rel="noreferrer" 
               className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-[#5D3A29] hover:text-emerald-600 border border-white/90 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group min-w-[80px]"

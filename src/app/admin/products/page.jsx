@@ -47,7 +47,7 @@ export default function AdminProductsPage() {
     status: 'active',
     desc: '',
     image: '',
-    waLink: 'https://wa.link/ewddmf'
+    waLink: 'https://wa.me/628818578363'
   });
 
   const openAddModal = () => {
@@ -64,7 +64,7 @@ export default function AdminProductsPage() {
       status: 'active',
       desc: '',
       image: '',
-      waLink: 'https://wa.link/ewddmf'
+      waLink: 'https://wa.me/628818578363'
     });
     setIsModalOpen(true);
   };
@@ -83,7 +83,7 @@ export default function AdminProductsPage() {
       status: product.status || 'active',
       desc: product.desc || product.description || '',
       image: product.image || '',
-      waLink: product.waLink || 'https://wa.link/ewddmf'
+      waLink: product.waLink || 'https://wa.me/628818578363'
     });
     setIsModalOpen(true);
   };

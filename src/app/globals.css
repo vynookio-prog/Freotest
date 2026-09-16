@@ -108,3 +108,134 @@ a, button {
   }
 }
 
+/* ==============================================================================
+   Bazar Kokurikuler Filipina — Migrated Theme & Animations from combine
+   ============================================================================== */
+
+@keyframes floatShape {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-20px) scale(1.05); }
+}
+
+.hero-bg-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bazar-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.12;
+}
+
+.bazar-shape-1 {
+  width: 320px;
+  height: 320px;
+  background: #DDA15E;
+  top: -80px;
+  right: -60px;
+  animation: floatShape 8s ease-in-out infinite;
+}
+
+.bazar-shape-2 {
+  width: 200px;
+  height: 200px;
+  background: #BC6C25;
+  bottom: -40px;
+  left: -30px;
+  animation: floatShape 6s ease-in-out infinite reverse;
+}
+
+.bazar-shape-3 {
+  width: 120px;
+  height: 120px;
+  background: #DDA15E;
+  top: 45%;
+  left: 15%;
+  animation: floatShape 7s ease-in-out infinite 1s;
+}
+
+/* Hero Badge */
+.hero-badge-bazar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(221, 161, 94, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(221, 161, 94, 0.4);
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 1.1rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px rgba(221, 161, 94, 0.2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+}
+
+.hero-badge-bazar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(221, 161, 94, 0.35);
+}
+
+/* Card Qty Badge */
+.card-qty-badge-anim {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #DDA15E;
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow: 0 3px 12px rgba(221, 161, 94, 0.45);
+  transition: opacity 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shake Animation */
+@keyframes shakeAlert {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
+
+.anim-shake {
+  animation: shakeAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* WhatsApp Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.65);
+  }
+}
+
+.wa-btn-pulse {
+  animation: pulseGlow 2.2s infinite;
+}
+
+/* PopIn Animation for Total */
+@keyframes popInScale {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.anim-popin {
+  animation: popInScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+

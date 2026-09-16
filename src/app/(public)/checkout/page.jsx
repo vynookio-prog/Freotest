@@ -289,7 +289,7 @@ export default function CheckoutPage() {
         total: quantities[p.id] * p.price
       }));
 
-    const adminPhone = settings.adminPhone || settings.whatsappAdmin || '6287856624994';
+    const adminPhone = settings.adminPhone || settings.whatsappAdmin || '628818578363';
     let textMessage = `Halo Admin, saya ingin memesan produk kuliner ${settings.storeName || 'FREONIX'}.\n\n`;
     textMessage += `*NO. PESANAN:* #${orderId}\n`;
     textMessage += `*STATUS PEMBAYARAN:* ${isQris ? '⏳ PAYMENT PENDING (Sedang dalam pengecekan bukti transfer QRIS oleh Admin)' : '⏳ PAYMENT PENDING (Bayar Tunai di Stand saat Pengambilan)'}\n`;
@@ -820,13 +820,11 @@ export default function CheckoutPage() {
                     <span className="text-xs font-black text-[#5D3A29]">QRIS NASIONAL</span>
                     <span className="text-[10px] font-bold text-stone-400">NMID: ID1020038849201</span>
                   </div>
-                  <div className="bg-stone-50 p-4 rounded-xl inline-block border border-stone-100 mb-2">
+                  <div className="bg-white p-3 rounded-2xl inline-block border border-stone-200/80 mb-2 shadow-xs max-w-[280px]">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=00020101021126570014ID.LINKAJA.WWW01189360091100203884902150000000000000000303UMI51440014ID.DANA.WWW02150000000000000000303UMI52045812530336054${calculateTotal() || 1000}5802ID5914FREONIX%20OFFICIAL6007JAKARTA61051234062070703A016304`} 
+                      src={settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-16-94ea017f-3d8f-4c0f-b925-6098c503dbd8.jpg'} 
                       alt="QR Code QRIS FREONIX" 
-                      width="200"
-                      height="200"
-                      className="mx-auto"
+                      className="mx-auto rounded-xl w-full h-auto max-w-[240px] object-contain"
                     />
                   </div>
                   <p className="text-xs font-black text-[#8B5742]">

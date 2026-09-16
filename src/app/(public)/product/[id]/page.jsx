@@ -19,8 +19,8 @@ import {
   MessageCircle, 
   HeartHandshake, 
   Award, 
-  Clock, 
-  Check
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { useDb } from '../../../../lib/useDb';
 
@@ -309,7 +309,7 @@ export default function ProductDetailPage({ params }) {
                   </a>
                 ) : (
                   <a
-                    href={`https://wa.me/${settings.adminPhone || '6287856624994'}?text=${encodeURIComponent(`Halo FREONIX, saya ingin bertanya tentang menu ${product.name}`)}`}
+                    href={`https://wa.me/${settings.adminPhone || '628818578363'}?text=${encodeURIComponent(`Halo FREONIX, saya ingin bertanya tentang menu ${product.name}`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-xs font-bold transition-colors"
@@ -443,6 +443,31 @@ export default function ProductDetailPage({ params }) {
                   Estimasi nilai gizi dihitung berdasarkan proporsi takaran saji dan bahan baku pilihan secara saintifik, menjamin keseimbangan rasa dan kandungan nutrisi yang aman dikonsumsi.
                 </p>
               </div>
+            </div>
+
+            {/* DIRECT KE MENU CHECKOUT DI BAWAH NILAI GIZI */}
+            <div className="bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FCD34D]/70 rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-[0_8px_30px_rgba(93,58,41,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 text-left">
+                <div className="w-12 h-12 rounded-2xl bg-[#5D3A29] text-white flex items-center justify-center shadow-md shrink-0">
+                  <ShoppingBag size={22} />
+                </div>
+                <div>
+                  <h4 className="font-heading font-black text-stone-900 text-base sm:text-lg">
+                    Cocok dengan nutrisi hidangan ini?
+                  </h4>
+                  <p className="text-xs text-stone-700 font-medium">
+                    Langsung pesan menu {product.name} melalui menu checkout resmi kami.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/checkout"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white font-heading font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95 shrink-0"
+              >
+                <ShoppingBag size={16} />
+                <span>Langsung ke Menu Checkout</span>
+                <ArrowRight size={16} />
+              </Link>
             </div>
 
             {/* INGREDIENTS & PRODUCTION TOOLS */}

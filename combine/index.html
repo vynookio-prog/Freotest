@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🇵🇭 Masakan Filipina — Bazar Kokurikuler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- HEADER / HERO -->
+  <header class="hero">
+    <div class="hero-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge fade-up" style="animation-delay:.05s">ASEAN KOKURIKULER</div>
+      <img src="images/logo-freonix.png" alt="Logo Freonix" class="hero-logo fade-up" style="animation-delay:.1s">
+      <h1 class="hero-title fade-up" style="animation-delay:.15s">Masakan Filipina</h1>
+      <p class="hero-subtitle fade-up" style="animation-delay:.2s">FREONIX</p>
+      <p class="hero-tagline fade-up" style="animation-delay:.25s">Future Ready, Twelve One and Only</p>
+      <div class="hero-divider fade-up" style="animation-delay:.3s"></div>
+    </div>
+  </header>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="container">
+<p class="hero-cta">Pilih menu favoritmu di bawah ↓</p>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <section class="menu">
+    <div class="container">
+      <h2 class="section-heading reveal">Menu</h2>
+      <p class="section-subtitle reveal">Ketuk menu untuk memilih jumlah pesanan</p>
+      <div class="menu-grid">
+        <!-- Card: Kwek Kwek -->
+        <div class="menu-card reveal" data-menu="Kwek Kwek" data-harga="3000">
+          <div class="card-img-wrapper">
+            <img
+              src="images/kwek-kwek.jpg"
+              alt="Kwek Kwek — telur puyuh goreng berbalut tepung berwarna oranye"
+              class="menu-img"
+            >
+            <div class="card-img-overlay"></div>
+            <span class="card-qty-badge" data-badge="Kwek Kwek">0</span>
+          </div>
+          <div class="menu-info">
+            <h3 class="menu-name">Kwek Kwek</h3>
+            <span class="menu-desc">Telur puyuh goreng berbalut tepung dengan rempah spesial, renyah di luar lembut di dalam.</span>
+            <div class="menu-price-wrap">
+              <span class="menu-price">Rp 3.000</span>
+              <span class="menu-price-unit">/ tusuk</span>
+            </div>
+          </div>
+          <!-- Order panel -->
+          <div class="order-panel">
+            <div class="order-panel-inner">
+              <label class="order-label">Jumlah pesanan</label>
+              <div class="qty-row">
+                <button type="button" class="qty-btn qty-minus" aria-label="Kurangi">−</button>
+                <input type="number" class="qty-input" value="0" min="0" max="99" readonly>
+                <button type="button" class="qty-btn qty-plus" aria-label="Tambah">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+<!-- Card: Turon -->
+        <div class="menu-card reveal" data-menu="Turon" data-harga="3000">
+          <div class="card-img-wrapper">
+            <img
+              src="https://cdn.shortpixel.ai/spai2/q_lossless+ret_img+to_auto/www.hungryhuy.com/wp-content/uploads/turon-closeup-sq.jpg"
+              alt="Turon — pisang goreng isi kacang, gurih dan manis"
+              class="menu-img"
+            >
+            <div class="card-img-overlay"></div>
+            <span class="card-qty-badge" data-badge="Turon">0</span>
+          </div>
+          <div class="menu-info">
+            <h3 class="menu-name">Turon</h3>
+            <span class="menu-desc">Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.</span>
+            <div class="menu-price-wrap">
+              <span class="menu-price">Rp 3.000</span>
+              <span class="menu-price-unit">/ piece</span>
+            </div>
+          </div>
+          <!-- Order panel -->
+          <div class="order-panel">
+            <div class="order-panel-inner">
+              <label class="order-label">Jumlah pesanan</label>
+              <div class="qty-row">
+                <button type="button" class="qty-btn qty-minus" aria-label="Kurangi">−</button>
+                <input type="number" class="qty-input" value="0" min="0" max="99" readonly>
+                <button type="button" class="qty-btn qty-plus" aria-label="Tambah">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Buko Coklat -->
+        <div class="menu-card reveal" data-menu="Buko Coklat" data-harga="6000">
+          <div class="card-img-wrapper">
+            <img
+              src="https://i.ytimg.com/vi/YJn4WAuAmWA/maxresdefault.jpg"
+              alt="Buko Coklat — buko yang dimasak dengan coklat manis"
+              class="menu-img"
+            >
+            <div class="card-img-overlay"></div>
+            <span class="card-qty-badge" data-badge="Buko Coklat">0</span>
+          </div>
+          <div class="menu-info">
+            <h3 class="menu-name">Buko Coklat</h3>
+            <span class="menu-desc">Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.</span>
+            <div class="menu-price-wrap">
+              <span class="menu-price">Rp 6.000</span>
+              <span class="menu-price-unit">/ cup</span>
+            </div>
+          </div>
+          <div class="order-panel">
+            <div class="order-panel-inner">
+              <label class="order-label">Jumlah pesanan</label>
+              <div class="qty-row">
+                <button type="button" class="qty-btn qty-minus" aria-label="Kurangi">−</button>
+                <input type="number" class="qty-input" value="0" min="0" max="99" readonly>
+                <button type="button" class="qty-btn qty-plus" aria-label="Tambah">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IDENTITY + SUMMARY -->
+  <section class="identity-section">
+    <div class="container">
+      <div class="identity-card reveal">
+        <div class="identity-header">
+          <div class="identity-icon">📋</div>
+          <h2 class="identity-title">Identitas Pemesan</h2>
+        </div>
+        <div class="identity-fields">
+          <div class="field-group">
+            <label for="input-nama" class="field-label">Nama Lengkap</label>
+            <div class="field-input-wrap">
+              <input type="text" id="input-nama" class="field-input" placeholder="Masukkan nama lengkap">
+              <div class="field-focus-line"></div>
+            </div>
+          </div>
+<div class="field-group">
+              <label for="input-jenjang" class="field-label">Jenjang</label>
+              <div class="field-input-wrap">
+                <select id="input-jenjang" class="field-input">
+                  <option value="" disabled selected>Pilih Jenjang</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
+                <div class="field-focus-line"></div>
+              </div>
+            </div>
+            <div class="field-group" id="kelas-field-group" style="display: none;">
+              <label for="input-kelas" class="field-label">Kelas</label>
+              <div class="field-input-wrap">
+                <select id="input-kelas" class="field-input" disabled>
+                  <option value="" disabled selected>Pilih Jenjang dulu</option>
+                </select>
+                <div class="field-focus-line"></div>
+              </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Ringkasan pesanan -->
+        <div class="order-summary" id="order-summary">
+          <div class="summary-header">
+            <div class="summary-title-wrap">
+              <div class="summary-icon">🧾</div>
+              <h3 class="summary-title">Ringkasan Pesanan</h3>
+            </div>
+            <button type="button" class="reset-btn" id="reset-btn" style="display: none;">
+              🗑️ Reset
+            </button>
+          </div>
+          <ul class="summary-list" id="summary-list">
+            <li class="summary-empty">Belum ada pesanan</li>
+          </ul>
+          <div class="summary-footer">
+            <div class="summary-total">
+              <span class="total-label">Total</span>
+              <span class="total-value" id="summary-total-value">Rp 0</span>
+            </div>
+            <!-- Form status hint -->
+            <p class="form-hint" id="form-hint">Pilih menu di atas, lalu isi nama & kelas untuk memesan.</p>
+            <!-- Tombol kirim WhatsApp -->
+            <button type="button" class="wa-btn" id="wa-btn" disabled>
+              <svg class="wa-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <span class="wa-btn-text">Pesan</span>
+            </button>
+            <!-- Tombol Salin Struk -->
+            <button type="button" class="copy-btn" id="copy-btn" disabled>
+              📋 Salin Struk
+            </button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOATING QUICK BAR (MOBILE) -->
+  <div class="floating-bar" id="floating-bar">
+    <div class="floating-bar-info">
+      <span class="floating-bar-count" id="floating-bar-count">0 Item</span>
+      <span class="floating-bar-total" id="floating-bar-total">Rp 0</span>
+    </div>
+    <button type="button" class="floating-bar-btn" id="floating-bar-btn">
+      Lihat Struk ↓
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-text">SMAN 1 Grabag &middot; FREONIX</p>
+      <p class="footer-sub">Dibuat untuk Kokurikuler Tema ASEAN — Filipina</p>
+    </div>
+  </footer>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    (function () {
+      const cards = document.querySelectorAll('.menu-card');
+      const summaryList = document.getElementById('summary-list');
+      const summaryTotal = document.getElementById('summary-total-value');
+      const waBtn = document.getElementById('wa-btn');
+      const inputNama = document.getElementById('input-nama');
+      const inputJenjang = document.getElementById('input-jenjang');
+      const inputKelas = document.getElementById('input-kelas');
+      const formHint = document.getElementById('form-hint');
+      const resetBtn = document.getElementById('reset-btn');
+      const floatingBar = document.getElementById('floating-bar');
+      const floatingBarCount = document.getElementById('floating-bar-count');
+      const floatingBarTotal = document.getElementById('floating-bar-total');
+      const floatingBarBtn = document.getElementById('floating-bar-btn');
+      const toastContainer = document.getElementById('toast-container');
+      const copyBtn = document.getElementById('copy-btn');
+
+      /* >>> Ganti nomor WhatsApp kasir/panitia di sini <<< */
+      const WA_NUMBER = '6285600550911';
+
+      /* ---- Format Rupiah ---- */
+      function formatRupiah(num) {
+        return 'Rp ' + num.toLocaleString('id-ID');
+      }
+
+      /* ---- Generate class options based on jenjang ---- */
+      function generateClassOptions(jenjang) {
+        const prefix = jenjang === '10' ? '10E' : jenjang === '11' ? '11F' : '12F';
+        const options = ['<option value="" disabled selected>Pilih Kelas</option>'];
+
+        for (let i = 1; i <= 10; i++) {
+          options.push(`<option value="${prefix}${i}">${prefix}${i}</option>`);
+        }
+
+        return options.join('');
+      }
+
+      /* ---- Toast Notification System ---- */
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+          toast.classList.add('toast-hide');
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      /* ---- Generate receipt text ---- */
+      function generateReceipt() {
+        const nama = inputNama.value.trim();
+        const jenjang = inputJenjang.value;
+        const kelas = inputKelas.value;
+
+        let totalQty = 0;
+        let totalHarga = 0;
+        let items = '';
+
+        cards.forEach(function (card) {
+          const qty = parseInt(card.querySelector('.qty-input').value);
+          const harga = parseInt(card.dataset.harga);
+          const nama = card.dataset.menu;
+          if (qty > 0) {
+            const subtotal = qty * harga;
+            items += '  ' + nama + '\n   └ ' + qty + 'x @ ' + formatRupiah(harga) + ' = ' + formatRupiah(subtotal) + '\n';
+            totalQty += qty;
+            totalHarga += subtotal;
+          }
+        });
+
+        return '===== STRUK PESANAN =====\n' +
+          'Bazar Masakan Filipina 🇵🇭\n' +
+          '========================\n' +
+          '\n' +
+          'Nama  : ' + nama + '\n' +
+          'Kelas : ' + kelas + '\n' +
+          '\n' +
+          '------------------------\n' +
+          items +
+          '------------------------\n' +
+          'TOTAL : ' + formatRupiah(totalHarga) + ' (' + totalQty + ' item)\n' +
+          '========================\n' +
+          '\n' +
+          'Terima kasih! 🙏';
+      }
+
+      /* ---- Salin struk ke clipboard ---- */
+      function copyReceiptToClipboard() {
+        const receipt = generateReceipt();
+        navigator.clipboard.writeText(receipt).then(() => {
+          showToast('Struk disalin ke clipboard! 📋', 'success');
+        }).catch(() => {
+          showToast('Gagal menyalin struk. Coba lagi.', 'error');
+        });
+      }
+
+      /* ---- Cek apakah form valid untuk kirim & tampilkan hint ---- */
+      function checkFormValidity() {
+        let totalQty = 0;
+        cards.forEach(function (card) {
+          totalQty += parseInt(card.querySelector('.qty-input').value);
+        });
+        const namaFilled = inputNama.value.trim().length > 0;
+        const kelasFilled = inputKelas.value !== '';
+
+        if (totalQty === 0) {
+          formHint.textContent = '💡 Pilih minimal 1 menu di atas untuk memesan.';
+          formHint.className = 'form-hint';
+          waBtn.disabled = true;
+        } else if (!namaFilled && !kelasFilled) {
+          formHint.textContent = '✏️ Silakan isi Nama Lengkap & Kelas Anda.';
+          formHint.className = 'form-hint hint-alert';
+          waBtn.disabled = true;
+        } else if (!namaFilled) {
+          formHint.textContent = '✏️ Silakan isi Nama Lengkap Anda.';
+          formHint.className = 'form-hint hint-alert';
+          waBtn.disabled = true;
+        } else if (!kelasFilled) {
+          formHint.textContent = '✏️ Silakan pilih Kelas Anda.';
+          formHint.className = 'form-hint hint-alert';
+          waBtn.disabled = true;
+        } else {
+          formHint.textContent = '✅ Siap dikirim ke WhatsApp!';
+          formHint.className = 'form-hint hint-success';
+          waBtn.disabled = false;
+        }
+      }
+
+      /* ---- Update badge angka di kartu ---- */
+      function updateBadges() {
+        cards.forEach(function (card) {
+          const qty = parseInt(card.querySelector('.qty-input').value);
+          const badge = card.querySelector('.card-qty-badge');
+          badge.textContent = qty;
+          badge.classList.toggle('is-visible', qty > 0);
+          card.classList.toggle('has-order', qty > 0);
+        });
+      }
+
+      /* ---- Update ringkasan pesanan ---- */
+      function updateSummary() {
+        let total = 0;
+        let totalItems = 0;
+        let html = '';
+        let hasItem = false;
+
+        cards.forEach(function (card) {
+          const qty = parseInt(card.querySelector('.qty-input').value);
+          const harga = parseInt(card.dataset.harga);
+          const nama = card.dataset.menu;
+          const subtotal = qty * harga;
+
+          if (qty > 0) {
+            hasItem = true;
+            totalItems += qty;
+            html += '<li class="summary-item">' +
+              '<div class="summary-item-info">' +
+                '<span class="summary-item-name">' + nama + '</span>' +
+                '<span class="summary-item-detail">' + qty + ' porsi @ ' + formatRupiah(harga) + '</span>' +
+              '</div>' +
+              '<span class="summary-item-price">' + formatRupiah(subtotal) + '</span>' +
+              '</li>';
+            total += subtotal;
+          }
+        });
+
+        if (hasItem) {
+          summaryList.innerHTML = html;
+          summaryTotal.textContent = formatRupiah(total);
+          summaryTotal.classList.add('is-active');
+          resetBtn.style.display = 'inline-flex';
+          copyBtn.disabled = false;
+
+          /* Update floating bar */
+          floatingBarCount.textContent = totalItems + ' Porsi';
+          floatingBarTotal.textContent = formatRupiah(total);
+          floatingBar.classList.add('is-visible');
+        } else {
+          summaryList.innerHTML = '<li class="summary-empty">Belum ada pesanan</li>';
+          summaryTotal.textContent = 'Rp 0';
+          summaryTotal.classList.remove('is-active');
+          resetBtn.style.display = 'none';
+          copyBtn.disabled = true;
+
+          /* Hide floating bar */
+          floatingBar.classList.remove('is-visible');
+        }
+
+        updateBadges();
+        checkFormValidity();
+      }
+
+      /* ---- Reset Semua Pesanan ---- */
+      resetBtn.addEventListener('click', function () {
+        if (confirm('Batal memilih semua menu?')) {
+          cards.forEach(function (card) {
+            card.querySelector('.qty-input').value = 0;
+            card.querySelector('.order-panel').classList.remove('is-open');
+          });
+          updateSummary();
+          showToast('Semua pesanan dibatalkan! 🗑️', 'info');
+        }
+      });
+
+      /* ---- Kirim ke WhatsApp ---- */
+      function sendToWhatsApp() {
+        const nama = inputNama.value.trim();
+        const kelas = inputKelas.value;
+
+        if (!nama) {
+          inputNama.focus();
+          inputNama.classList.add('field-error');
+          setTimeout(() => inputNama.classList.remove('field-error'), 2000);
+          return;
+        }
+        if (!kelas) {
+          inputKelas.focus();
+          inputKelas.classList.add('field-error');
+          setTimeout(() => inputKelas.classList.remove('field-error'), 2000);
+          return;
+        }
+
+        let totalQty = 0;
+        let totalHarga = 0;
+        let items = '';
+
+        cards.forEach(function (card) {
+          const qty = parseInt(card.querySelector('.qty-input').value);
+          const harga = parseInt(card.dataset.harga);
+          const nama = card.dataset.menu;
+          if (qty > 0) {
+            const subtotal = qty * harga;
+            items += '  ' + nama + '\n   └ ' + qty + 'x @ ' + formatRupiah(harga) + ' = ' + formatRupiah(subtotal) + '\n';
+            totalQty += qty;
+            totalHarga += subtotal;
+          }
+        });
+
+        if (totalQty === 0) return;
+
+        const msg =
+          '===== STRUK PESANAN =====\n' +
+          'Bazar Masakan Filipina 🇵🇭\n' +
+          '========================\n' +
+          '\n' +
+          'Nama  : ' + nama + '\n' +
+          'Kelas : ' + kelas + '\n' +
+          '\n' +
+          '------------------------\n' +
+          items +
+          '------------------------\n' +
+          'TOTAL : ' + formatRupiah(totalHarga) + ' (' + totalQty + ' item)\n' +
+          '========================\n' +
+          '\n' +
+          'Terima kasih! 🙏';
+
+        const url = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg);
+        window.open(url, '_blank');
+      }
+
+      /* ---- Event: kartu diklik ---- */
+      cards.forEach(function (card) {
+        const panel = card.querySelector('.order-panel');
+        const input = card.querySelector('.qty-input');
+        const minusBtn = card.querySelector('.qty-minus');
+        const plusBtn = card.querySelector('.qty-plus');
+
+        card.addEventListener('click', function (e) {
+          if (e.target.classList.contains('qty-btn')) return;
+          var isOpen = panel.classList.contains('is-open');
+
+          /* Tutup panel lain KECUALI yang punya pesanan > 0 */
+          cards.forEach(function (c) {
+            const cQty = parseInt(c.querySelector('.qty-input').value);
+            if (c !== card && cQty === 0) {
+              c.querySelector('.order-panel').classList.remove('is-open');
+            }
+          });
+
+          if (!isOpen) {
+            panel.classList.add('is-open');
+            /* Auto set to 1 if opening for the first time and qty is 0 */
+            if (parseInt(input.value) === 0) {
+              input.value = 1;
+              updateSummary();
+            }
+          } else if (parseInt(input.value) === 0) {
+            panel.classList.remove('is-open');
+          }
+        });
+
+        minusBtn.addEventListener('click', function () {
+          let val = parseInt(input.value);
+          if (val > 0) {
+            input.value = val - 1;
+            if (val - 1 === 0) {
+              // collapse if user decremented to 0
+              panel.classList.remove('is-open');
+            }
+            updateSummary();
+          }
+        });
+
+        plusBtn.addEventListener('click', function () {
+          let val = parseInt(input.value);
+          if (val < 99) {
+            input.value = val + 1;
+            updateSummary();
+          }
+        });
+      });
+
+      /* ---- Event: input nama/kelas ---- */
+      inputNama.addEventListener('input', checkFormValidity);
+      inputKelas.addEventListener('change', checkFormValidity);
+
+      /* ---- Event: jenjang selection ---- */
+inputJenjang.addEventListener('change', function() {
+        const jenjang = this.value;
+        const kelasField = document.getElementById('kelas-field-group');
+         
+        if (jenjang) {
+          // Show kelas field and populate options
+          kelasField.style.display = 'block';
+          inputKelas.disabled = false;
+          inputKelas.innerHTML = generateClassOptions(jenjang);
+          
+          // Show hint
+          showToast(`Pilih kelas di jenjang ${jenjang}`, 'info');
+        } else {
+          // Hide kelas field if jenjang not selected
+          kelasField.style.display = 'none';
+          inputKelas.disabled = true;
+          inputKelas.innerHTML = '<option value="" disabled selected>Pilih Jenjang dulu</option>';
+        }
+      });
+
+      /* ---- Event: tombol Salin Struk ---- */
+      copyBtn.addEventListener('click', copyReceiptToClipboard);
+
+      /* ---- Event: tombol WhatsApp ---- */
+      waBtn.addEventListener('click', sendToWhatsApp);
+
+      /* ---- Event: floating bar button ---- */
+      floatingBarBtn.addEventListener('click', function () {
+        document.getElementById('order-summary').scrollIntoView({ behavior: 'smooth' });
+        if (!inputNama.value.trim()) {
+          inputNama.focus();
+        }
+      });
+
+      updateSummary();
+
+      /* ---- Scroll reveal animation (Intersection Observer) ---- */
+      const reveals = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15 });
+        reveals.forEach(function (el) { observer.observe(el); });
+      } else {
+        reveals.forEach(function (el) { el.classList.add('is-visible'); });
+      }
+    })();
+  </script>
+
+</body>
+</html>

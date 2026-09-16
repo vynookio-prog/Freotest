@@ -17,10 +17,10 @@ import {
 import Link from 'next/link';
 
 const QUICK_PROMPTS = [
-  { label: '🍽️ Rekomendasi Favorit', text: 'Apa menu rekomendasi paling favorit dari FREONIX?' },
-  { label: '💪 Tinggi Protein', text: 'Menu apa yang paling tinggi protein dan cocok untuk menambah energi?' },
-  { label: '🧪 Sains Turon & Buko', text: 'Apa penjelasan sains di balik pembuatan Turon karamel dan kesegaran Buko Coklat khas Filipina?' },
-  { label: '💳 Cara Pesan & Bayar', text: 'Bagaimana cara pre-order dan metode pembayaran apa saja yang tersedia?' }
+  { label: '✨ Tanya Apa Saja', text: 'Jelaskan fakta sains paling menakjubkan di alam semesta ini!' },
+  { label: '📚 Bantuan Belajar', text: 'Bantu saya memahami konsep sains/pelajaran dengan cara yang mudah!' },
+  { label: '🍽️ Menu Bazar', text: 'Apa menu rekomendasi paling favorit dari bazar FREONIX?' },
+  { label: '💡 Ide Kreatif', text: 'Berikan tips menarik untuk meningkatkan produktivitas belajar siswa!' }
 ];
 
 export default function AIChatWidget() {
@@ -33,7 +33,7 @@ export default function AIChatWidget() {
     {
       id: 'welcome',
       role: 'model',
-      text: 'Halo! 👋 Saya **Asisten AI FREONIX**, pemandu sains dan kuliner kelas XII-F1 Sains.\n\nAda yang bisa saya bantu? Kamu bisa tanya rekomendasi menu khas Filipina, kandungan kalori & gizi, hingga sains seru di balik cara memasaknya!',
+      text: 'Halo! 👋 Saya **Asisten AI FREONIX**, asisten cerdas universal dari kelas XII-F1 Sains.\n\nAda yang bisa saya bantu hari ini? Kamu bisa bertanya tentang apa saja—mulai dari ilmu pengetahuan umum, sains & teknologi, tugas sekolah, hingga informasi lengkap seputar bazar kuliner FREONIX!',
       time: 'Baru saja'
     }
   ]);
@@ -131,7 +131,7 @@ export default function AIChatWidget() {
       {
         id: 'welcome',
         role: 'model',
-        text: 'Percakapan telah direset. Silakan tanyakan apa saja seputar menu, gizi, atau sains kuliner FREONIX!',
+        text: 'Percakapan telah direset. Silakan tanyakan topik apa saja (sains, umum, tugas, atau menu FREONIX), saya siap membantu!',
         time: 'Baru saja'
       }
     ]);
@@ -283,7 +283,7 @@ export default function AIChatWidget() {
                   </span>
                 </div>
                 <p className="text-[11px] text-stone-200 flex items-center gap-1">
-                  <span>XII-F1 Sains & Culinary Guide</span>
+                  <span>Asisten Universal XII-F1 Sains</span>
                 </p>
               </div>
             </div>
@@ -391,7 +391,7 @@ export default function AIChatWidget() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Tanya seputar menu, gizi, atau sains..."
+              placeholder="Tanya apa saja (sains, umum, tugas, atau menu)..."
               disabled={isLoading}
               className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-full bg-stone-100 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 focus:bg-white text-[#1F2937] placeholder:text-stone-400 transition-all"
             />

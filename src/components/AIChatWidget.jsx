@@ -137,35 +137,95 @@ export default function AIChatWidget() {
     ]);
   };
 
-  // Helper perender markdown sederhana (bold, list, break lines)
+  // Helper sanitasi dan perender teks Markdown AI (Bold, Italic, Bullet, Numbering, Heading, Linebreaks)
   const renderFormattedText = (content) => {
-    const lines = content.split('\n');
-    return lines.map((line, idx) => {
-      // Render bullet list
-      const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
-      const cleanLine = isBullet ? line.trim().substring(2) : line;
+    if (!content) return null;
 
-      // Render bold **text**
-      const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
-      const renderedParts = parts.map((part, pIdx) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={pIdx} className="font-extrabold text-[#4A2818]">{part.slice(2, -2)}</strong>;
+    // 1. Sanitasi relic / format teks aneh seperti 1/ (times), \times, dll.
+    let sanitized = content
+      .replace(/(\d+)\s*\/\s*\(times\)/gi, '$1x')
+      .replace(/\\times/gi, 'x')
+      .replace(/\(times\)/gi, 'kali')
+      .replace(/^(\d+)\s*\/\s+/gm, '$1. ')
+      .replace(/^#{1,4}\s*(.*)$/gm, '**$1**');
+
+    const lines = sanitized.split('\n');
+
+    const parseInline = (textLine) => {
+      // Regex untuk mendeteksi **bold**, *italic*, dan `code`
+      const regex = /(\*\*[^*]+?\*\*|\*[^*]+?\*|`[^`]+?`)/g;
+      const parts = textLine.split(regex);
+
+      return parts.map((part, pIdx) => {
+        if (!part) return null;
+        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+          return (
+            <strong key={pIdx} className="font-extrabold text-[#4A2818] tracking-tight">
+              {part.slice(2, -2).trim()}
+            </strong>
+          );
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+          return (
+            <em key={pIdx} className="italic text-stone-700">
+              {part.slice(1, -1).trim()}
+            </em>
+          );
+        }
+        if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+          return (
+            <code key={pIdx} className="px-1 py-0.5 rounded bg-stone-100 font-mono text-[11px] text-[#5D3A29]">
+              {part.slice(1, -1)}
+            </code>
+          );
         }
         return part;
       });
+    };
 
-      if (isBullet) {
+    return lines.map((line, idx) => {
+      const trimmed = line.trim();
+
+      // Baris kosong
+      if (!trimmed) {
+        return <span key={idx} className="block h-2" />;
+      }
+
+      // 1. Numbered List (contoh: "1. ", "2) ")
+      const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+      if (numMatch) {
+        const num = numMatch[1];
+        const rest = numMatch[2];
         return (
-          <div key={idx} className="flex items-start gap-1.5 ml-1 my-1">
-            <span className="text-[#8B5742] font-bold text-xs mt-0.5">•</span>
-            <span className="flex-1">{renderedParts}</span>
+          <div key={idx} className="flex items-start gap-2 my-1.5 ml-0.5">
+            <span className="w-4 h-4 rounded-full bg-[#8B5742]/15 text-[#8B5742] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+              {num}
+            </span>
+            <span className="flex-1 leading-relaxed text-stone-800">
+              {parseInline(rest)}
+            </span>
           </div>
         );
       }
 
+      // 2. Bullet List (contoh: "- ", "* ", "• ")
+      const bulletMatch = trimmed.match(/^[-*•]\s+(.*)$/);
+      if (bulletMatch) {
+        const rest = bulletMatch[1];
+        return (
+          <div key={idx} className="flex items-start gap-2 my-1 ml-1">
+            <span className="text-[#8B5742] font-black text-xs mt-0.5 shrink-0">•</span>
+            <span className="flex-1 leading-relaxed text-stone-800">
+              {parseInline(rest)}
+            </span>
+          </div>
+        );
+      }
+
+      // 3. Paragraf Biasa
       return (
-        <span key={idx} className="block min-h-[1.1rem]">
-          {renderedParts}
+        <span key={idx} className="block leading-relaxed min-h-[1.2rem] my-0.5 text-stone-800">
+          {parseInline(line)}
         </span>
       );
     });

@@ -102,7 +102,12 @@ DATA MENU TERKINI DI DATABASE:
 ${productsSummary}
 
 PANDUAN GAYA JAWABAN:
-- Bahasa: Bahasa Indonesia yang santun, ramah, bersahabat, ceria, dan edukatif khas pelajar sains.
+- Bahasa: 100% Bahasa Indonesia yang santun, alami, ramah, dan edukatif khas pelajar sains XII-F1.
+- FORMAT TEKS & TIPOGRAFI:
+  1. DILARANG menggunakan istilah campur bahasa Inggris aneh seperti "(times)", "x times", atau simbol LaTeX "\\times".
+  2. Untuk menyebutkan jumlah atau porsi, gunakan kata bahasa Indonesia yang wajar seperti "1 porsi", "2 buah", "1 cup", atau "3 kali".
+  3. Untuk penomoran urutan/langkah, SELALU gunakan format angka standar seperti "1. ", "2. ", "3. " (JANGAN pernah gunakan format "1/", "2/" atau sejenisnya).
+  4. Gunakan cetak tebal markdown secara benar (**nama menu**, **harga**, **poin penting**) dan pastikan selalu tertutup berpasangan (**...**).
 - Format: Buat jawaban terstruktur, rapi, dan mudah dibaca (gunakan bullet points, bold untuk nama menu/harga). Jangan membuat teks terlalu panjang atau membosankan.
 - Sisipkan sedikit wawasan sains yang relevan bila ditanya soal nutrisi atau cara pembuatan.
 - Jika pengguna ingin memesan, sarankan mereka untuk menekan tombol "Pesan Sekarang" atau menu Checkout di navigasi atas.
@@ -158,13 +163,13 @@ PANDUAN GAYA JAWABAN:
 
         const data = await response.json();
 
-        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        if (response.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
           replyText = data.candidates[0].content.parts[0].text;
           usedModel = model;
-          break; // Sukses, keluar dari loop
+          break;
         } else {
-          lastError = data.error?.message || `Status HTTP ${response.status}`;
-          console.warn(`Model ${model} gagal atau sibuk: ${lastError}, mencoba model berikutnya...`);
+          lastError = data?.error?.message || `Model ${model} tidak mengembalikan teks`;
+          console.warn(`Gagal memanggil model ${model}:`, data?.error || data);
         }
       } catch (err) {
         lastError = err.message;
@@ -182,9 +187,16 @@ PANDUAN GAYA JAWABAN:
       );
     }
 
+    // Sanitasi otomatis dari sisa relic teks LaTeX atau typo
+    const cleanedReply = replyText
+      .replace(/(\d+)\s*\/\s*\(times\)/gi, '$1x')
+      .replace(/\\times/gi, 'x')
+      .replace(/\(times\)/gi, 'kali')
+      .replace(/^(\d+)\s*\/\s+/gm, '$1. ');
+
     return NextResponse.json({
       success: true,
-      reply: replyText,
+      reply: cleanedReply,
       model: usedModel
     });
 

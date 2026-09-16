@@ -12,9 +12,60 @@ import {
   Loader2, 
   ChevronDown,
   Info,
-  Utensils
+  Utensils,
+  Camera,
+  Image as ImageIcon,
+  Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
+
+// Helper kompresi gambar client-side (Base64 Ephemeral in-memory)
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const MAX_DIM = 1024;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const mimeType = 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mimeType, 0.82);
+        const base64 = dataUrl.replace(/^data:[^;]+;base64,/, '');
+
+        resolve({
+          name: file.name || 'foto.jpg',
+          previewUrl: dataUrl,
+          base64: base64,
+          mimeType: mimeType
+        });
+      };
+      img.onerror = () => reject(new Error('Gagal memuat gambar'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
 
 const QUICK_PROMPTS = [
   { label: '✨ Tanya Apa Saja', text: 'Jelaskan fakta sains paling menakjubkan di alam semesta ini!' },
@@ -28,6 +79,12 @@ export default function AIChatWidget() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [modelUsed, setModelUsed] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // { name, previewUrl, base64, mimeType }
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [previewModalImage, setPreviewModalImage] = useState(null);
+
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const [messages, setMessages] = useState([
     {
@@ -52,19 +109,47 @@ export default function AIChatWidget() {
     }
   }, [isOpen, messages, isLoading]);
 
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  const handleImageFile = async (file) => {
+    if (!file) return;
+    if (!file.type || !file.type.startsWith('image/')) {
+      alert('Mohon pilih file gambar yang valid (JPG, PNG, WebP).');
+      return;
+    }
+    try {
+      setIsProcessingImage(true);
+      const compressed = await compressImage(file);
+      setSelectedImage(compressed);
+    } catch (err) {
+      console.error('Gagal memproses gambar:', err);
+      alert('Maaf, gagal memproses gambar. Silakan coba kembali.');
+    } finally {
+      setIsProcessingImage(false);
+    }
+  };
+
   const handleSendMessage = async (textToSend) => {
     const query = (textToSend || inputMessage).trim();
-    if (!query || isLoading) return;
+    const imagePayload = selectedImage;
+
+    if ((!query && !imagePayload) || isLoading || isProcessingImage) return;
 
     const userMsg = {
       id: Date.now().toString(),
       role: 'user',
-      text: query,
+      text: query || (imagePayload ? 'Tolong perhatikan dan analisis foto ini.' : ''),
+      image: imagePayload ? imagePayload.previewUrl : null,
       time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputMessage('');
+    clearSelectedImage();
     setIsLoading(true);
 
     try {
@@ -76,13 +161,22 @@ export default function AIChatWidget() {
           text: m.text
         }));
 
+      const payload = {
+        message: query,
+        history: historyForApi
+      };
+
+      if (imagePayload?.base64 && imagePayload?.mimeType) {
+        payload.image = {
+          mimeType: imagePayload.mimeType,
+          base64: imagePayload.base64
+        };
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          history: historyForApi
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
@@ -127,6 +221,7 @@ export default function AIChatWidget() {
   };
 
   const handleResetChat = () => {
+    clearSelectedImage();
     setMessages([
       {
         id: 'welcome',
@@ -298,7 +393,10 @@ export default function AIChatWidget() {
                 <RotateCcw size={16} />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  clearSelectedImage();
+                  setIsOpen(false);
+                }}
                 className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
                 title="Tutup Chat"
                 aria-label="Tutup Chat"
@@ -318,7 +416,7 @@ export default function AIChatWidget() {
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-xs ${
+                    className={`max-w-[88%] sm:max-w-[85%] rounded-2xl px-4 py-3 shadow-xs ${
                       isUser
                         ? 'bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white rounded-br-xs shadow-[0_4px_14px_rgba(93,58,41,0.2)]'
                         : msg.isError
@@ -326,7 +424,26 @@ export default function AIChatWidget() {
                         : 'bg-white/90 backdrop-blur-md text-[#374151] border border-stone-200/80 rounded-bl-xs shadow-xs'
                     }`}
                   >
-                    {renderFormattedText(msg.text)}
+                    {/* Foto Lampiran Pengguna (jika ada) */}
+                    {msg.image && (
+                      <div className="mb-2.5 rounded-xl overflow-hidden border border-white/25 bg-black/10 shadow-sm relative group">
+                        <img
+                          src={msg.image}
+                          alt="Lampiran foto pengguna"
+                          className="w-full max-h-52 object-cover rounded-xl cursor-pointer transition-transform group-hover:scale-[1.02]"
+                          onClick={() => setPreviewModalImage(msg.image)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPreviewModalImage(msg.image)}
+                          className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 backdrop-blur-xs transition-all"
+                          title="Perbesar foto"
+                        >
+                          <Maximize2 size={13} />
+                        </button>
+                      </div>
+                    )}
+                    {msg.text && renderFormattedText(msg.text)}
                   </div>
 
                   <span className="text-[9px] font-semibold text-stone-400 mt-1 px-1">
@@ -378,32 +495,151 @@ export default function AIChatWidget() {
             </Link>
           </div>
 
-          {/* Input Footer */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="p-3 bg-white border-t border-stone-200/60 flex items-center gap-2 shrink-0"
-          >
+          {/* Input Footer with Camera & Gallery */}
+          <div className="bg-white border-t border-stone-200/60 shrink-0">
+            {/* Hidden File Inputs */}
             <input
-              ref={inputRef}
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Tanya apa saja (sains, umum, tugas, atau menu)..."
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-full bg-stone-100 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 focus:bg-white text-[#1F2937] placeholder:text-stone-400 transition-all"
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  handleImageFile(e.target.files[0]);
+                }
+              }}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  handleImageFile(e.target.files[0]);
+                }
+              }}
+            />
+
+            {/* Status Processing Image */}
+            {isProcessingImage && (
+              <div className="px-4 py-1.5 bg-amber-50/80 border-b border-amber-100 flex items-center gap-2 text-xs text-[#5D3A29]">
+                <Loader2 size={13} className="animate-spin text-[#8B5742]" />
+                <span className="font-semibold text-[11px]">Mengompresi foto kamera/galeri...</span>
+              </div>
+            )}
+
+            {/* Selected Image Preview Card */}
+            {selectedImage && !isProcessingImage && (
+              <div className="px-3 py-2 bg-stone-50 border-b border-stone-200/70 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative shrink-0">
+                    <img
+                      src={selectedImage.previewUrl}
+                      alt="Preview"
+                      className="w-11 h-11 object-cover rounded-xl border border-stone-300 shadow-xs cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setPreviewModalImage(selectedImage.previewUrl)}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-stone-800 truncate max-w-[170px] sm:max-w-[240px]">
+                      {selectedImage.name}
+                    </p>
+                    <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                      ✓ Siap dianalisis oleh AI
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSelectedImage}
+                  className="p-1.5 rounded-full text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-all shrink-0"
+                  title="Batalkan lampiran foto"
+                  aria-label="Batalkan foto"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Form Row */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="p-2.5 sm:p-3 flex items-center gap-1.5 sm:gap-2"
+            >
+              {/* Action Buttons: Kamera Langsung & Galeri */}
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isLoading || isProcessingImage}
+                  className="p-2 text-stone-500 hover:text-[#8B5742] hover:bg-[#8B5742]/10 rounded-full transition-all active:scale-90 disabled:opacity-40"
+                  title="Ambil Foto Langsung (Kamera)"
+                  aria-label="Ambil Foto Langsung"
+                >
+                  <Camera size={19} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isLoading || isProcessingImage}
+                  className="p-2 text-stone-500 hover:text-[#8B5742] hover:bg-[#8B5742]/10 rounded-full transition-all active:scale-90 disabled:opacity-40"
+                  title="Pilih Gambar dari Galeri"
+                  aria-label="Pilih Foto Galeri"
+                >
+                  <ImageIcon size={19} />
+                </button>
+              </div>
+
+              {/* Text Input */}
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder={selectedImage ? "Tanya seputar foto ini (opsional)..." : "Tanya apa saja (sains, umum, menu)..."}
+                disabled={isLoading || isProcessingImage}
+                className="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-full bg-stone-100 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 focus:bg-white text-[#1F2937] placeholder:text-stone-400 transition-all"
+              />
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={(!inputMessage.trim() && !selectedImage) || isLoading || isProcessingImage}
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white flex items-center justify-center hover:opacity-95 active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shrink-0"
+                aria-label="Kirim Pesan"
+              >
+                <Send size={15} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Preview Modal */}
+      {previewModalImage && (
+        <div 
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setPreviewModalImage(null)}
+        >
+          <div className="relative max-w-2xl max-h-[90vh] flex flex-col items-center">
+            <img
+              src={previewModalImage}
+              alt="Tampilan perbesar foto"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/20"
+              onClick={(e) => e.stopPropagation()}
             />
             <button
-              type="submit"
-              disabled={!inputMessage.trim() || isLoading}
-              className="w-10 h-10 rounded-full bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white flex items-center justify-center hover:opacity-95 active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shrink-0"
-              aria-label="Kirim Pesan"
+              onClick={() => setPreviewModalImage(null)}
+              className="mt-3 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold backdrop-blur-md transition-all flex items-center gap-1.5"
             >
-              <Send size={15} />
+              <X size={14} /> Tutup Tampilan Foto
             </button>
-          </form>
+          </div>
         </div>
       )}
     </>

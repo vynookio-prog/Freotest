@@ -60,14 +60,19 @@ export async function POST(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const userMessage = (body.message || '').trim();
+    let userMessage = (body.message || '').trim();
     const clientHistory = Array.isArray(body.history) ? body.history : [];
+    const image = body.image; // { mimeType, base64 }
 
-    if (!userMessage) {
+    if (!userMessage && !image) {
       return NextResponse.json(
-        { success: false, error: 'Pesan tidak boleh kosong.' },
+        { success: false, error: 'Pesan atau foto tidak boleh kosong.' },
         { status: 400 }
       );
+    }
+
+    if (!userMessage && image) {
+      userMessage = 'Tolong perhatikan dan analisis gambar ini secara mendalam.';
     }
 
     // Ambil data menu dan toko terkini
@@ -93,7 +98,11 @@ KEMAMPUAN & KARAKTER UTAMA:
    - Kamu dapat berdiskusi dan menjawab segala topik pertanyaan pengguna tanpa batasan: ilmu pengetahuan umum, sains (fisika, kimia, biologi, astronomi), matematika, teknologi, komputasi & pemrograman, sejarah, geografi, bahasa, sastra, tips kehidupan sehari-hari, metode belajar & tugas sekolah, logika, filosofi, hingga obrolan santai yang menyenangkan.
    - JANGAN PERNAH menolak atau membatasi pertanyaan pengguna hanya karena topiknya di luar makanan atau kuliner. Jawablah setiap pertanyaan dengan antusias, cerdas, akurat, dan bermanfaat.
 
-2. PENGETAHUAN LENGKAP PROYEK BAZAR FREONIX:
+2. KEMAMPUAN ANALISIS GAMBAR / FOTO (VISION):
+   - Jika pengguna menyertakan foto (makanan, tugas/soal pelajaran sains, objek sehari-hari, grafik, atau tumbuhan), amati dan analisis foto tersebut dengan teliti.
+   - Berikan ulasan mendalam, penjelasan ilmiah/edukatif yang relevan, atau solusi yang membantu.
+
+3. PENGETAHUAN LENGKAP PROYEK BAZAR FREONIX:
    - Jika pengguna menanyakan seputar kelas XII-F1, bazar, kuliner Filipina, atau hal-hal terkait website ini, kamu memiliki informasi akurat berikut:
      * Penyelenggara: Kelas XII-F1 Sains ("FREONIX")
      * Tema Acara: Bazar Kokurikuler ASEAN — Masakan Khas Filipina
@@ -128,10 +137,25 @@ PANDUAN GAYA JAWABAN:
       }
     }
 
-    // Tambahkan pesan pengguna saat ini
+    // Susun parts untuk pesan pengguna saat ini (termasuk foto/gambar jika ada)
+    const currentUserParts = [{ text: userMessage }];
+
+    if (image && typeof image === 'object' && image.base64 && image.mimeType) {
+      const cleanBase64 = image.base64.replace(/^data:[^;]+;base64,/, '').trim();
+      if (cleanBase64) {
+        currentUserParts.push({
+          inlineData: {
+            mimeType: image.mimeType,
+            data: cleanBase64
+          }
+        });
+      }
+    }
+
+    // Tambahkan pesan pengguna saat ini ke riwayat request Gemini
     formattedContents.push({
       role: 'user',
-      parts: [{ text: userMessage }]
+      parts: currentUserParts
     });
 
     // Panggil model Gemini dengan fallback otomatis

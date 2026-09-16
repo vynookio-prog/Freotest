@@ -223,8 +223,8 @@ export default function ProductDetailPage({ params }) {
           <div className="lg:col-span-5 flex flex-col gap-5">
             
             {/* Food Photo Showcase Card */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-3 sm:p-4 border border-white/90 shadow-[0_12px_40px_rgba(93,58,41,0.08)] relative overflow-hidden group">
-              <div className="relative w-full h-[360px] sm:h-[420px] rounded-[2rem] overflow-hidden bg-stone-100 shadow-inner">
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl sm:rounded-[2.5rem] p-3 sm:p-4 border border-white/90 shadow-[0_12px_40px_rgba(93,58,41,0.08)] relative overflow-hidden group">
+              <div className="relative w-full h-[260px] sm:h-[340px] lg:h-[420px] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-stone-100 shadow-inner">
                 <img 
                   src={product.image || `/images/${product.id || 'kwek-kwek'}.jpg`} 
                   alt={product.name} 
@@ -248,18 +248,18 @@ export default function ProductDetailPage({ params }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
                 {/* Top Badges */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-10 pointer-events-none">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/55 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold shadow-sm">
+                <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2 z-10 pointer-events-none">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-black/55 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-[11px] font-bold shadow-sm">
                     <span>🇵🇭</span>
                     <span>Kuliner Khas Filipina</span>
                   </span>
 
                   {settings.storeStatus === 'closed' ? (
-                    <span className="bg-rose-500/90 text-white backdrop-blur-md text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
+                    <span className="bg-rose-500/90 text-white backdrop-blur-md text-[10px] sm:text-[11px] font-extrabold px-2.5 sm:px-3 py-1 rounded-full shadow-sm">
                       PO Ditutup
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md border border-emerald-400/40 text-white text-[11px] font-extrabold shadow-sm">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md border border-emerald-400/40 text-white text-[10px] sm:text-[11px] font-extrabold shadow-sm">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       Open Pre-Order
                     </span>
@@ -267,12 +267,12 @@ export default function ProductDetailPage({ params }) {
                 </div>
 
                 {/* Bottom Photo Overlay */}
-                <div className="absolute bottom-5 left-5 right-5 z-10">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#DDA15E]/90 text-stone-900 text-[10px] font-extrabold uppercase tracking-wider mb-2 shadow-sm">
-                    <Sparkles size={12} />
+                <div className="absolute bottom-3 sm:bottom-5 left-3 sm:left-5 right-3 sm:right-5 z-10">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full bg-[#DDA15E]/90 text-stone-900 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-1.5 sm:mb-2 shadow-sm">
+                    <Sparkles size={11} />
                     <span>{product.categoryName || 'Sajian Kokurikuler'}</span>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug drop-shadow-md">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-snug drop-shadow-md">
                     {product.name}
                   </h1>
                 </div>

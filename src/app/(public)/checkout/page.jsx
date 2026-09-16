@@ -679,25 +679,30 @@ export default function CheckoutPage() {
 
                   return (
                     <div key={prod.id} className="flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70">
-                      <div className="flex items-center gap-3">
-                        <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 min-w-[3rem] min-h-[3rem] sm:min-w-[3.5rem] sm:min-h-[3.5rem] max-w-[3rem] max-h-[3rem] sm:max-w-[3.5rem] sm:max-h-[3.5rem] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
                           <img 
-                            src={prod.image || '/logo-freonix.png'} 
+                            src={prod.image || `/images/${prod.id}.jpg`} 
                             alt={prod.name} 
                             width="56"
                             height="56"
                             loading="lazy"
                             decoding="async"
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover rounded-xl" 
                             onError={(e) => {
-                              e.target.src = '/logo-freonix.png';
+                              if (!e.target.dataset.triedLocal) {
+                                e.target.dataset.triedLocal = 'true';
+                                e.target.src = `/images/${prod.id || prod.slug}.jpg`;
+                              } else {
+                                e.target.src = '/logo-freonix.png';
+                              }
                             }}
                           />
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-[#5D3A29]">{prod.name}</h3>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-sm text-[#5D3A29] truncate">{prod.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-semibold text-[#8B5742]">
+                            <span className="text-xs font-semibold text-[#8B5742] whitespace-nowrap">
                               Rp {Number(prod.price || 0).toLocaleString('id-ID')} / {prod.unit || 'porsi'}
                             </span>
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">

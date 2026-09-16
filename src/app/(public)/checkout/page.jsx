@@ -37,6 +37,120 @@ export default function CheckoutPage() {
     paymentMethod: 'qris' // 'qris' or 'cash'
   });
 
+  const [jenjang, setJenjang] = useState(''); // '10', '11', '12'
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    jenjang: '',
+    kelas: '',
+    phone: ''
+  });
+
+  // Generate options untuk kelas berdasarkan jenjang (10E1-10E10, 11F1-11F10, 12F1-12F10)
+  const getClassOptions = (j) => {
+    if (!j) return [];
+    const prefix = j === '10' ? '10E' : j === '11' ? '11F' : '12F';
+    const opts = [];
+    for (let i = 1; i <= 10; i++) {
+      opts.push(`${prefix}${i}`);
+    }
+    return opts;
+  };
+
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setFormData(prev => ({ ...prev, name: val }));
+    if (formErrors.name && val.trim().length >= 5) {
+      setFormErrors(prev => ({ ...prev, name: '' }));
+    }
+  };
+
+  const handleJenjangChange = (e) => {
+    const val = e.target.value;
+    setJenjang(val);
+    setFormData(prev => ({
+      ...prev,
+      kelas: ''
+    }));
+    setFormErrors(prev => ({
+      ...prev,
+      jenjang: '',
+      kelas: ''
+    }));
+  };
+
+  const handleKelasChange = (e) => {
+    const val = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      kelas: val
+    }));
+    if (formErrors.kelas && val) {
+      setFormErrors(prev => ({ ...prev, kelas: '' }));
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const onlyDigits = e.target.value.replace(/\D/g, '');
+    setFormData(prev => ({
+      ...prev,
+      phone: onlyDigits
+    }));
+    if (formErrors.phone && onlyDigits.length >= 10) {
+      setFormErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
+  const handlePhoneKeyDown = (e) => {
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'Home',
+      'End'
+    ];
+    if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+      return;
+    }
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const validateCustomerData = () => {
+    const errors = {};
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      errors.name = 'Nama lengkap wajib diisi.';
+    } else if (trimmedName.length < 5) {
+      errors.name = 'Nama lengkap minimal 5 huruf.';
+    }
+
+    if (!jenjang) {
+      errors.jenjang = 'Pilih jenjang kelas (10, 11, atau 12).';
+    }
+
+    if (!formData.kelas.trim()) {
+      errors.kelas = 'Pilih kelas Anda.';
+    }
+
+    const trimmedPhone = formData.phone.trim();
+    if (!trimmedPhone) {
+      errors.phone = 'Nomor WhatsApp wajib diisi.';
+    } else if (trimmedPhone.length < 10) {
+      errors.phone = 'Nomor WhatsApp minimal 10 digit angka (contoh: 08123456789).';
+    }
+
+    setFormErrors(errors);
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
+  };
+
   // Dynamic Item Quantities: { [productId]: count }
   const [quantities, setQuantities] = useState(() => {
     const initial = {};
@@ -242,17 +356,25 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!formData.name.trim()) {
-      alert('Silakan isi Nama Lengkap Anda terlebih dahulu.');
-      return;
-    }
+    const { isValid, errors } = validateCustomerData();
+    if (!isValid) {
+      const firstError = errors.name || errors.jenjang || errors.kelas || errors.phone;
+      setSubmitError(firstError);
 
-    if (!formData.kelas.trim()) {
-      alert('Silakan isi Kelas Anda terlebih dahulu.');
+      if (errors.name) {
+        document.getElementById('input-name')?.focus();
+      } else if (errors.jenjang) {
+        document.getElementById('input-jenjang')?.focus();
+      } else if (errors.kelas) {
+        document.getElementById('input-kelas')?.focus();
+      } else if (errors.phone) {
+        document.getElementById('input-phone')?.focus();
+      }
       return;
     }
 
     if (totalItemCount === 0) {
+      setSubmitError('Silakan pilih minimal 1 produk untuk dipesan.');
       alert('Silakan pilih minimal 1 produk untuk dipesan.');
       return;
     }
@@ -606,58 +728,158 @@ export default function CheckoutPage() {
 
           {/* Data Diri */}
           <div className="mb-8">
-            <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider border-b border-stone-200/50 pb-3 mb-5">
-              Data Diri Pembeli
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200/50 pb-3 mb-5 gap-2">
+              <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider">
+                Data Diri Pembeli
+              </h2>
+              <span className="text-[11px] font-bold text-red-600 bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full w-fit">
+                * Kolom Bertanda Bintang Wajib Diisi
+              </span>
+            </div>
+
+            {/* Error Notification Alert */}
+            {submitError && (
+              <div className="mb-5 p-3.5 rounded-2xl bg-red-50/90 border border-red-200/90 flex items-center gap-2.5 text-red-700 text-xs font-semibold shadow-xs">
+                <AlertCircle size={17} className="shrink-0 text-red-600" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
+              {/* Nama Lengkap */}
+              <div className="sm:col-span-2">
+                <label htmlFor="input-name" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
                   <span>Nama Lengkap <span className="text-red-500 font-bold">*</span></span>
-                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">Wajib</span>
+                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                    Wajib (Min. 5 Huruf)
+                  </span>
                 </label>
                 <input 
+                  id="input-name"
                   type="text"
                   name="name"
                   required
                   value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-2xl border border-white/90 bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#DDA15E]/60 text-sm shadow-xs transition-all placeholder:text-stone-400"
-                  placeholder="Nama Lengkap Anda"
+                  onChange={handleNameChange}
+                  className={`w-full px-4 py-3 rounded-2xl border bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all placeholder:text-stone-400 ${
+                    formErrors.name 
+                      ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
+                      : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
+                  }`}
+                  placeholder="Nama Lengkap Anda (minimal 5 huruf)"
                 />
+                {formErrors.name && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" /> {formErrors.name}
+                  </p>
+                )}
               </div>
 
+              {/* Jenjang Dropdown */}
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
-                  <span>Kelas <span className="text-red-500 font-bold">*</span></span>
-                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">Wajib</span>
+                <label htmlFor="input-jenjang" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
+                  <span>1. Pilih Jenjang <span className="text-red-500 font-bold">*</span></span>
+                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                    Wajib
+                  </span>
                 </label>
-                <input 
-                  type="text"
-                  name="kelas"
-                  required
-                  value={formData.kelas}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-2xl border border-white/90 bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#DDA15E]/60 text-sm shadow-xs transition-all placeholder:text-stone-400"
-                  placeholder="Contoh: XII IPA 1"
-                />
+                <select
+                  id="input-jenjang"
+                  value={jenjang}
+                  onChange={handleJenjangChange}
+                  className={`w-full px-4 py-3 rounded-2xl border bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all cursor-pointer ${
+                    formErrors.jenjang 
+                      ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
+                      : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
+                  }`}
+                >
+                  <option value="">-- Pilih Jenjang Kelas --</option>
+                  <option value="10">Kelas 10 (Fase E)</option>
+                  <option value="11">Kelas 11 (Fase F)</option>
+                  <option value="12">Kelas 12 (Fase F)</option>
+                </select>
+                {formErrors.jenjang && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" /> {formErrors.jenjang}
+                  </p>
+                )}
               </div>
 
+              {/* Kelas Dropdown */}
+              <div>
+                <label htmlFor="input-kelas" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
+                  <span>2. Pilih Kelas <span className="text-red-500 font-bold">*</span></span>
+                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                    Wajib
+                  </span>
+                </label>
+                <select
+                  id="input-kelas"
+                  name="kelas"
+                  value={formData.kelas}
+                  onChange={handleKelasChange}
+                  disabled={!jenjang}
+                  className={`w-full px-4 py-3 rounded-2xl border backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all ${
+                    !jenjang 
+                      ? 'bg-stone-100/80 border-stone-200 text-stone-400 cursor-not-allowed' 
+                      : formErrors.kelas
+                      ? 'border-red-400 ring-2 ring-red-300/60 bg-white/70 text-red-800 cursor-pointer'
+                      : 'border-white/90 bg-white/70 focus:ring-[#DDA15E]/60 text-[#1F2937] cursor-pointer'
+                  }`}
+                >
+                  <option value="">
+                    {jenjang ? `-- Pilih Kelas di Jenjang ${jenjang} --` : '⚠️ Pilih Jenjang Terlebih Dahulu'}
+                  </option>
+                  {getClassOptions(jenjang).map(cls => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.kelas && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" /> {formErrors.kelas}
+                  </p>
+                )}
+              </div>
+
+              {/* Nomor WhatsApp */}
               <div className="sm:col-span-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
-                  <span>Nomor WhatsApp (Opsional)</span>
-                  <span className="text-[10px] text-stone-400 font-bold uppercase">Untuk Notifikasi</span>
+                <label htmlFor="input-phone" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
+                  <span>Nomor WhatsApp <span className="text-red-500 font-bold">*</span></span>
+                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                    Wajib (Min. 10 Digit Angka)
+                  </span>
                 </label>
                 <div className="relative">
-                  <Phone size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                  <Phone size={15} className={`absolute left-4 top-1/2 -translate-y-1/2 ${formErrors.phone ? 'text-red-500' : 'text-stone-400'}`} />
                   <input 
+                    id="input-phone"
                     type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     name="phone"
+                    required
                     value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-white/90 bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#DDA15E]/60 text-sm shadow-xs transition-all placeholder:text-stone-400 font-mono"
-                    placeholder="Contoh: 081234567890"
+                    onChange={handlePhoneChange}
+                    onKeyDown={handlePhoneKeyDown}
+                    className={`w-full pl-11 pr-4 py-3 rounded-2xl border bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all font-mono placeholder:text-stone-400 ${
+                      formErrors.phone 
+                        ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
+                        : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
+                    }`}
+                    placeholder="Contoh: 081234567890 (khusus angka)"
                   />
                 </div>
+                {formErrors.phone ? (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" /> {formErrors.phone}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-stone-500 mt-1.5 flex items-center gap-1">
+                    <span>📱 Digunakan untuk verifikasi pemesanan & notifikasi pengambilan di stand.</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>

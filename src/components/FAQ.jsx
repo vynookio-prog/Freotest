@@ -9,7 +9,7 @@ export default function FAQ() {
   const faqs = [
     {
       question: 'Kapan dan di mana pesanan bisa diambil?',
-      answer: 'Pesanan dapat diambil pada tanggal 23 September 2026. Perlu diperhatikan bahwa pengambilan hanya dapat dilakukan langsung di stand acara kokurikuler FREONIX.'
+      answer: 'Pesanan dapat diambil pada tanggal 22 September 2026. Perlu diperhatikan bahwa pengambilan hanya dapat dilakukan langsung di stand acara kokurikuler FREONIX.'
     },
     {
       question: 'Pembayarannya bisa melalui apa saja?',

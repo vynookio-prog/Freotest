@@ -9,7 +9,7 @@ const DB_KEY = 'freonix_database_v3';
 export const INITIAL_DB = {
   settings: {
     storeName: 'FREONIX XII-F1',
-    eventDate: '2026-09-23',
+    eventDate: '2026-09-22',
     eventDateDisplay: 'Bazar Kokurikuler ASEAN — Masakan Filipina',
     adminPhone: '628818578363',
     currency: 'IDR',
@@ -289,8 +289,8 @@ export function mapOrderToDb(o) {
 function mapSettingsFromDb(row) {
   return {
     storeName: row.store_name || 'FREONIX XII-F1',
-    eventDate: row.event_date || '2026-09-23',
-    eventDateDisplay: row.event_date_display || '23 September 2026',
+    eventDate: row.event_date || '2026-09-22',
+    eventDateDisplay: row.event_date_display || '22 September 2026',
     adminPhone: row.admin_phone || '628818578363',
     currency: row.currency || 'IDR',
     lowStockThreshold: Number(row.low_stock_threshold) || 5,

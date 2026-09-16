@@ -73,7 +73,7 @@ export async function POST(req) {
     // Ambil data menu dan toko terkini
     const products = await getProductsContext();
     const storeName = INITIAL_DB.settings?.storeName || 'FREONIX XII-F1';
-    const eventDate = INITIAL_DB.settings?.eventDateDisplay || '23 September 2026';
+    const eventDate = INITIAL_DB.settings?.eventDateDisplay || '22 September 2026';
 
     const productsSummary = products.map(p => {
       const nut = (p.nutrition || []).map(n => `${n.label}: ${n.value}`).join(', ');

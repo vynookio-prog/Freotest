@@ -80,11 +80,16 @@ export default function ProductsPage() {
                   {/* Image Area */}
                   <div className="relative h-52 w-full overflow-hidden bg-stone-100">
                     <img 
-                      src={item.image || '/logo-freonix.png'} 
+                      src={item.image || `/images/${item.id}.jpg`} 
                       alt={item.name} 
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                       onError={(e) => {
-                        e.target.src = '/logo-freonix.png';
+                        if (!e.target.dataset.triedLocal) {
+                          e.target.dataset.triedLocal = 'true';
+                          e.target.src = `/images/${item.id || item.slug}.jpg`;
+                        } else {
+                          e.target.src = '/logo-freonix.png';
+                        }
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />

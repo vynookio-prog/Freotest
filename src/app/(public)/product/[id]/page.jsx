@@ -66,9 +66,17 @@ export default function ProductDetailPage({ params }) {
                   className="flex items-center gap-3 p-3 bg-white/80 hover:bg-white rounded-2xl border border-stone-200/80 shadow-xs hover:shadow-md transition-all text-left group"
                 >
                   <img
-                    src={p.image}
+                    src={p.image || `/images/${p.id}.jpg`}
                     alt={p.name}
                     className="w-12 h-12 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+                    onError={(e) => {
+                      if (!e.target.dataset.triedLocal) {
+                        e.target.dataset.triedLocal = 'true';
+                        e.target.src = `/images/${p.id || p.slug}.jpg`;
+                      } else {
+                        e.target.src = '/logo-freonix.png';
+                      }
+                    }}
                   />
                   <div className="min-w-0">
                     <p className="text-xs font-black text-[#5D3A29] truncate">{p.name}</p>
@@ -217,19 +225,24 @@ export default function ProductDetailPage({ params }) {
             {/* Food Photo Showcase Card */}
             <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-3 sm:p-4 border border-white/90 shadow-[0_12px_40px_rgba(93,58,41,0.08)] relative overflow-hidden group">
               <div className="relative w-full h-[360px] sm:h-[420px] rounded-[2rem] overflow-hidden bg-stone-100 shadow-inner">
-                <picture>
-                  <source srcSet={product.image ? product.image.replace(/\.jpg$/, '.webp') : ''} type="image/webp" />
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    width="600"
-                    height="600"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
-                  />
-                </picture>
+                <img 
+                  src={product.image || `/images/${product.id || 'kwek-kwek'}.jpg`} 
+                  alt={product.name} 
+                  width="600"
+                  height="600"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                  onError={(e) => {
+                    if (!e.target.dataset.triedLocal) {
+                      e.target.dataset.triedLocal = 'true';
+                      e.target.src = `/images/${product.id || product.slug || 'kwek-kwek'}.jpg`;
+                    } else {
+                      e.target.src = '/logo-freonix.png';
+                    }
+                  }}
+                />
 
                 {/* Glass Gradient Overlay for text contrast */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
@@ -549,9 +562,17 @@ export default function ProductDetailPage({ params }) {
                   <div>
                     <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-stone-100 mb-4">
                       <img 
-                        src={other.image} 
+                        src={other.image || `/images/${other.id}.jpg`} 
                         alt={other.name} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        onError={(e) => {
+                          if (!e.target.dataset.triedLocal) {
+                            e.target.dataset.triedLocal = 'true';
+                            e.target.src = `/images/${other.id || other.slug}.jpg`;
+                          } else {
+                            e.target.src = '/logo-freonix.png';
+                          }
+                        }}
                       />
                       <div className="absolute top-2.5 right-2.5 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
                         Rp {Number(other.price || 0).toLocaleString('id-ID')}

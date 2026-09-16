@@ -62,7 +62,7 @@ export async function uploadToInsforgeStorage(file, folder = 'payment_proofs') {
  */
 export async function loginAdmin(identifier, password, rememberMe = true) {
   const raw = identifier ? identifier.trim().toLowerCase() : '';
-  const email = raw.includes('@') ? raw : (raw === 'freonix' ? 'admin@freonix.com' : `${raw}@freonix.com`);
+  const email = raw.includes('@') ? raw : (raw === 'freonix' ? 'freonix@freonix.com' : `${raw}@freonix.com`);
 
   // 1. Coba lewat InsForge Auth
   if (isInsforgeConfigured && insforge.auth) {
@@ -92,8 +92,8 @@ export async function loginAdmin(identifier, password, rememberMe = true) {
 
   // 2. Fallback credential check untuk kredensial admin toko
   if (
-    ((raw === 'vynookio@gmail.com' || raw === 'vynookio') && password === 'Freonixx2026') ||
-    ((raw === 'freonix' || raw === 'admin@freonix.com') && (password === 'freonix123' || password === 'admin123'))
+    ((raw === 'vynookio@gmail.com' || raw === 'vynookio') && (password === 'Freonixx2026' || password === 'Freonix2026')) ||
+    ((raw === 'freonix' || raw === 'admin@freonix.com' || raw === 'freonix@freonix.com') && (password === 'Freonix2026' || password === 'freonix123' || password === 'admin123'))
   ) {
     if (typeof window !== 'undefined') {
       const storage = rememberMe ? localStorage : sessionStorage;
@@ -102,9 +102,9 @@ export async function loginAdmin(identifier, password, rememberMe = true) {
     return {
       success: true,
       user: { 
-        id: raw.includes('vynookio') ? '6fa0f09f-d825-43f2-9735-b027388de0f0' : 'admin-default', 
-        email: raw.includes('vynookio') ? 'vynookio@gmail.com' : 'admin@freonix.com', 
-        name: raw.includes('vynookio') ? 'Admin Vynookio' : 'Admin FREONIX' 
+        id: raw.includes('vynookio') ? '6fa0f09f-d825-43f2-9735-b027388de0f0' : 'admin-freonix', 
+        email: raw.includes('vynookio') ? 'vynookio@gmail.com' : 'freonix@freonix.com', 
+        name: raw.includes('vynookio') ? 'Admin Vynookio' : 'Admin Freonix' 
       }
     };
   }

@@ -1041,6 +1041,39 @@ export default function CheckoutPage() {
               </label>
             </div>
 
+            {/* Banner Total Pembayaran (Konsisten Tampil untuk QRIS maupun Tunai) */}
+            <div className="mb-4 p-4 sm:p-5 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/90 shadow-xs flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] block">
+                  Total Pembayaran
+                </span>
+                <span className="text-[11px] text-stone-500 font-medium">
+                  {formData.paymentMethod === 'qris' 
+                    ? 'Nominal transfer sesuai pesanan' 
+                    : 'Siapkan uang pas saat ambil di stand'}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-xl sm:text-2xl font-black text-[#8B5742] tracking-tight block">
+                  Rp {calculateTotal().toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
+
+            {formData.paymentMethod === 'cash' && (
+              <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-stone-200/80 text-[#5D3A29] text-xs font-medium flex items-center gap-3 animate-fade-in shadow-2xs">
+                <div className="p-2.5 bg-amber-100 rounded-xl text-amber-900 shrink-0">
+                  <Banknote size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-[#5D3A29]">Pembayaran Tunai (Cash di Stand)</p>
+                  <p className="text-[11px] text-stone-600 mt-0.5">
+                    Silakan siapkan uang pas saat mengambil pesanan Anda di stand FREONIX (Hari H Acara: {settings.eventDateDisplay || '22 September 2026'}).
+                  </p>
+                </div>
+              </div>
+            )}
+
             {formData.paymentMethod === 'qris' && (
               <div className="p-5 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/90 shadow-sm animate-fade-in space-y-4">
                 <div className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs text-center max-w-sm mx-auto">
@@ -1066,9 +1099,6 @@ export default function CheckoutPage() {
                     </span>
                   </div>
 
-                  <p className="text-xs font-black text-[#8B5742]">
-                    Total: Rp {calculateTotal().toLocaleString('id-ID')}
-                  </p>
                   <p className="text-[11px] text-stone-600 mt-1 font-medium">
                     Scan via BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, atau ShopeePay
                   </p>
@@ -1135,15 +1165,8 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Ringkasan Total & Submit Button */}
+          {/* Submit Button */}
           <div className="pt-4 border-t border-stone-200/50">
-            <div className="flex justify-between items-center mb-6">
-              <span className="font-bold text-sm text-[#5D3A29]">Total Tagihan</span>
-              <span className="text-2xl font-black text-[#8B5742]">
-                Rp {calculateTotal().toLocaleString('id-ID')}
-              </span>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading || settings.storeStatus === 'closed'}

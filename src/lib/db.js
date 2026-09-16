@@ -97,7 +97,7 @@ export const INITIAL_DB = {
       status: 'active',
       desc: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
       description: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
-      image: 'https://cdn.shortpixel.ai/spai2/q_lossless+ret_img+to_auto/www.hungryhuy.com/wp-content/uploads/turon-closeup-sq.jpg',
+      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/turon.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Pisang kepok matang pilihan (Saba)',
@@ -135,7 +135,7 @@ export const INITIAL_DB = {
       status: 'active',
       desc: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
       description: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
-      image: 'https://i.ytimg.com/vi/YJn4WAuAmWA/maxresdefault.jpg',
+      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/buko-coklat.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Daging kelapa muda segar serut (Buko)',

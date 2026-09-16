@@ -680,20 +680,20 @@ export default function CheckoutPage() {
                   return (
                     <div key={prod.id} className="flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70">
                       <div className="flex items-center gap-3">
-                        {prod.image && (
-                          <picture>
-                            <source srcSet={prod.image.replace(/\.jpg$/, '.webp')} type="image/webp" />
-                            <img 
-                              src={prod.image} 
-                              alt={prod.name} 
-                              width="48"
-                              height="48"
-                              loading="lazy"
-                              decoding="async"
-                              className="w-12 h-12 rounded-xl object-cover border border-white/80 shrink-0" 
-                            />
-                          </picture>
-                        )}
+                        <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
+                          <img 
+                            src={prod.image || '/logo-freonix.png'} 
+                            alt={prod.name} 
+                            width="56"
+                            height="56"
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.target.src = '/logo-freonix.png';
+                            }}
+                          />
+                        </div>
                         <div>
                           <h3 className="font-bold text-sm text-[#5D3A29]">{prod.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">

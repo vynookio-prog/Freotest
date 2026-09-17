@@ -150,21 +150,20 @@ export default function ProductsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {activeProducts.map((item) => {
-              const stats = getProductStats(item);
               const targetSlug = encodeURIComponent(item.slug || item.id);
 
               return (
                 <div 
                   key={item.id}
-                  className="bg-white rounded-[2rem] overflow-hidden border border-stone-200/80 hover:border-stone-300 transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1.5"
+                  className="bg-white/70 backdrop-blur-2xl rounded-[2rem] overflow-hidden border border-white/80 hover:border-white transition-all duration-300 flex flex-col justify-between shadow-[0_8px_30px_rgba(93,58,41,0.06)] hover:shadow-[0_20px_50px_rgba(93,58,41,0.14)] hover:-translate-y-1.5 group"
                 >
                   <div>
                     {/* Image Area */}
-                    <div className="relative h-52 w-full overflow-hidden bg-stone-100">
+                    <div className="relative h-52 w-full overflow-hidden bg-stone-100/50">
                       <img 
                         src={item.image || `/images/${item.id}.jpg`} 
                         alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           if (!e.target.dataset.triedLocal) {
                             e.target.dataset.triedLocal = 'true';
@@ -176,36 +175,26 @@ export default function ProductsPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
 
+                      {/* Subtle Specular Top Highlight */}
+                      <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-10" />
+
                       {/* Category Badge */}
                       {item.categoryName && (
-                        <div className="absolute bottom-3 left-3 bg-black/45 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                        <div className="absolute bottom-3 left-3 bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                           {item.categoryName}
                         </div>
                       )}
-
-                      {/* Floating Rating Badge on Image */}
-                      <Link 
-                        href={`/product/${targetSlug}#reviews`}
-                        className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs transition-colors"
-                        title="Klik untuk melihat ulasan menu ini"
-                      >
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <span>{stats.count > 0 ? stats.avg : '5.0'}</span>
-                        {stats.count > 0 && (
-                          <span className="text-white/70 text-[9px]">({stats.count})</span>
-                        )}
-                      </Link>
                     </div>
 
                     {/* Card Information */}
                     <div className="p-5 text-center flex flex-col items-center">
-                      <h3 className="text-lg font-bold font-heading text-stone-900 mb-1">
+                      <h3 className="text-lg font-bold font-heading text-[#5D3A29] mb-1">
                         {item.name}
                       </h3>
                       <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed mb-3">
                         {item.description || item.desc}
                       </p>
-                      <div className="flex items-baseline justify-center gap-1.5 mb-3">
+                      <div className="flex items-baseline justify-center gap-1.5 mb-4">
                         <span className="text-xl font-black font-heading text-[#DDA15E]">
                           {formatRupiah(item.price)}
                         </span>
@@ -214,35 +203,11 @@ export default function ProductsPage() {
                         </span>
                       </div>
 
-                      {/* Star Rating & Review Link Pill */}
-                      <div className="mb-3.5">
-                        <Link 
-                          href={`/product/${targetSlug}#reviews`}
-                          className="inline-flex items-center gap-1.5 text-xs py-1 px-3 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-[#8B5742] transition-colors group/star shadow-2xs"
-                          title="Lihat ulasan lengkap menu ini"
-                        >
-                          <div className="flex items-center gap-0.5">
-                            {[1, 2, 3, 4, 5].map((s) => (
-                              <Star 
-                                key={s} 
-                                size={11} 
-                                className={s <= Math.round(Number(stats.avg || 5)) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'} 
-                              />
-                            ))}
-                          </div>
-                          <span className="font-extrabold text-[#5D3A29] ml-0.5">{stats.avg}</span>
-                          <span className="text-[10px] text-stone-500">
-                            {stats.count > 0 ? `(${stats.count} ulasan)` : '(Belum ada ulasan)'}
-                          </span>
-                          <ArrowRight size={10} className="text-[#8B5742] group-hover/star:translate-x-0.5 transition-transform" />
-                        </Link>
-                      </div>
-
                       {/* Link to Detail Nilai Gizi */}
                       <div className="mb-4">
                         <Link 
                           href={`/product/${targetSlug}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8B5742] hover:text-[#5D3A29] py-1.5 px-4 rounded-full bg-stone-100 hover:bg-stone-200/80 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8B5742] hover:text-[#5D3A29] py-1.5 px-4 rounded-full bg-white/80 hover:bg-white backdrop-blur-md border border-white/90 shadow-2xs transition-colors"
                         >
                           <FileText size={13} />
                           <span>Lihat Nilai Gizi & Resep</span>
@@ -251,7 +216,7 @@ export default function ProductsPage() {
                       </div>
 
                       {/* DIRECT KE MENU CHECKOUT DI BAWAH NILAI GIZI */}
-                      <div className="w-full pt-3 border-t border-stone-100">
+                      <div className="w-full pt-3 border-t border-stone-200/60">
                         <Link
                           href="/checkout"
                           className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95"
@@ -271,10 +236,10 @@ export default function ProductsPage() {
         {/* =====================================================================
             CUSTOMER REVIEWS SHOWCASE SECTION
             ===================================================================== */}
-        <div id="reviews" className="mb-16 bg-white/85 backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-10 border border-white/90 shadow-[0_8px_30px_rgba(93,58,41,0.06)] scroll-mt-24">
+        <div id="reviews" className="mb-16 bg-white/75 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-10 border border-white/90 shadow-[0_16px_50px_rgba(93,58,41,0.08)] scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-amber-600 flex items-center justify-center shrink-0">
                 <Star size={24} className="fill-amber-500 text-amber-500" />
               </div>
               <div>
@@ -288,7 +253,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Overall Rating Score Card */}
-            <div className="flex items-center gap-4 bg-gradient-to-r from-amber-500/10 to-amber-500/5 px-4 py-2.5 rounded-2xl border border-amber-500/20 shrink-0">
+            <div className="flex items-center gap-4 bg-white/60 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-amber-500/25 shadow-xs shrink-0">
               <div className="text-3xl font-black text-[#5D3A29]">
                 {overallAvgRating}
               </div>
@@ -317,7 +282,7 @@ export default function ProductsPage() {
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
                 selectedProductFilter === 'all'
                   ? 'bg-[#8B5742] text-white shadow-xs'
-                  : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+                  : 'bg-white/70 hover:bg-white/95 backdrop-blur-md border border-white/80 text-stone-600'
               }`}
             >
               Semua Menu ({activeReviews.length})
@@ -339,7 +304,7 @@ export default function ProductsPage() {
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
                     selectedProductFilter === p.id
                       ? 'bg-[#8B5742] text-white shadow-xs'
-                      : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+                      : 'bg-white/70 hover:bg-white/95 backdrop-blur-md border border-white/80 text-stone-600'
                   }`}
                 >
                   {p.name} ({count})
@@ -354,7 +319,7 @@ export default function ProductsPage() {
               Memuat ulasan pelanggan...
             </div>
           ) : displayedReviews.length === 0 ? (
-            <div className="py-12 px-4 text-center bg-[#FAFAF9] rounded-3xl border border-dashed border-stone-300">
+            <div className="py-12 px-4 text-center bg-white/40 backdrop-blur-xl rounded-3xl border border-dashed border-stone-300">
               <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-3">
                 <Star size={22} className="fill-amber-400 text-amber-400" />
               </div>
@@ -379,7 +344,7 @@ export default function ProductsPage() {
                 return (
                   <div 
                     key={rev.id}
-                    className="p-5 rounded-2xl bg-[#FAFAF9] border border-stone-200/80 hover:bg-white hover:shadow-md transition-all text-left flex flex-col justify-between"
+                    className="p-5 rounded-2xl bg-white/65 hover:bg-white/95 backdrop-blur-xl border border-white/85 hover:border-white shadow-xs hover:shadow-md transition-all text-left flex flex-col justify-between"
                   >
                     <div>
                       {/* Top Row: User & Rating */}
@@ -446,7 +411,7 @@ export default function ProductsPage() {
                       )}
                     </div>
 
-                    <div className="pt-3 mt-3 border-t border-stone-100 flex items-center justify-between text-[10px] text-stone-400">
+                    <div className="pt-3 mt-3 border-t border-stone-200/50 flex items-center justify-between text-[10px] text-stone-400">
                       <span>Pesanan #{rev.orderId}</span>
                       <span>{new Date(rev.createdAt).toLocaleDateString('id-ID', { dateStyle: 'medium' })}</span>
                     </div>
@@ -455,31 +420,6 @@ export default function ProductsPage() {
               })}
             </div>
           )}
-        </div>
-
-        {/* DIRECT TO CHECKOUT PROMO CARD */}
-        <div className="bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FCD34D]/60 rounded-3xl p-6 sm:p-8 border border-amber-300/70 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-5 mb-16">
-          <div className="flex items-center gap-4 text-left">
-            <div className="w-14 h-14 rounded-2xl bg-[#5D3A29] text-white flex items-center justify-center shadow-md shrink-0">
-              <ShoppingBag size={26} />
-            </div>
-            <div>
-              <h3 className="font-heading font-black text-stone-900 text-lg sm:text-xl mb-1">
-                Sudah Menentukan Pilihan Menu?
-              </h3>
-              <p className="text-xs sm:text-sm text-stone-700">
-                Pesan sekarang lewat menu checkout resmi untuk kemudahan pembayaran QRIS atau Cash.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/checkout"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white font-heading font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95 shrink-0"
-          >
-            <ShoppingBag size={18} />
-            <span>Buka Halaman Checkout</span>
-            <ArrowRight size={16} />
-          </Link>
         </div>
 
         {/* PHOTO LIGHTBOX MODAL */}

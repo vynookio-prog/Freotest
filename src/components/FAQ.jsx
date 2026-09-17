@@ -20,8 +20,8 @@ export default function FAQ({ className = '' }) {
       answer: 'Jika ada perubahan menu atau pembatalan, harap segera menghubungi Admin via WhatsApp dengan menyertakan Nama Lengkap dan Kelas sebelum sesi Pre-Order resmi ditutup.'
     },
     {
-      question: 'Apakah makanan dan minumannya higienis serta terjamin?',
-      answer: 'Ya, seluruh menu makanan dan minuman khas Filipina ini diolah secara higienis, menggunakan bahan-bahan berkualitas, dan disajikan fresh oleh siswa-siswi kelas FREONIX.'
+      question: 'Bagaimana alur dan langkah pemesanan hingga pengambilan?',
+      answer: '1. Pilih Menu: Buka katalog di halaman Menu & Gizi, lalu pilih sajian khas Filipina yang Anda inginkan.\n2. Checkout & Data Diri: Masukkan Nama, Kelas, serta pilih metode pembayaran (QRIS atau Tunai di stand).\n3. Konfirmasi WhatsApp: Lanjutkan konfirmasi ke Admin via WhatsApp untuk pencatatan pesanan dan verifikasi.\n4. Ambil di Stand: Tunjukkan bukti pemesanan/chat di stand bazar FREONIX (XII-F1) pada 22 September 2026 saat pengambilan.'
     }
   ];
 
@@ -74,7 +74,7 @@ export default function FAQ({ className = '' }) {
               </button>
               
               {isOpen && (
-                <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-[#4B5563] leading-relaxed border-t border-white/60 animate-fade-in bg-white/20">
+                <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-[#4B5563] leading-relaxed border-t border-white/60 animate-fade-in bg-white/20 whitespace-pre-line">
                   {faq.answer}
                 </div>
               )}

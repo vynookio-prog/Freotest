@@ -28,20 +28,21 @@ import ReviewModal from '../../../components/ReviewModal';
 
 // Konfigurasi terpusat untuk jenjang, fase kurikulum, dan jumlah rombel kelas
 export const JENJANG_CONFIG = {
-  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10 },
-  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10 },
-  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10 },
+  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10, isStaff: false },
+  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10, isStaff: false },
+  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10, isStaff: false },
+  'guru': { label: 'Guru / Tenaga Pendidik', fase: '', count: 0, isStaff: true },
 };
 
 /**
  * Generate opsi kelas secara dinamis: `${jenjang} ${fase} ${nomor}`
  * Contoh: "10 E 1" s/d "10 E 10", "11 F 1" s/d "11 F 10", "12 F 1" s/d "12 F 10"
- * @param {string} j - Kunci jenjang ('10', '11', '12')
+ * @param {string} j - Kunci jenjang ('10', '11', '12', 'guru')
  * @returns {string[]} Array nama kelas
  */
 export const getClassOptions = (j) => {
   const config = JENJANG_CONFIG[j];
-  if (!config) return [];
+  if (!config || !config.count) return [];
   return Array.from({ length: config.count }, (_, i) => `${j} ${config.fase} ${i + 1}`);
 };
 
@@ -59,7 +60,7 @@ export default function CheckoutPage() {
     paymentMethod: '' // '' (belum memilih), 'qris', or 'cash'
   });
 
-  const [jenjang, setJenjang] = useState(''); // '10', '11', '12'
+  const [jenjang, setJenjang] = useState(''); // '10', '11', '12', 'guru'
   const [formErrors, setFormErrors] = useState({
     name: '',
     jenjang: '',
@@ -67,6 +68,8 @@ export default function CheckoutPage() {
     phone: '',
     paymentMethod: ''
   });
+
+  const isTeacher = jenjang === 'guru';
 
   // Opsi kelas reaktif ter-memoize berdasarkan jenjang yang aktif
   const classOptions = useMemo(() => getClassOptions(jenjang), [jenjang]);
@@ -84,7 +87,7 @@ export default function CheckoutPage() {
     setJenjang(val);
     setFormData(prev => ({
       ...prev,
-      kelas: ''
+      kelas: val === 'guru' ? 'Guru / Tenaga Pendidik' : ''
     }));
     setFormErrors(prev => ({
       ...prev,
@@ -162,10 +165,10 @@ export default function CheckoutPage() {
     }
 
     if (!jenjang) {
-      errors.jenjang = 'Pilih jenjang kelas (10, 11, atau 12).';
+      errors.jenjang = 'Pilih jenjang kelas atau Guru.';
     }
 
-    if (!formData.kelas.trim()) {
+    if (!isTeacher && !formData.kelas.trim()) {
       errors.kelas = 'Pilih kelas Anda.';
     }
 
@@ -1074,7 +1077,7 @@ export default function CheckoutPage() {
               {/* Jenjang Dropdown */}
               <div>
                 <label htmlFor="input-jenjang" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
-                  <span>1. Pilih Jenjang <span className="text-red-500 font-bold">*</span></span>
+                  <span>1. Pilih Jenjang / Profesi <span className="text-red-500 font-bold">*</span></span>
                   <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
                     Wajib
                   </span>
@@ -1090,7 +1093,7 @@ export default function CheckoutPage() {
                       : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
                   }`}
                 >
-                  <option value="">-- Pilih Jenjang Kelas --</option>
+                  <option value="">-- Pilih Jenjang / Profesi --</option>
                   {Object.entries(JENJANG_CONFIG).map(([key, item]) => (
                     <option key={key} value={key}>
                       {item.label}
@@ -1107,37 +1110,53 @@ export default function CheckoutPage() {
               {/* Kelas Dropdown */}
               <div>
                 <label htmlFor="input-kelas" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
-                  <span>2. Pilih Kelas <span className="text-red-500 font-bold">*</span></span>
-                  <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
-                    Wajib
-                  </span>
+                  <span>2. Pilih Kelas {!isTeacher && <span className="text-red-500 font-bold">*</span>}</span>
+                  {isTeacher ? (
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
+                      Khusus Guru
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
+                      Wajib
+                    </span>
+                  )}
                 </label>
                 <select
                   id="input-kelas"
                   name="kelas"
                   value={formData.kelas}
                   onChange={handleKelasChange}
-                  disabled={!jenjang}
-                  aria-disabled={!jenjang}
-                  aria-required="true"
+                  disabled={!jenjang || isTeacher}
+                  aria-disabled={!jenjang || isTeacher}
+                  aria-required={!isTeacher}
                   className={`w-full px-4 py-3 rounded-2xl border backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all ${
-                    !jenjang 
+                    isTeacher
+                      ? 'bg-emerald-50/70 border-emerald-200/90 text-emerald-900 font-medium cursor-not-allowed'
+                      : !jenjang 
                       ? 'bg-stone-100/80 border-stone-200 text-stone-400 cursor-not-allowed opacity-80' 
                       : formErrors.kelas
                       ? 'border-red-400 ring-2 ring-red-300/60 bg-white/70 text-red-800 cursor-pointer'
                       : 'border-white/90 bg-white/70 focus:ring-[#DDA15E]/60 text-[#1F2937] cursor-pointer'
                   }`}
                 >
-                  <option value="">
-                    {jenjang ? '-- Pilih Kelas --' : 'Pilih jenjang dulu'}
-                  </option>
-                  {classOptions.map(cls => (
-                    <option key={cls} value={cls}>
-                      {cls}
+                  {isTeacher ? (
+                    <option value="Guru / Tenaga Pendidik">
+                      Guru / Tenaga Pendidik (Tidak perlu memilih kelas)
                     </option>
-                  ))}
+                  ) : (
+                    <>
+                      <option value="">
+                        {jenjang ? '-- Pilih Kelas --' : 'Pilih jenjang dulu'}
+                      </option>
+                      {classOptions.map(cls => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
-                {formErrors.kelas && (
+                {formErrors.kelas && !isTeacher && (
                   <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
                     <AlertCircle size={13} className="shrink-0" /> {formErrors.kelas}
                   </p>

@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDb } from '../lib/useDb';
 
 const JENJANG_CONFIG = {
-  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10 },
-  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10 },
-  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10 },
+  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10, isStaff: false },
+  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10, isStaff: false },
+  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10, isStaff: false },
+  'guru': { label: 'Guru / Tenaga Pendidik', fase: '', count: 0, isStaff: true },
 };
 
 export default function BazarOrder() {
@@ -56,16 +57,21 @@ export default function BazarOrder() {
   // Generate options untuk kelas berdasarkan jenjang: `${jenjang} ${fase} ${nomor}`
   const getClassOptions = (j) => {
     const config = JENJANG_CONFIG[j];
-    if (!config) return [];
+    if (!config || !config.count) return [];
     return Array.from({ length: config.count }, (_, i) => `${j} ${config.fase} ${i + 1}`);
   };
 
   const handleJenjangChange = (e) => {
     const val = e.target.value;
     setJenjang(val);
-    setKelas('');
-    if (val) {
-      showToast(`Pilih kelas di jenjang ${val}`, 'info');
+    if (val === 'guru') {
+      setKelas('Guru / Tenaga Pendidik');
+      showToast('Kategori Guru dipilih, tidak perlu memilih kelas', 'info');
+    } else {
+      setKelas('');
+      if (val) {
+        showToast(`Pilih kelas di jenjang ${val}`, 'info');
+      }
     }
   };
 
@@ -160,7 +166,8 @@ export default function BazarOrder() {
 
   // Validasi form & status hint
   const namaFilled = nama.trim().length > 0;
-  const kelasFilled = kelas !== '';
+  const isTeacher = jenjang === 'guru';
+  const kelasFilled = isTeacher || kelas !== '';
   const isReadyToOrder = totalQty > 0 && namaFilled && kelasFilled;
 
   const getFormHint = () => {
@@ -509,26 +516,34 @@ export default function BazarOrder() {
             {/* Kelas Dinamis */}
             <div>
               <label htmlFor="input-kelas" className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                Kelas
+                Kelas {isTeacher && <span className="text-emerald-600 font-semibold">(Khusus Guru)</span>}
               </label>
               <select 
                 id="input-kelas"
                 ref={inputKelasRef}
                 value={kelas}
                 onChange={(e) => setKelas(e.target.value)}
-                disabled={!jenjang}
+                disabled={!jenjang || isTeacher}
                 className={`w-full h-12 px-4 rounded-xl border-2 font-medium focus:outline-none transition-all ${
-                  jenjang 
+                  isTeacher
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800 cursor-not-allowed'
+                    : jenjang 
                     ? 'border-stone-200 bg-stone-50 text-stone-900 focus:bg-white focus:border-[#8B5742] cursor-pointer' 
                     : 'border-stone-100 bg-stone-100 text-stone-400 cursor-not-allowed'
                 }`}
               >
-                <option value="" disabled>
-                  {jenjang ? 'Pilih Kelas' : 'Pilih Jenjang dulu'}
-                </option>
-                {getClassOptions(jenjang).map(cls => (
-                  <option key={cls} value={cls}>{cls}</option>
-                ))}
+                {isTeacher ? (
+                  <option value="Guru / Tenaga Pendidik">Guru / Tenaga Pendidik (Tidak perlu kelas)</option>
+                ) : (
+                  <>
+                    <option value="" disabled>
+                      {jenjang ? 'Pilih Kelas' : 'Pilih Jenjang dulu'}
+                    </option>
+                    {getClassOptions(jenjang).map(cls => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
           </div>

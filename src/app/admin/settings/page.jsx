@@ -31,7 +31,7 @@ export default function AdminSettingsPage() {
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
     orderPrefix: currentSettings.orderPrefix || 'FRX',
     qrisAccountName: currentSettings.qrisAccountName || 'FREONIX',
-    qrisImageUrl: currentSettings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg'
+    qrisImageUrl: currentSettings.qrisImageUrl || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg'
   });
 
   const [toast, setToast] = useState(null);
@@ -311,7 +311,7 @@ export default function AdminSettingsPage() {
                   name="qrisImageUrl"
                   value={formData.qrisImageUrl || ''}
                   onChange={handleInputChange}
-                  placeholder="https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg"
+                  placeholder="https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg"
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 font-mono"
                 />
               </div>

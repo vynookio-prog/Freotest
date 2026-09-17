@@ -195,7 +195,7 @@ export default function CheckoutPage() {
   // Download QRIS: fetch → blob → object URL → auto-download ke storage lokal
   const [isDownloadingQris, setIsDownloadingQris] = useState(false);
   const handleDownloadQris = async () => {
-    const url = settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg';
+    const url = settings.qrisImageUrl || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg';
     setIsDownloadingQris(true);
     try {
       const res = await fetch(url);
@@ -1462,7 +1462,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="bg-white p-3 rounded-2xl inline-block border border-stone-200/80 mb-2 shadow-xs max-w-[280px]">
                     <img 
-                      src={settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg'} 
+                      src={settings.qrisImageUrl || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg'} 
                       alt={`QR Code QRIS FREONIX - a.n. ${settings.qrisAccountName || 'FREONIX'}`} 
                       className="mx-auto rounded-xl w-full h-auto max-w-[240px] object-contain"
                     />

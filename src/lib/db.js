@@ -16,7 +16,7 @@ export const INITIAL_DB = {
     lowStockThreshold: 5,
     storeStatus: 'open',
     orderPrefix: 'FRX',
-    qrisImageUrl: 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg',
+    qrisImageUrl: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     qrisAccountName: 'FREONIX',
     updatedAt: new Date().toISOString()
   },
@@ -296,7 +296,7 @@ function mapSettingsFromDb(row) {
     lowStockThreshold: Number(row.low_stock_threshold) || 5,
     storeStatus: row.store_status || 'open',
     orderPrefix: row.order_prefix || 'FRX',
-    qrisImageUrl: row.qris_image_url || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg',
+    qrisImageUrl: row.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     qrisAccountName: row.qris_account_name || 'FREONIX',
     updatedAt: row.updated_at
   };
@@ -313,7 +313,7 @@ function mapSettingsToDb(s) {
     low_stock_threshold: Number(s.lowStockThreshold) || 5,
     store_status: s.storeStatus || 'open',
     order_prefix: s.orderPrefix || 'FRX',
-    qris_image_url: s.qrisImageUrl || s.qris_image_url || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg',
+    qris_image_url: s.qrisImageUrl || s.qris_image_url || 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/branding/qris-freonix.jpg',
     qris_account_name: s.qrisAccountName || s.qris_account_name || 'FREONIX',
     updated_at: new Date().toISOString()
   };
@@ -424,7 +424,12 @@ function loadLocalDb() {
       settings: { 
         ...INITIAL_DB.settings, 
         ...(parsed.settings || {}),
-        qrisImageUrl: (!parsed.settings?.qrisImageUrl || parsed.settings?.qrisImageUrl.includes('qris-freonix.jpg') || parsed.settings?.qrisImageUrl.includes('94ea017f-3d8f-4c0f-b925-6098c503dbd8'))
+        qrisImageUrl: (
+          !parsed.settings?.qrisImageUrl ||
+          parsed.settings?.qrisImageUrl.includes('94ea017f-3d8f-4c0f-b925-6098c503dbd8') ||
+          parsed.settings?.qrisImageUrl.includes('07ea5a55-7913-45f5-b313-9c5819ae71a3') ||
+          parsed.settings?.qrisImageUrl.includes('cdn.phototourl.com')
+        )
           ? INITIAL_DB.settings.qrisImageUrl
           : parsed.settings.qrisImageUrl,
         qrisAccountName: (!parsed.settings?.qrisAccountName || parsed.settings?.qrisAccountName === 'Jezwu')

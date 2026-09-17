@@ -227,6 +227,11 @@ export default function CheckoutPage() {
     return initial;
   });
 
+  // Toping Iskrambol: true = pakai toping (+Rp1.000/porsi), false = tanpa toping
+  const ISKRAMBOL_ID = 'iskrambol';
+  const TOPPING_PRICE = 1000;
+  const [iskrambolTopping, setIskrambolTopping] = useState(false);
+
   const [paymentProof, setPaymentProof] = useState(null); // Data URL for local thumbnail preview
   const [paymentProofUrl, setPaymentProofUrl] = useState(''); // Public CDN URL for WhatsApp & Sheets
   const [isUploadingProof, setIsUploadingProof] = useState(false);
@@ -537,7 +542,12 @@ export default function CheckoutPage() {
   const calculateTotal = () => {
     return activeProducts.reduce((sum, p) => {
       const qty = quantities[p.id] || 0;
-      return sum + (qty * (p.price || 0));
+      const baseTotal = sum + (qty * (p.price || 0));
+      // Tambah biaya toping Iskrambol jika diaktifkan
+      if (p.id === ISKRAMBOL_ID && iskrambolTopping && qty > 0) {
+        return baseTotal + (qty * TOPPING_PRICE);
+      }
+      return baseTotal;
     }, 0);
   };
 
@@ -614,13 +624,20 @@ export default function CheckoutPage() {
 
     const orderItems = activeProducts
       .filter(p => (quantities[p.id] || 0) > 0)
-      .map(p => ({
-        id: p.id,
-        name: p.name,
-        qty: quantities[p.id],
-        price: p.price,
-        total: quantities[p.id] * p.price
-      }));
+      .map(p => {
+        const qty = quantities[p.id];
+        const hasTopping = p.id === ISKRAMBOL_ID && iskrambolTopping;
+        const toppingCost = hasTopping ? qty * TOPPING_PRICE : 0;
+        return {
+          id: p.id,
+          name: p.name,
+          qty,
+          price: p.price,
+          topping: hasTopping,
+          toppingCost,
+          total: (qty * p.price) + toppingCost
+        };
+      });
 
     const adminPhone = settings.adminPhone || settings.whatsappAdmin || '628818578363';
     let textMessage = `Halo Admin, saya ingin memesan produk kuliner ${settings.storeName || 'FREONIX'}.\n\n`;
@@ -634,7 +651,11 @@ export default function CheckoutPage() {
     if (formData.phone) textMessage += `WhatsApp: ${formData.phone}\n`;
     textMessage += `\n*RINCIAN PESANAN*\n`;
     orderItems.forEach(item => {
-      textMessage += `• ${item.name}: ${item.qty} porsi (Rp ${item.total.toLocaleString('id-ID')})\n`;
+      textMessage += `• ${item.name}: ${item.qty} porsi (Rp ${item.total.toLocaleString('id-ID')})`;
+      if (item.topping) {
+        textMessage += ` ✅ Pakai Toping (+Rp ${(item.toppingCost).toLocaleString('id-ID')})`;
+      }
+      textMessage += `\n`;
     });
     if (formData.notes.trim()) {
       textMessage += `\n*CATATAN KHUSUS:* ${formData.notes.trim()}\n`;
@@ -758,6 +779,7 @@ export default function CheckoutPage() {
     const resetQty = {};
     activeProducts.forEach(p => { resetQty[p.id] = 0; });
     setQuantities(resetQty);
+    setIskrambolTopping(false);
   };
 
   // Tunggu client mount untuk memastikan keselarasan SSR dan browser (cegah hydration mismatch)
@@ -1251,61 +1273,92 @@ export default function CheckoutPage() {
                   const currentQty = quantities[prod.id] || 0;
 
                   return (
-                    <div key={prod.id} className="flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 min-w-[3rem] min-h-[3rem] sm:min-w-[3.5rem] sm:min-h-[3.5rem] max-w-[3rem] max-h-[3rem] sm:max-w-[3.5rem] sm:max-h-[3.5rem] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
-                          <img 
-                            src={prod.image || `/images/${prod.id}.jpg`} 
-                            alt={prod.name} 
-                            width="56"
-                            height="56"
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover rounded-xl" 
-                            onError={(e) => {
-                              if (!e.target.dataset.triedLocal) {
-                                e.target.dataset.triedLocal = 'true';
-                                e.target.src = `/images/${prod.id || prod.slug}.jpg`;
-                              } else {
-                                e.target.src = '/logo-freonix.png';
-                              }
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-sm text-[#5D3A29] truncate">{prod.name}</h3>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-semibold text-[#8B5742] whitespace-nowrap">
-                              Rp {Number(prod.price || 0).toLocaleString('id-ID')} / {prod.unit || 'porsi'}
-                            </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
-                              <span className="w-1 h-1 rounded-full bg-emerald-600" />
-                              Open PO
-                            </span>
+                    <div key={prod.id} className="rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70 overflow-hidden">
+                      <div className="flex items-center justify-between p-3.5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 min-w-[3rem] min-h-[3rem] sm:min-w-[3.5rem] sm:min-h-[3.5rem] max-w-[3rem] max-h-[3rem] sm:max-w-[3.5rem] sm:max-h-[3.5rem] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
+                            <img 
+                              src={prod.image || `/images/${prod.id}.jpg`} 
+                              alt={prod.name} 
+                              width="56"
+                              height="56"
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover rounded-xl" 
+                              onError={(e) => {
+                                if (!e.target.dataset.triedLocal) {
+                                  e.target.dataset.triedLocal = 'true';
+                                  e.target.src = `/images/${prod.id || prod.slug}.jpg`;
+                                } else {
+                                  e.target.src = '/logo-freonix.png';
+                                }
+                              }}
+                            />
                           </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-sm text-[#5D3A29] truncate">{prod.name}</h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs font-semibold text-[#8B5742] whitespace-nowrap">
+                                Rp {Number(prod.price || 0).toLocaleString('id-ID')} / {prod.unit || 'porsi'}
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-emerald-600" />
+                                Open PO
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <button 
+                            type="button"
+                            disabled={currentQty === 0}
+                            onClick={() => handleQtyChange(prod.id, -1)}
+                            className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
+                          >
+                            -
+                          </button>
+                          <span className="w-7 text-center font-extrabold text-sm text-[#5D3A29]">
+                            {currentQty}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={() => handleQtyChange(prod.id, 1)}
+                            className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
+                          >
+                            +
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
-                        <button 
-                          type="button"
-                          disabled={currentQty === 0}
-                          onClick={() => handleQtyChange(prod.id, -1)}
-                          className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
-                        >
-                          -
-                        </button>
-                        <span className="w-7 text-center font-extrabold text-sm text-[#5D3A29]">
-                          {currentQty}
-                        </span>
-                        <button 
-                          type="button"
-                          onClick={() => handleQtyChange(prod.id, 1)}
-                          className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
-                        >
-                          +
-                        </button>
-                      </div>
+                      {/* Opsi Toping khusus Iskrambol */}
+                      {prod.id === ISKRAMBOL_ID && currentQty > 0 && (
+                        <div className="mx-3.5 mb-3 px-3 py-2 rounded-xl bg-amber-50/80 border border-amber-200/70 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-base">🧁</span>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-bold text-amber-900 leading-tight">Tambah Toping</p>
+                              <p className="text-[10px] text-amber-700 font-semibold">+Rp 1.000 / porsi</p>
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                            <span className="text-[11px] font-bold text-amber-800">
+                              {iskrambolTopping ? 'Pakai Toping' : 'Tanpa Toping'}
+                            </span>
+                            <div
+                              onClick={() => setIskrambolTopping(v => !v)}
+                              className={`w-10 h-5.5 rounded-full relative transition-colors duration-200 cursor-pointer flex items-center px-0.5 ${
+                                iskrambolTopping ? 'bg-amber-500' : 'bg-stone-300'
+                              }`}
+                              style={{ minWidth: '2.5rem', height: '1.35rem' }}
+                            >
+                              <span className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 block ${
+                                iskrambolTopping ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
+                            </div>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   );
                 })

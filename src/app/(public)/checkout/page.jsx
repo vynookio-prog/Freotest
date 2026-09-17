@@ -19,7 +19,8 @@ import {
   Phone,
   Sparkles,
   Star,
-  Search
+  Search,
+  Download
 } from 'lucide-react';
 import Link from 'next/link';
 import { useDb } from '../../../lib/useDb';
@@ -1439,6 +1440,20 @@ export default function CheckoutPage() {
                       alt={`QR Code QRIS FREONIX - a.n. ${settings.qrisAccountName || 'FREONIX'}`} 
                       className="mx-auto rounded-xl w-full h-auto max-w-[240px] object-contain"
                     />
+                  </div>
+
+                  {/* Tombol Download QRIS */}
+                  <div className="mb-1">
+                    <a
+                      href={settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg'}
+                      download="QRIS-FREONIX.jpg"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#5D3A29]/10 hover:bg-[#5D3A29]/20 border border-[#8B5742]/20 text-[#5D3A29] text-[11px] font-bold transition-all active:scale-95"
+                    >
+                      <Download size={13} />
+                      Unduh Gambar QRIS
+                    </a>
                   </div>
 
                   {/* Highlight Atas Nama */}

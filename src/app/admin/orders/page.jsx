@@ -252,7 +252,33 @@ export default function AdminOrdersPage() {
       ? '✅ PEMBAYARAN TERVERIFIKASI LUNAS' 
       : (order.paymentMethod === 'cash' ? '💵 PEMBAYARAN TUNAI (CASH DI STAND)' : '⏳ MENUNGGU PEMBAYARAN / VERIFIKASI');
 
-    const message = `Halo kak ${order.name} (${order.kelas}),\n\n` +
+    // Cek apakah pemesan adalah guru / tenaga pendidik
+    const isGuru = /guru/i.test(order.kelas || '') || /pendidik/i.test(order.kelas || '');
+
+    // Ucapan salam waktu Indonesia dinamis
+    const hour = new Date().getHours();
+    let timeGreeting = 'Selamat pagi';
+    if (hour >= 11 && hour < 15) {
+      timeGreeting = 'Selamat siang';
+    } else if (hour >= 15 && hour < 18) {
+      timeGreeting = 'Selamat sore';
+    } else if (hour >= 18 || hour < 4) {
+      timeGreeting = 'Selamat malam';
+    }
+
+    const greetingLine = isGuru
+      ? `${timeGreeting} Bapak/Ibu ${order.name},\n\n`
+      : `Halo kak ${order.name} (${order.kelas}),\n\n`;
+
+    const closingNote = isGuru
+      ? (isLunas 
+          ? `Pesanan Bapak/Ibu sedang disiapkan. Harap ambil pesanan di stand FREONIX saat waktu istirahat/jam acara ya. Terima kasih banyak Bapak/Ibu! 🙏✨`
+          : `Silakan tunjukkan pesan ini atau selesaikan pembayaran di stand FREONIX saat pengambilan pesanan ya. Terima kasih banyak Bapak/Ibu! 🙏😊`)
+      : (isLunas 
+          ? `Pesanan kakak sedang disiapkan. Harap ambil pesanan di stand FREONIX saat waktu istirahat/jam acara ya. Terima kasih! ✨`
+          : `Silakan tunjukkan pesan ini atau selesaikan pembayaran di stand FREONIX saat pengambilan pesanan ya! Sampai jumpa! 😊`);
+
+    const message = greetingLine +
       `Terima kasih telah memesan kuliner khas Filipina di *FREONIX*!\n` +
       `ID Pesanan: *#${order.orderId}*\n` +
       `Status Bayar: *${statusNote}*\n` +
@@ -260,9 +286,7 @@ export default function AdminOrdersPage() {
       `Rincian Pesanan:\n` +
       (order.items || []).map(i => `• ${i.name} x${i.qty} = Rp ${(i.price * i.qty).toLocaleString('id-ID')}`).join('\n') +
       `\n*Total Tagihan: Rp ${(order.totalHarga || 0).toLocaleString('id-ID')}*\n\n` +
-      (isLunas 
-        ? `Pesanan kakak sedang disiapkan. Harap ambil pesanan di stand FREONIX saat waktu istirahat/jam acara ya. Terima kasih! ✨`
-        : `Silakan tunjukkan pesan ini atau selesaikan pembayaran di stand FREONIX saat pengambilan pesanan ya! Sampai jumpa! 😊`);
+      closingNote;
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };

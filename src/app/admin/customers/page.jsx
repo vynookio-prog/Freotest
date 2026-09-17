@@ -55,11 +55,26 @@ export default function AdminCustomersPage() {
     ? (customers.reduce((acc, c) => acc + (c.totalOrders || 0), 0) / totalCustomers).toFixed(1)
     : 0;
 
-  const getWhatsAppLink = (phone, name) => {
+  const getWhatsAppLink = (phone, name, kelas = '') => {
     let clean = (phone || '').replace(/\D/g, '');
     if (clean.startsWith('0')) clean = '62' + clean.slice(1);
     if (!clean.startsWith('62')) clean = '62' + clean;
-    const msg = `Halo kak ${name}, ini dari Tim Admin FREONIX terkait pesanan kuliner kamu.`;
+
+    const isGuru = /guru/i.test(kelas || '') || /pendidik/i.test(kelas || '');
+    const hour = new Date().getHours();
+    let timeGreeting = 'Selamat pagi';
+    if (hour >= 11 && hour < 15) {
+      timeGreeting = 'Selamat siang';
+    } else if (hour >= 15 && hour < 18) {
+      timeGreeting = 'Selamat sore';
+    } else if (hour >= 18 || hour < 4) {
+      timeGreeting = 'Selamat malam';
+    }
+
+    const msg = isGuru
+      ? `${timeGreeting} Bapak/Ibu ${name}, ini dari Tim Admin FREONIX terkait pesanan kuliner Bapak/Ibu.`
+      : `Halo kak ${name}, ini dari Tim Admin FREONIX terkait pesanan kuliner kamu.`;
+
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
@@ -320,7 +335,7 @@ export default function AdminCustomersPage() {
             <div className="pt-3 border-t border-stone-200 flex items-center justify-between gap-3">
               {selectedCustomer.phone && selectedCustomer.phone !== '-' ? (
                 <a
-                  href={getWhatsAppLink(selectedCustomer.phone, selectedCustomer.name)}
+                  href={getWhatsAppLink(selectedCustomer.phone, selectedCustomer.name, selectedCustomer.kelas)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-all shadow-md cursor-pointer"

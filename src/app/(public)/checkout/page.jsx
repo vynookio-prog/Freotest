@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useDb } from '../../../lib/useDb';
 import { uploadToInsforgeStorage, isInsforgeConfigured } from '../../../lib/insforge';
 import ReviewModal from '../../../components/ReviewModal';
+import Loading from '../loading';
 
 // Konfigurasi terpusat untuk jenjang, fase kurikulum, dan jumlah rombel kelas
 export const JENJANG_CONFIG = {
@@ -207,33 +208,29 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  // Restore order state from localStorage
-  const [savedOrder, setSavedOrder] = useState(() => {
-    if (typeof window === 'undefined') return null;
+  // Hydration-safe State Management
+  const [isMounted, setIsMounted] = useState(false);
+  const [savedOrder, setSavedOrder] = useState(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [hasSavedReceipt, setHasSavedReceipt] = useState(false);
+
+  // Restore order state from localStorage after mount to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
     try {
       const saved = localStorage.getItem('freonix_last_order');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setSavedOrder(parsed);
+        setIsSuccess(true);
+        if (parsed?.orderId && sessionStorage.getItem(`receipt_saved_${parsed.orderId}`) === 'true') {
+          setHasSavedReceipt(true);
+        }
+      }
+    } catch (err) {
+      console.error('Error reading localStorage order:', err);
     }
-  });
-
-  const [isSuccess, setIsSuccess] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('freonix_last_order');
-  });
-
-  const [hasSavedReceipt, setHasSavedReceipt] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const saved = localStorage.getItem('freonix_last_order');
-      if (!saved) return false;
-      const parsed = JSON.parse(saved);
-      return sessionStorage.getItem(`receipt_saved_${parsed.orderId}`) === 'true';
-    } catch {
-      return false;
-    }
-  });
+  }, []);
 
   const [liveOrder, setLiveOrder] = useState(null);
 
@@ -735,6 +732,11 @@ export default function CheckoutPage() {
     activeProducts.forEach(p => { resetQty[p.id] = 0; });
     setQuantities(resetQty);
   };
+
+  // Tunggu client mount untuk memastikan keselarasan SSR dan browser (cegah hydration mismatch)
+  if (!isMounted) {
+    return <Loading />;
+  }
 
   // --- DIGITAL RECEIPT ---
   if (isSuccess && orderSummary) {

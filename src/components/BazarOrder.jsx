@@ -3,6 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDb } from '../lib/useDb';
 
+const JENJANG_CONFIG = {
+  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10 },
+  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10 },
+  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10 },
+};
+
 export default function BazarOrder() {
   const db = useDb();
   const activeProducts = db.getActiveProducts() || [];
@@ -35,11 +41,10 @@ export default function BazarOrder() {
     return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
   };
 
-  // Toast Helper
+  // Helper untuk menampilkan toast
   const showToast = (message, type = 'info') => {
-    const id = Date.now() + Math.random();
+    const id = Date.now();
     setToasts(prev => [...prev, { id, message, type, hide: false }]);
-
     setTimeout(() => {
       setToasts(prev => prev.map(t => t.id === id ? { ...t, hide: true } : t));
       setTimeout(() => {
@@ -48,15 +53,11 @@ export default function BazarOrder() {
     }, 3000);
   };
 
-  // Generate options untuk kelas berdasarkan jenjang
+  // Generate options untuk kelas berdasarkan jenjang: `${jenjang} ${fase} ${nomor}`
   const getClassOptions = (j) => {
-    if (!j) return [];
-    const prefix = j === '10' ? '10E' : j === '11' ? '11F' : '12F';
-    const opts = [];
-    for (let i = 1; i <= 10; i++) {
-      opts.push(`${prefix}${i}`);
-    }
-    return opts;
+    const config = JENJANG_CONFIG[j];
+    if (!config) return [];
+    return Array.from({ length: config.count }, (_, i) => `${j} ${config.fase} ${i + 1}`);
   };
 
   const handleJenjangChange = (e) => {
@@ -499,9 +500,9 @@ export default function BazarOrder() {
                 className="w-full h-12 px-4 rounded-xl border-2 border-stone-200 bg-stone-50 font-medium text-stone-900 focus:bg-white focus:border-[#8B5742] focus:outline-none transition-all cursor-pointer"
               >
                 <option value="" disabled>Pilih Jenjang</option>
-                <option value="10">Kelas 10</option>
-                <option value="11">Kelas 11</option>
-                <option value="12">Kelas 12</option>
+                {Object.entries(JENJANG_CONFIG).map(([key, item]) => (
+                  <option key={key} value={key}>{item.label}</option>
+                ))}
               </select>
             </div>
 

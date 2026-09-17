@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingBag, 
   CheckCircle, 
@@ -26,6 +26,25 @@ import { useDb } from '../../../lib/useDb';
 import { uploadToInsforgeStorage, isInsforgeConfigured } from '../../../lib/insforge';
 import ReviewModal from '../../../components/ReviewModal';
 
+// Konfigurasi terpusat untuk jenjang, fase kurikulum, dan jumlah rombel kelas
+export const JENJANG_CONFIG = {
+  '10': { label: 'Kelas 10 (Fase E)', fase: 'E', count: 10 },
+  '11': { label: 'Kelas 11 (Fase F)', fase: 'F', count: 10 },
+  '12': { label: 'Kelas 12 (Fase F)', fase: 'F', count: 10 },
+};
+
+/**
+ * Generate opsi kelas secara dinamis: `${jenjang} ${fase} ${nomor}`
+ * Contoh: "10 E 1" s/d "10 E 10", "11 F 1" s/d "11 F 10", "12 F 1" s/d "12 F 10"
+ * @param {string} j - Kunci jenjang ('10', '11', '12')
+ * @returns {string[]} Array nama kelas
+ */
+export const getClassOptions = (j) => {
+  const config = JENJANG_CONFIG[j];
+  if (!config) return [];
+  return Array.from({ length: config.count }, (_, i) => `${j} ${config.fase} ${i + 1}`);
+};
+
 export default function CheckoutPage() {
   const db = useDb();
   const activeProducts = db.getActiveProducts() || [];
@@ -49,16 +68,8 @@ export default function CheckoutPage() {
     paymentMethod: ''
   });
 
-  // Generate options untuk kelas berdasarkan jenjang (10E1-10E10, 11F1-11F10, 12F1-12F10)
-  const getClassOptions = (j) => {
-    if (!j) return [];
-    const prefix = j === '10' ? '10E' : j === '11' ? '11F' : '12F';
-    const opts = [];
-    for (let i = 1; i <= 10; i++) {
-      opts.push(`${prefix}${i}`);
-    }
-    return opts;
-  };
+  // Opsi kelas reaktif ter-memoize berdasarkan jenjang yang aktif
+  const classOptions = useMemo(() => getClassOptions(jenjang), [jenjang]);
 
   const handleNameChange = (e) => {
     const val = e.target.value;
@@ -1072,6 +1083,7 @@ export default function CheckoutPage() {
                   id="input-jenjang"
                   value={jenjang}
                   onChange={handleJenjangChange}
+                  aria-required="true"
                   className={`w-full px-4 py-3 rounded-2xl border bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all cursor-pointer ${
                     formErrors.jenjang 
                       ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
@@ -1079,9 +1091,11 @@ export default function CheckoutPage() {
                   }`}
                 >
                   <option value="">-- Pilih Jenjang Kelas --</option>
-                  <option value="10">Kelas 10 (Fase E)</option>
-                  <option value="11">Kelas 11 (Fase F)</option>
-                  <option value="12">Kelas 12 (Fase F)</option>
+                  {Object.entries(JENJANG_CONFIG).map(([key, item]) => (
+                    <option key={key} value={key}>
+                      {item.label}
+                    </option>
+                  ))}
                 </select>
                 {formErrors.jenjang && (
                   <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
@@ -1104,18 +1118,20 @@ export default function CheckoutPage() {
                   value={formData.kelas}
                   onChange={handleKelasChange}
                   disabled={!jenjang}
+                  aria-disabled={!jenjang}
+                  aria-required="true"
                   className={`w-full px-4 py-3 rounded-2xl border backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all ${
                     !jenjang 
-                      ? 'bg-stone-100/80 border-stone-200 text-stone-400 cursor-not-allowed' 
+                      ? 'bg-stone-100/80 border-stone-200 text-stone-400 cursor-not-allowed opacity-80' 
                       : formErrors.kelas
                       ? 'border-red-400 ring-2 ring-red-300/60 bg-white/70 text-red-800 cursor-pointer'
                       : 'border-white/90 bg-white/70 focus:ring-[#DDA15E]/60 text-[#1F2937] cursor-pointer'
                   }`}
                 >
                   <option value="">
-                    {jenjang ? `-- Pilih Kelas di Jenjang ${jenjang} --` : '⚠️ Pilih Jenjang Terlebih Dahulu'}
+                    {jenjang ? '-- Pilih Kelas --' : 'Pilih jenjang dulu'}
                   </option>
-                  {getClassOptions(jenjang).map(cls => (
+                  {classOptions.map(cls => (
                     <option key={cls} value={cls}>
                       {cls}
                     </option>

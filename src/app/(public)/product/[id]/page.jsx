@@ -50,11 +50,12 @@ export default function ProductDetailPage({ params }) {
   const settings = db.getSettings() || {};
 
   useEffect(() => {
-    if (!product?.id) return;
+    const targetId = product?.id || rawId;
+    if (!targetId) return;
     let isMounted = true;
     setReviewsLoading(true);
 
-    fetch(`/api/reviews?productId=${encodeURIComponent(product.id)}`)
+    fetch(`/api/reviews?productId=${encodeURIComponent(targetId)}`)
       .then(res => res.json())
       .then(data => {
         if (isMounted && data?.success) {
@@ -71,7 +72,7 @@ export default function ProductDetailPage({ params }) {
     return () => {
       isMounted = false;
     };
-  }, [product?.id, product?.slug]);
+  }, [product?.id, product?.slug, rawId]);
 
   const totalReviews = productReviews.length;
   const avgRating = totalReviews > 0
@@ -316,13 +317,16 @@ export default function ProductDetailPage({ params }) {
 
                   {/* Rating Stars Badge near Title */}
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-xs">
+                    <a 
+                      href="#reviews"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-xs transition-all hover:scale-105 active:scale-95"
+                    >
                       <Star size={13} className="fill-amber-400 text-amber-400" />
                       <span>{avgRating ? `${avgRating}` : '5.0'}</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium drop-shadow-sm">
-                      {totalReviews > 0 ? `(${totalReviews} Ulasan)` : '(Belum ada ulasan)'}
-                    </span>
+                      <span className="text-[11px] text-white/80 font-normal ml-0.5">
+                        {totalReviews > 0 ? `(${totalReviews} Ulasan)` : '(Belum ada ulasan)'}
+                      </span>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -557,7 +561,7 @@ export default function ProductDetailPage({ params }) {
             </div>
 
             {/* CUSTOMER REVIEWS & RATINGS SECTION */}
-            <div className="bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/90 shadow-[0_8px_30px_rgba(93,58,41,0.06)] relative overflow-hidden">
+            <div id="reviews" className="bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/90 shadow-[0_8px_30px_rgba(93,58,41,0.06)] relative overflow-hidden scroll-mt-24">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
@@ -666,9 +670,13 @@ export default function ProductDetailPage({ params }) {
                       </div>
 
                       {/* Comment */}
-                      {rev.comment && (
+                      {rev.comment ? (
                         <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-normal">
                           &ldquo;{rev.comment}&rdquo;
+                        </p>
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">
+                          Memberikan penilaian bintang {rev.rating}/5 untuk menu ini.
                         </p>
                       )}
 

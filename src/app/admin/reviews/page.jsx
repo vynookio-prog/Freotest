@@ -120,8 +120,11 @@ export default function AdminReviewsPage() {
         (r.orderId || '').toLowerCase().includes(q) ||
         pName.includes(q);
 
-      // Product
-      const matchProduct = productFilter === 'all' || r.productId === productFilter;
+      // Product (support aliases between iskrambol & buko-coklat)
+      const matchProduct = productFilter === 'all' || 
+        r.productId === productFilter || 
+        (productFilter === 'iskrambol' && r.productId === 'buko-coklat') || 
+        (productFilter === 'buko-coklat' && r.productId === 'iskrambol');
 
       // Rating
       const matchRating = ratingFilter === 'all' || r.rating === Number(ratingFilter);

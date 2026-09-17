@@ -41,7 +41,12 @@ export async function GET(req) {
     let query = adminClient.database.from('reviews').select('*');
 
     if (productId) {
-      query = query.eq('product_id', productId);
+      const cleanProdId = productId.trim().toLowerCase();
+      if (cleanProdId === 'iskrambol' || cleanProdId === 'buko-coklat') {
+        query = query.in('product_id', ['buko-coklat', 'iskrambol']);
+      } else {
+        query = query.eq('product_id', productId);
+      }
     }
 
     if (orderId) {
@@ -123,12 +128,18 @@ export async function POST(req) {
 
       const cleanComment = (comment || '').trim().slice(0, 200);
 
+      // Normalize productId to match foreign key in DB (buko-coklat vs iskrambol)
+      const canonicalProductId = (productId === 'iskrambol') ? 'buko-coklat' : productId;
+      const checkProductIds = (productId === 'iskrambol' || productId === 'buko-coklat')
+        ? ['buko-coklat', 'iskrambol']
+        : [productId];
+
       // 2. Prevent duplicate submission for same order_id + product_id
       const existing = await adminClient.database
         .from('reviews')
         .select('id')
         .eq('order_id', orderId)
-        .eq('product_id', productId)
+        .in('product_id', checkProductIds)
         .limit(1);
 
       if (existing.data && existing.data.length > 0) {
@@ -146,7 +157,7 @@ export async function POST(req) {
       rowsToInsert.push({
         id: reviewId,
         order_id: orderId,
-        product_id: productId,
+        product_id: canonicalProductId,
         rating: numRating,
         comment: cleanComment || null,
         photo_url: photoUrl || null,

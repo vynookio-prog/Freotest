@@ -1328,7 +1328,13 @@ export const db = {
   },
   getReviewsByProduct(productId, includeHidden = false) {
     const list = this.getReviews();
-    return list.filter(r => (r.productId === productId) && (includeHidden || !r.isHidden));
+    const cleanId = String(productId || '').trim().toLowerCase();
+    const aliases = (cleanId === 'iskrambol' || cleanId === 'buko-coklat')
+      ? ['buko-coklat', 'iskrambol']
+      : [cleanId];
+    return list.filter(r => 
+      aliases.includes(String(r.productId || '').trim().toLowerCase()) && (includeHidden || !r.isHidden)
+    );
   },
   hasReviewedOrder(orderId) {
     const list = this.getReviews();

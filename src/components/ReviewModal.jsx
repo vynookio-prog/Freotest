@@ -324,29 +324,29 @@ export default function ReviewModal({ order, isOpen, onClose, onSuccess }) {
                     {/* Photo Upload (Optional) */}
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-1.5">
-                        Foto Produk (Opsional, Maks 2MB):
+                        Unggah Foto Produk (Opsional, Maks 2MB):
                       </span>
 
                       {currentRev.photoPreview ? (
                         <div className="relative inline-block rounded-xl overflow-hidden border border-stone-300 group shadow-xs">
                           <img 
                             src={currentRev.photoPreview} 
-                            alt="Pratinjau Ulasan" 
+                            alt="Pratinjau Foto Produk yang Diunggah" 
                             className="w-20 h-20 object-cover"
                           />
                           <button
                             type="button"
                             onClick={() => handleRemovePhoto(item.id)}
                             className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full shadow-md hover:bg-rose-700 transition-colors"
-                            title="Hapus foto"
+                            title="Hapus foto ini"
                           >
                             <Trash2 size={12} />
                           </button>
                         </div>
                       ) : (
                         <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-xs font-bold text-stone-600 hover:text-[#5D3A29] cursor-pointer transition-colors shadow-2xs">
-                          <ImageIcon size={14} className="text-[#8B5742]" />
-                          <span>Unggah Foto Sajian</span>
+                          <Upload size={14} className="text-[#8B5742]" />
+                          <span>Unggah Foto Produk</span>
                           <input 
                             type="file" 
                             accept="image/jpeg,image/png,image/webp" 

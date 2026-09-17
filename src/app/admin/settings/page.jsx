@@ -30,7 +30,8 @@ export default function AdminSettingsPage() {
     whatsappAdmin: currentSettings.adminPhone || currentSettings.whatsappAdmin || '628818578363',
     lowStockThreshold: currentSettings.lowStockThreshold || 5,
     orderPrefix: currentSettings.orderPrefix || 'FRX',
-    qrisAccountName: currentSettings.qrisAccountName || 'Jezwu'
+    qrisAccountName: currentSettings.qrisAccountName || 'FREONIX',
+    qrisImageUrl: currentSettings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg'
   });
 
   const [toast, setToast] = useState(null);
@@ -296,8 +297,22 @@ export default function AdminSettingsPage() {
                   name="qrisAccountName"
                   value={formData.qrisAccountName || ''}
                   onChange={handleInputChange}
-                  placeholder="Jezwu"
+                  placeholder="FREONIX"
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 font-semibold"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  URL Gambar Kode QRIS (CDN / Direct Link)
+                </label>
+                <input
+                  type="url"
+                  name="qrisImageUrl"
+                  value={formData.qrisImageUrl || ''}
+                  onChange={handleInputChange}
+                  placeholder="https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-stone-200 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 font-mono"
                 />
               </div>
             </div>

@@ -108,7 +108,7 @@ KEMAMPUAN & KARAKTER UTAMA:
      * Tema Acara: Bazar Kokurikuler ASEAN — Masakan Khas Filipina
      * Tanggal Pelaksanaan Event: ${eventDate}
      * Lokasi Stand: Stand FREONIX XII-F1 di area acara sekolah
-     * Metode Pembayaran: QRIS resmi (a.n. Jezwu) atau Tunai (Cash di stand saat pengambilan)
+     * Metode Pembayaran: QRIS resmi (a.n. FREONIX) atau Tunai (Cash di stand saat pengambilan)
      * Cara Pemesanan: Klik menu "Pesan Sekarang" atau kunjungi halaman /checkout pada website ini.
      * Menu Kuliner FREONIX yang Dijual:
 ${productsSummary}

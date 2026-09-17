@@ -1036,7 +1036,7 @@ export default function CheckoutPage() {
                 <label htmlFor="input-name" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
                   <span>Nama Lengkap <span className="text-red-500 font-bold">*</span></span>
                   <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
-                    Wajib (Min. 5 Huruf)
+                    Wajib
                   </span>
                 </label>
                 <input 
@@ -1051,7 +1051,7 @@ export default function CheckoutPage() {
                       ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
                       : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
                   }`}
-                  placeholder="Nama Lengkap Anda (minimal 5 huruf)"
+                  placeholder="Masukkan nama lengkap Anda (minimal 5 huruf)"
                 />
                 {formErrors.name && (
                   <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
@@ -1133,7 +1133,7 @@ export default function CheckoutPage() {
                 <label htmlFor="input-phone" className="text-xs font-bold uppercase tracking-wider text-[#5D3A29] mb-2 flex items-center justify-between">
                   <span>Nomor WhatsApp <span className="text-red-500 font-bold">*</span></span>
                   <span className="text-[10px] text-red-600 font-bold uppercase bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full">
-                    Wajib (Min. 10 Digit Angka)
+                    Wajib
                   </span>
                 </label>
                 <div className="relative">
@@ -1154,7 +1154,7 @@ export default function CheckoutPage() {
                         ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
                         : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
                     }`}
-                    placeholder="Contoh: 0812345678"
+                    placeholder="Contoh: 081234567890 (minimal 10 digit angka)"
                   />
                 </div>
                 {formErrors.phone ? (

@@ -192,6 +192,32 @@ export default function CheckoutPage() {
     };
   };
 
+  // Download QRIS: fetch → blob → object URL → auto-download ke storage lokal
+  const [isDownloadingQris, setIsDownloadingQris] = useState(false);
+  const handleDownloadQris = async () => {
+    const url = settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg';
+    setIsDownloadingQris(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Gagal mengunduh gambar.');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `QRIS-FREONIX.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error('Download QRIS error:', err);
+      // Fallback: buka di tab baru jika fetch gagal (misal CORS)
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } finally {
+      setIsDownloadingQris(false);
+    }
+  };
+
   // Dynamic Item Quantities: { [productId]: count }
   const [quantities, setQuantities] = useState(() => {
     const initial = {};
@@ -1444,16 +1470,19 @@ export default function CheckoutPage() {
 
                   {/* Tombol Download QRIS */}
                   <div className="mb-1">
-                    <a
-                      href={settings.qrisImageUrl || 'https://cdn.phototourl.com/free/2026-09-17-07ea5a55-7913-45f5-b313-9c5819ae71a3.jpg'}
-                      download="QRIS-FREONIX.jpg"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#5D3A29]/10 hover:bg-[#5D3A29]/20 border border-[#8B5742]/20 text-[#5D3A29] text-[11px] font-bold transition-all active:scale-95"
+                    <button
+                      type="button"
+                      onClick={handleDownloadQris}
+                      disabled={isDownloadingQris}
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#5D3A29]/10 hover:bg-[#5D3A29]/20 border border-[#8B5742]/20 text-[#5D3A29] text-[11px] font-bold transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait"
                     >
-                      <Download size={13} />
-                      Unduh Gambar QRIS
-                    </a>
+                      {isDownloadingQris ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <Download size={13} />
+                      )}
+                      {isDownloadingQris ? 'Mengunduh...' : 'Unduh Gambar QRIS'}
+                    </button>
                   </div>
 
                   {/* Highlight Atas Nama */}

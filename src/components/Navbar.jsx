@@ -39,7 +39,7 @@ export default function Navbar() {
   const navLinks = [
     { path: '/', label: 'Beranda' },
     { path: '/about', label: 'Tentang Kelas' },
-    { path: '/products', label: 'Menu & Gizi' },
+    { path: '/products', label: 'Menu' },
     { path: '/gallery', label: 'Galeri' },
   ];
 

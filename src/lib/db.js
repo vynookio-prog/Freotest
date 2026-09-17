@@ -63,12 +63,12 @@ export const INITIAL_DB = {
       image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/kwek-kwek.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
-        'Telur puyuh (direbus & dikupas)',
-        'Tepung terigu & maizena',
-        'Pewarna makanan oranye alami (Annatto)',
-        'Garam, kaldu bubuk, & merica',
-        'Air mineral',
-        'Minyak goreng'
+        'Telur puyuh rebus berkualitas (3 butir/tusuk)',
+        'Tepung terigu & tepung maizena renyah',
+        'Bawang putih bubuk, merica, kaldu & garam',
+        'Pewarna makanan oranye alami',
+        'Saus asam manis khas Filipina (saus tomat, cabai rawit, cuka & gula)',
+        'Minyak nabati untuk menggoreng'
       ],
       tools: [
         'Mangkuk adonan',
@@ -78,12 +78,12 @@ export const INITIAL_DB = {
         'Tusuk sate bambu'
       ],
       nutrition: [
-        { label: 'Kalori', value: '150 kkal' },
-        { label: 'Protein', value: '6 g' },
-        { label: 'Lemak', value: '10 g' },
-        { label: 'Karbohidrat', value: '8 g' }
+        { label: 'Kalori', value: '146 kkal' },
+        { label: 'Protein', value: '5.5 g' },
+        { label: 'Lemak', value: '6.7 g' },
+        { label: 'Karbohidrat', value: '15 g' }
       ],
-      updatedAt: '2026-09-16T02:00:00.000Z'
+      updatedAt: '2026-09-17T08:00:00.000Z'
     },
     {
       id: 'turon',
@@ -96,17 +96,17 @@ export const INITIAL_DB = {
       stock: 50,
       unit: 'piece',
       status: 'active',
-      desc: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
-      description: 'Pisang goreng golden dengan isian kacang manis, disajikan hangat dan renyah.',
+      desc: 'Pisang goreng karamel khas Filipina dengan balutan kulit renyah manis legit disajikan hangat.',
+      description: 'Pisang goreng karamel khas Filipina dengan balutan kulit renyah manis legit disajikan hangat.',
       image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/turon.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
-        'Pisang kepok matang pilihan (Saba)',
-        'Irisan nangka manis segar (Langka)',
-        'Kulit lumpia tipis & renyah (Spring roll wrapper)',
-        'Gula palem / brown sugar murni (karamelisasi)',
-        'Minyak goreng nabati berkualitas',
-        'Larutan perekat tepung maizena'
+        'Pisang uli / kepok matang manis pilihan',
+        'Kulit lumpia tipis & renyah',
+        'Gula palem / brown sugar karamel',
+        'Gula pasir murni pelapis karamel krispi',
+        'Saus karamel gurih legit (gula palem, santan kental & daun pandan)',
+        'Minyak nabati untuk menggoreng'
       ],
       tools: [
         'Wajan penggorengan / deep fryer',
@@ -116,55 +116,55 @@ export const INITIAL_DB = {
         'Kemasan kertas food grade'
       ],
       nutrition: [
-        { label: 'Kalori', value: '195 kkal' },
-        { label: 'Karbohidrat', value: '38 g' },
-        { label: 'Lemak', value: '5 g' },
-        { label: 'Protein', value: '2.5 g' }
+        { label: 'Kalori', value: '156 kkal' },
+        { label: 'Karbohidrat', value: '29 g' },
+        { label: 'Lemak', value: '4.5 g' },
+        { label: 'Protein', value: '1.3 g' }
       ],
-      updatedAt: '2026-09-16T02:00:00.000Z'
+      updatedAt: '2026-09-17T08:00:00.000Z'
     },
     {
       id: 'buko-coklat',
-      slug: 'buko-coklat',
-      name: 'Buko Coklat',
+      slug: 'iskrambol',
+      name: 'Iskrambol',
       categoryId: 'cat-3',
       categoryName: 'Minuman & Dessert',
-      price: 6000,
+      price: 7000,
       discountPrice: 0,
       stock: 50,
       unit: 'cup',
       status: 'active',
-      desc: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
-      description: 'Sari buko dengan sentuhan cokelat, rasa tropis manis dan lezat untuk ulang tahun.',
-      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/buko-coklat.jpg',
+      desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+      description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
-        'Daging kelapa muda segar serut (Buko)',
-        'Jelly cokelat lembut olahan alami',
-        'Nata de coco kenyal menyegarkan',
-        'Susu evaporasi creamy',
-        'Susu kental manis cokelat premium',
-        'Bubuk kakao murni / cokelat leleh',
-        'Es batu kristal higienis'
+        'Es serut halus higienis (Shaved ice - 2 cups)',
+        'Susu stroberi manis, creamy & segar (1/2 cup)',
+        'Saus cokelat kental manis (Chocolate syrup)',
+        'Topping marshmallow lembut / marshmallow fluff',
+        'Topping 1 scoop es krim Neapolitan lezat',
+        'Taburan susu bubuk premium khas Iskrambol'
       ],
       tools: [
-        'Pengerok kelapa muda stainless steril',
-        'Wadah pencampur stainless food grade',
-        'Sendok takar & pengaduk higienis',
+        'Mesin serut es higienis',
+        'Wadah pencampur & mixer stainless food grade',
+        'Botol saus squeeze & sendok takar',
         'Cup dessert anti-tumpah 300ml + sendok'
       ],
       nutrition: [
-        { label: 'Kalori', value: '215 kkal' },
-        { label: 'Karbohidrat', value: '34 g' },
-        { label: 'Lemak', value: '7 g' },
-        { label: 'Protein', value: '4 g' }
+        { label: 'Kalori', value: '333 kkal' },
+        { label: 'Karbohidrat', value: '61 g' },
+        { label: 'Lemak', value: '7.7 g' },
+        { label: 'Protein', value: '5.7 g' }
       ],
-      updatedAt: '2026-09-16T02:00:00.000Z'
+      updatedAt: '2026-09-17T08:00:00.000Z'
     }
   ],
   orders: [],
   notifications: [],
-  auditLogs: []
+  auditLogs: [],
+  reviews: []
 };
 
 // --- DATA MAPPERS (InsForge snake_case <-> Application camelCase) ---
@@ -365,6 +365,38 @@ function mapAuditLogToDb(l) {
   };
 }
 
+function mapReviewFromDb(row) {
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    productId: row.product_id,
+    rating: Number(row.rating) || 5,
+    comment: row.comment || '',
+    photoUrl: row.photo_url || '',
+    photoKey: row.photo_key || '',
+    buyerName: row.buyer_name || 'Pelanggan',
+    isHidden: Boolean(row.is_hidden),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function mapReviewToDb(r) {
+  return {
+    id: r.id,
+    order_id: r.orderId,
+    product_id: r.productId,
+    rating: Number(r.rating) || 5,
+    comment: r.comment || null,
+    photo_url: r.photoUrl || null,
+    photo_key: r.photoKey || null,
+    buyer_name: r.buyerName || 'Pelanggan',
+    is_hidden: Boolean(r.isHidden),
+    created_at: r.createdAt || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+}
+
 // In-memory cache
 let cachedDb = null;
 let cachedActiveProducts = null;
@@ -392,11 +424,27 @@ function loadLocalDb() {
       settings: { ...INITIAL_DB.settings, ...(parsed.settings || {}) },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
       products: Array.isArray(parsed.products) && parsed.products.length > 0 
-        ? parsed.products.filter(p => p.id !== 'chicken-adobo' && p.id !== 'halo-halo' && p.slug !== 'chicken-adobo' && p.slug !== 'halo-halo')
+        ? parsed.products
+            .filter(p => p.id !== 'chicken-adobo' && p.id !== 'halo-halo' && p.slug !== 'chicken-adobo' && p.slug !== 'halo-halo')
+            .map(p => {
+              if (p.id === 'buko-coklat' && (p.name === 'Buko Coklat' || p.slug === 'buko-coklat')) {
+                return {
+                  ...p,
+                  name: 'Iskrambol',
+                  slug: 'iskrambol',
+                  price: 7000,
+                  desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+                  description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+                  image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg'
+                };
+              }
+              return p;
+            })
         : INITIAL_DB.products,
       orders: [],
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
-      auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
+      auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
+      reviews: Array.isArray(parsed.reviews) ? parsed.reviews : []
     };
     return cachedDb;
   } catch (err) {
@@ -413,7 +461,8 @@ function saveLocalDb(data) {
       const persistentData = {
         settings: data.settings,
         categories: data.categories,
-        products: data.products
+        products: data.products,
+        reviews: data.reviews || []
       };
       localStorage.setItem(DB_KEY, JSON.stringify(persistentData));
     }
@@ -447,11 +496,12 @@ export async function fetchCatalog(force = false) {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    // Fetch Store Settings, Categories, and Products concurrently in parallel
-    const [settingsRes, catRes, prodRes] = await Promise.all([
+    // Fetch Store Settings, Categories, Products, and Reviews concurrently in parallel
+    const [settingsRes, catRes, prodRes, revRes] = await Promise.all([
       insforge.database.from('store_settings').select('*').eq('id', 'default').maybeSingle(),
       insforge.database.from('categories').select('*').order('created_at', { ascending: true }),
-      insforge.database.from('products').select('*').order('created_at', { ascending: true })
+      insforge.database.from('products').select('*').order('created_at', { ascending: true }),
+      insforge.database.from('reviews').select('*').order('created_at', { ascending: false })
     ]);
 
     if (!settingsRes.error && settingsRes.data) {
@@ -466,6 +516,11 @@ export async function fetchCatalog(force = false) {
 
     if (!prodRes.error && Array.isArray(prodRes.data) && prodRes.data.length > 0) {
       data.products = prodRes.data.map(mapProductFromDb);
+      hasUpdates = true;
+    }
+
+    if (!revRes.error && Array.isArray(revRes.data)) {
+      data.reviews = revRes.data.map(mapReviewFromDb);
       hasUpdates = true;
     }
 
@@ -495,10 +550,11 @@ export async function fetchAdminData() {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    const [ordersRes, notifRes, logsRes] = await Promise.all([
+    const [ordersRes, notifRes, logsRes, revsRes] = await Promise.all([
       insforge.database.from('orders').select('*').order('created_at', { ascending: false }),
       insforge.database.from('notifications').select('*').order('created_at', { ascending: false }).limit(30),
-      insforge.database.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50)
+      insforge.database.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
+      insforge.database.from('reviews').select('*').order('created_at', { ascending: false })
     ]);
 
     if (!ordersRes.error && Array.isArray(ordersRes.data)) {
@@ -513,6 +569,11 @@ export async function fetchAdminData() {
 
     if (!logsRes.error && Array.isArray(logsRes.data)) {
       data.auditLogs = logsRes.data.map(mapAuditLogFromDb);
+      hasUpdates = true;
+    }
+
+    if (!revsRes.error && Array.isArray(revsRes.data)) {
+      data.reviews = revsRes.data.map(mapReviewFromDb);
       hasUpdates = true;
     }
 
@@ -739,8 +800,8 @@ export const db = {
     if (cleanId === '2' || cleanId.includes('turon')) {
       return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods[1];
     }
-    if (cleanId === '3' || cleanId.includes('buko') || cleanId.includes('coklat')) {
-      return prods.find(p => p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods[2];
+    if (cleanId === '3' || cleanId.includes('iskrambol') || cleanId.includes('scramble') || cleanId.includes('buko') || cleanId.includes('coklat')) {
+      return prods.find(p => p.slug === 'iskrambol' || p.id === 'iskrambol' || p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods[2];
     }
 
     const num = parseInt(cleanId, 10);
@@ -1236,6 +1297,75 @@ export const db = {
         console.warn('InsForge addAuditLog err:', err);
       }
     }
+  },
+
+  // --- REVIEWS ---
+  getReviews() {
+    const data = cachedDb || loadLocalDb();
+    return data.reviews || [];
+  },
+  async fetchReviews() {
+    if (!isInsforgeConfigured) return this.getReviews();
+    try {
+      const { data, error } = await insforge.database
+        .from('reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('InsForge fetchReviews error:', error.message);
+        return this.getReviews();
+      }
+      const mapped = (data || []).map(mapReviewFromDb);
+      const localData = loadLocalDb();
+      localData.reviews = mapped;
+      saveLocalDb(localData);
+      return mapped;
+    } catch (err) {
+      console.warn('InsForge fetchReviews exception:', err);
+      return this.getReviews();
+    }
+  },
+  getReviewsByProduct(productId, includeHidden = false) {
+    const list = this.getReviews();
+    return list.filter(r => (r.productId === productId) && (includeHidden || !r.isHidden));
+  },
+  hasReviewedOrder(orderId) {
+    const list = this.getReviews();
+    return list.some(r => r.orderId === orderId);
+  },
+  async toggleReviewVisibility(reviewId, isHidden) {
+    const data = loadLocalDb();
+    if (!data.reviews) data.reviews = [];
+    data.reviews = data.reviews.map(r => r.id === reviewId ? { ...r, isHidden } : r);
+    saveLocalDb(data);
+
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database
+          .from('reviews')
+          .update({ is_hidden: isHidden, updated_at: new Date().toISOString() })
+          .eq('id', reviewId);
+      } catch (err) {
+        console.warn('InsForge toggleReviewVisibility err:', err);
+      }
+    }
+    return true;
+  },
+  async deleteReview(reviewId) {
+    const data = loadLocalDb();
+    if (!data.reviews) data.reviews = [];
+    data.reviews = data.reviews.filter(r => r.id !== reviewId);
+    saveLocalDb(data);
+
+    if (isInsforgeConfigured) {
+      try {
+        await insforge.database.from('reviews').delete().eq('id', reviewId);
+      } catch (err) {
+        console.warn('InsForge deleteReview err:', err);
+      }
+    }
+    return true;
   },
 
   // --- ANALYTICS STATS ---

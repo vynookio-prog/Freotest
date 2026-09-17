@@ -20,7 +20,12 @@ import {
   HeartHandshake, 
   Award, 
   Check,
-  ArrowRight
+  ArrowRight,
+  Star,
+  ThumbsUp,
+  Eye,
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useDb } from '../../../../lib/useDb';
 
@@ -31,6 +36,10 @@ export default function ProductDetailPage({ params }) {
   
   const db = useDb();
   const [copied, setCopied] = useState(false);
+  const [productReviews, setProductReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [visibleReviewCount, setVisibleReviewCount] = useState(3);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -39,6 +48,35 @@ export default function ProductDetailPage({ params }) {
   const product = db.getProductById(rawId);
   const allProducts = db.getActiveProducts() || [];
   const settings = db.getSettings() || {};
+
+  useEffect(() => {
+    if (!product?.id) return;
+    let isMounted = true;
+    setReviewsLoading(true);
+
+    fetch(`/api/reviews?productId=${encodeURIComponent(product.id)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted && data?.success) {
+          setProductReviews(data.reviews || []);
+        }
+      })
+      .catch(err => {
+        console.warn('Gagal memuat ulasan produk:', err);
+      })
+      .finally(() => {
+        if (isMounted) setReviewsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [product?.id, product?.slug]);
+
+  const totalReviews = productReviews.length;
+  const avgRating = totalReviews > 0
+    ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
+    : null;
 
   // Fallback jika produk tidak ditemukan
   if (!product) {
@@ -275,6 +313,17 @@ export default function ProductDetailPage({ params }) {
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-snug drop-shadow-md">
                     {product.name}
                   </h1>
+
+                  {/* Rating Stars Badge near Title */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-xs">
+                      <Star size={13} className="fill-amber-400 text-amber-400" />
+                      <span>{avgRating ? `${avgRating}` : '5.0'}</span>
+                    </div>
+                    <span className="text-[11px] text-white/90 font-medium drop-shadow-sm">
+                      {totalReviews > 0 ? `(${totalReviews} Ulasan)` : '(Belum ada ulasan)'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -458,31 +507,6 @@ export default function ProductDetailPage({ params }) {
               </div>
             </div>
 
-            {/* DIRECT KE MENU CHECKOUT DI BAWAH NILAI GIZI */}
-            <div className="bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FCD34D]/70 rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-[0_8px_30px_rgba(93,58,41,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5 text-left">
-                <div className="w-12 h-12 rounded-2xl bg-[#5D3A29] text-white flex items-center justify-center shadow-md shrink-0">
-                  <ShoppingBag size={22} />
-                </div>
-                <div>
-                  <h4 className="font-heading font-black text-stone-900 text-base sm:text-lg">
-                    Cocok dengan nutrisi hidangan ini?
-                  </h4>
-                  <p className="text-xs text-stone-700 font-medium">
-                    Langsung pesan menu {product.name} melalui menu checkout resmi kami.
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/checkout"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white font-heading font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95 shrink-0"
-              >
-                <ShoppingBag size={16} />
-                <span>Langsung ke Menu Checkout</span>
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-
             {/* INGREDIENTS & PRODUCTION TOOLS */}
             <div className="bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/90 shadow-[0_8px_30px_rgba(93,58,41,0.06)]">
               <div className="flex items-center gap-2 mb-6">
@@ -531,6 +555,189 @@ export default function ProductDetailPage({ params }) {
 
               </div>
             </div>
+
+            {/* CUSTOMER REVIEWS & RATINGS SECTION */}
+            <div className="bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/90 shadow-[0_8px_30px_rgba(93,58,41,0.06)] relative overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+                    <Star size={20} className="fill-amber-500 text-amber-500" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#8B5742] block">
+                      Suara Pembeli FREONIX
+                    </span>
+                    <h3 className="text-lg sm:text-xl font-black text-[#5D3A29]">
+                      Ulasan & Penilaian Menu
+                    </h3>
+                  </div>
+                </div>
+
+                <span className="text-[11px] font-bold bg-[#8B5742]/10 text-[#8B5742] px-3 py-1 rounded-full border border-[#8B5742]/20">
+                  {totalReviews} Ulasan Masuk
+                </span>
+              </div>
+
+              {/* Review Summary Score Card */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 text-center sm:text-left">
+                  <div className="text-4xl sm:text-5xl font-black text-[#5D3A29]">
+                    {avgRating || '5.0'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1 justify-center sm:justify-start mb-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star 
+                          key={s} 
+                          size={16} 
+                          className={s <= Math.round(Number(avgRating || 5)) ? 'text-amber-400 fill-amber-400' : 'text-stone-300'} 
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-stone-600 font-medium">
+                      Berdasarkan <strong>{totalReviews}</strong> pengalaman pembeli terverifikasi
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/checkout"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-xs font-bold text-[#8B5742] hover:text-[#5D3A29] shadow-2xs transition-all active:scale-95 shrink-0"
+                >
+                  Pesan & Beri Nilai →
+                </Link>
+              </div>
+
+              {/* Reviews List or Friendly Empty State */}
+              {reviewsLoading ? (
+                <div className="py-10 text-center text-xs text-stone-400">
+                  Memuat ulasan pelanggan...
+                </div>
+              ) : productReviews.length === 0 ? (
+                <div className="py-10 px-4 text-center bg-[#FAFAF9] rounded-2xl border border-dashed border-stone-300">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-3">
+                    <Star size={22} className="fill-amber-400 text-amber-400" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#5D3A29] mb-1">
+                    Belum Ada Ulasan untuk Menu Ini
+                  </h4>
+                  <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed mb-4">
+                    Jadilah yang pertama mencoba dan memberikan ulasan! Pesanan Anda yang disetujui akan langsung mendapatkan pop-up rating di halaman status pesanan.
+                  </p>
+                  <Link
+                    href="/checkout"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8B5742] hover:bg-[#784936] text-white text-xs font-bold shadow-sm active:scale-95 transition-all"
+                  >
+                    <ShoppingBag size={14} /> Pesan Menu Sekarang
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {productReviews.slice(0, visibleReviewCount).map((rev) => (
+                    <div 
+                      key={rev.id} 
+                      className="p-4 sm:p-5 rounded-2xl bg-[#FAFAF9] border border-stone-200/70 text-left space-y-2.5 transition-all hover:bg-white hover:shadow-xs"
+                    >
+                      {/* Reviewer Header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#8B5742] to-[#DDA15E] text-white font-black text-xs flex items-center justify-center shadow-xs">
+                            {(rev.privacyName || rev.buyerName || 'P').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="font-extrabold text-xs text-[#5D3A29] block leading-tight">
+                              {rev.privacyName || rev.buyerName}
+                            </span>
+                            <span className="text-[10px] text-emerald-700 font-bold inline-flex items-center gap-1">
+                              <CheckCircle2 size={11} className="text-emerald-600" /> Pembeli Terverifikasi
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((st) => (
+                            <Star 
+                              key={st} 
+                              size={13} 
+                              className={st <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-stone-300'} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Comment */}
+                      {rev.comment && (
+                        <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-normal">
+                          &ldquo;{rev.comment}&rdquo;
+                        </p>
+                      )}
+
+                      {/* Photo Thumbnail if available */}
+                      {rev.photoUrl && (
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(rev.photoUrl)}
+                            className="relative group rounded-xl overflow-hidden border border-stone-200 shadow-2xs hover:ring-2 hover:ring-[#8B5742] transition-all cursor-pointer inline-block"
+                            title="Klik untuk melihat foto ulasan pembeli"
+                          >
+                            <img 
+                              src={rev.photoUrl} 
+                              alt="Foto Ulasan" 
+                              className="w-20 h-20 sm:w-24 sm:h-24 object-cover group-hover:scale-105 transition-transform" 
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity">
+                              <Eye size={14} className="mr-1" /> Perbesar
+                            </div>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Date */}
+                      <span className="text-[10px] text-stone-400 block pt-1 font-medium">
+                        {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Load More Button */}
+                  {productReviews.length > visibleReviewCount && (
+                    <div className="text-center pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleReviewCount(prev => prev + 4)}
+                        className="px-5 py-2.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-[#5D3A29] text-xs font-bold transition-all active:scale-95"
+                      >
+                        Muat Lebih Banyak Ulasan ({productReviews.length - visibleReviewCount} tersisa)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Lightbox for review image */}
+            {lightboxImage && (
+              <div 
+                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+                onClick={() => setLightboxImage(null)}
+              >
+                <div className="relative max-w-lg w-full max-h-[85vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(null)}
+                    className="absolute -top-10 right-0 text-white hover:text-stone-300 p-2"
+                  >
+                    <X size={24} />
+                  </button>
+                  <img 
+                    src={lightboxImage} 
+                    alt="Foto Ulasan Pembeli" 
+                    className="max-h-[75vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl" 
+                  />
+                </div>
+              </div>
+            )}
 
           </div>
 

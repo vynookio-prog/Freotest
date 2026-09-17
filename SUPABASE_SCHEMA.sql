@@ -308,21 +308,21 @@ INSERT INTO public.products (
 ),
 (
     'buko-coklat',
-    'buko-coklat',
-    'Buko Coklat',
+    'iskrambol',
+    'Iskrambol',
     'cat-3',
     'Minuman & Dessert',
-    10000,
+    7000,
     0,
-    35,
+    50,
     'cup',
     'active',
-    'Pencuci mulut dingin menyegarkan khas Filipina dengan serutan daging kelapa muda asli (buko), jelly cokelat lembut, nata de coco kenyal, dan siraman saus krim cokelat susu yang manis gurih legit.',
-    '/produk-buko-coklat.jpg',
-    'https://wa.link/ukep08',
-    '["Daging kelapa muda segar serut (Buko)", "Jelly cokelat lembut olahan alami", "Nata de coco kenyal menyegarkan", "Susu evaporasi creamy", "Susu kental manis cokelat premium", "Bubuk kakao murni / cokelat leleh", "Es batu kristal higienis"]'::jsonb,
-    '["Pengerok kelapa muda stainless steril", "Wadah pencampur stainless food grade", "Sendok takar & pengaduk higienis", "Cup dessert anti-tumpah 300ml + sendok"]'::jsonb,
-    '[{"label": "Kalori", "value": "215 kkal"}, {"label": "Karbohidrat", "value": "34 g"}, {"label": "Lemak", "value": "7 g"}, {"label": "Protein", "value": "4 g"}]'::jsonb
+    'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+    'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg',
+    'https://wa.me/628818578363',
+    '["Es serut halus higienis (Shaved ice)", "Susu evaporasi creamy & susu kental manis", "Sirup rasa pisang khas Iskrambol (banana syrup)", "Susu bubuk premium (topping tabur)", "Saus cokelat manis kental", "Topping mini marshmallow & meses warna-warni"]'::jsonb,
+    '["Mesin serut es higienis", "Wadah pencampur & mixer stainless food grade", "Botol saus squeeze & sendok takar", "Cup dessert anti-tumpah 300ml + sendok"]'::jsonb,
+    '[{"label": "Kalori", "value": "185 kkal"}, {"label": "Karbohidrat", "value": "32 g"}, {"label": "Lemak", "value": "5 g"}, {"label": "Protein", "value": "3.5 g"}]'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
     slug = EXCLUDED.slug,

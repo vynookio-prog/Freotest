@@ -17,7 +17,8 @@ import {
   X, 
   ShieldCheck, 
   Clock, 
-  Sparkles
+  Sparkles,
+  Star
 } from 'lucide-react';
 import { useDb } from '../../lib/useDb';
 import { logoutAdmin } from '../../lib/insforge';
@@ -73,6 +74,7 @@ export default function AdminLayout({ children, title = 'Admin Dashboard' }) {
     { path: '/admin/products', label: 'Produk', icon: Package },
     { path: '/admin/categories', label: 'Kategori', icon: Layers },
     { path: '/admin/orders', label: 'Pesanan', icon: ShoppingCart },
+    { path: '/admin/reviews', label: 'Ulasan', icon: Star },
     { path: '/admin/customers', label: 'Pelanggan', icon: Users },
     { path: '/admin/settings', label: 'Pengaturan', icon: Settings },
   ];

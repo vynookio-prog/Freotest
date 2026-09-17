@@ -10,7 +10,7 @@ Tanggal Pelaksanaan: **22 September 2026**
 ## 🌟 Fitur Utama
 
 - **Katalog Kuliner Interaktif**:
-  - Menu khas Filipina: **Kwek Kwek**, **Turon**, dan **Buko Coklat**.
+  - Menu khas Filipina: **Kwek Kwek**, **Turon**, dan **Iskrambol**.
   - Informasi rincian gizi lengkap, komposisi bahan, dan wawasan sains di balik proses pengolahan makanan.
 - **Sistem Pre-Order & Checkout Cepat**:
   - Pilihan metode pembayaran: **QRIS Resmi (a.n. Jezwu)** dengan upload bukti transfer otomatis atau **Tunai (Cash di Stand)**.

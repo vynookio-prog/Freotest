@@ -2,6 +2,7 @@ import React from 'react';
 import { Utensils, ImageIcon, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { InstagramIcon, TikTokIcon, WhatsAppIcon } from '../../components/SocialIcons';
+import FAQ from '../../components/FAQ';
 
 export const metadata = {
   title: 'FREONIX - Beranda | Sajian Kuliner Khas Filipina',
@@ -10,7 +11,7 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <section className="pb-20 md:pb-28 px-4 sm:px-6 relative flex items-center justify-center min-h-[75vh]">
+    <section className="pb-20 md:pb-28 px-4 sm:px-6 relative flex flex-col items-center justify-center min-h-[75vh]">
       {/* Floating Apple Liquid Glass Hero Card */}
       <div className="max-w-3xl w-full mx-auto text-center bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-8 sm:p-14 shadow-[0_20px_60px_rgba(93,58,41,0.08)] relative overflow-hidden">
         {/* Subtle Specular Top Highlight */}
@@ -105,6 +106,11 @@ export default function Home() {
               <span className="text-[11px] font-bold">WhatsApp</span>
             </a>
           </div>
+        </div>
+
+        {/* Section FAQ: Diletakkan Tepat di Bawah Section Sosial Media */}
+        <div className="mt-12 pt-10 border-t border-stone-200/60 text-left">
+          <FAQ />
         </div>
       </div>
     </section>

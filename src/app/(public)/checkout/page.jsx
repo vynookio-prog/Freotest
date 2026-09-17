@@ -17,11 +17,14 @@ import {
   Loader2,
   Clock,
   Phone,
-  Sparkles
+  Sparkles,
+  Star,
+  Search
 } from 'lucide-react';
 import Link from 'next/link';
 import { useDb } from '../../../lib/useDb';
 import { uploadToInsforgeStorage, isInsforgeConfigured } from '../../../lib/insforge';
+import ReviewModal from '../../../components/ReviewModal';
 
 export default function CheckoutPage() {
   const db = useDb();
@@ -101,6 +104,23 @@ export default function CheckoutPage() {
     }
   };
 
+  const handlePhoneBlur = () => {
+    const trimmedPhone = formData.phone.trim();
+    if (!trimmedPhone) {
+      setFormErrors(prev => ({
+        ...prev,
+        phone: 'Nomor WhatsApp wajib diisi minimal 10 digit angka (contoh: 0812345678).'
+      }));
+    } else if (trimmedPhone.length < 10) {
+      setFormErrors(prev => ({
+        ...prev,
+        phone: `Nomor WhatsApp harus minimal 10 digit angka (contoh: 0812345678). Anda baru memasukkan ${trimmedPhone.length} digit.`
+      }));
+    } else {
+      setFormErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
   const handlePhoneKeyDown = (e) => {
     const allowedKeys = [
       'Backspace',
@@ -140,9 +160,9 @@ export default function CheckoutPage() {
 
     const trimmedPhone = formData.phone.trim();
     if (!trimmedPhone) {
-      errors.phone = 'Nomor WhatsApp wajib diisi.';
+      errors.phone = 'Nomor WhatsApp wajib diisi minimal 10 digit angka (contoh: 0812345678).';
     } else if (trimmedPhone.length < 10) {
-      errors.phone = 'Nomor WhatsApp minimal 10 digit angka (contoh: 08123456789).';
+      errors.phone = `Nomor WhatsApp harus minimal 10 digit angka (contoh: 0812345678). Anda baru memasukkan ${trimmedPhone.length} digit.`;
     }
 
     if (!formData.paymentMethod) {
@@ -189,6 +209,18 @@ export default function CheckoutPage() {
     return !!localStorage.getItem('freonix_last_order');
   });
 
+  const [hasSavedReceipt, setHasSavedReceipt] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const saved = localStorage.getItem('freonix_last_order');
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      return sessionStorage.getItem(`receipt_saved_${parsed.orderId}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [liveOrder, setLiveOrder] = useState(null);
 
   useEffect(() => {
@@ -213,6 +245,129 @@ export default function CheckoutPage() {
     orderStatus: currentDbOrder.orderStatus,
     verifiedAt: currentDbOrder.verifiedAt
   } : savedOrder;
+
+  // Rating & Review Modal State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasSubmittedReview, setHasSubmittedReview] = useState(false);
+
+  // Order Lookup State (Search by Phone or Receipt Code)
+  const [showLookupBox, setShowLookupBox] = useState(false);
+  const [lookupQuery, setLookupQuery] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+
+  const orderKey = orderSummary?.orderId || orderSummary?.id;
+
+  // Check if review already submitted for this order
+  useEffect(() => {
+    if (!orderKey) return;
+    if (typeof window !== 'undefined') {
+      const isLocalReviewed = localStorage.getItem(`review_submitted_${orderKey}`) === 'true';
+      if (isLocalReviewed) {
+        setHasSubmittedReview(true);
+        return;
+      }
+      // Check server API to be 100% sure
+      fetch(`/api/reviews?orderId=${encodeURIComponent(orderKey)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.reviews?.length > 0) {
+            setHasSubmittedReview(true);
+            try {
+              localStorage.setItem(`review_submitted_${orderKey}`, 'true');
+            } catch (e) {}
+          }
+        })
+        .catch(() => {});
+    }
+  }, [orderKey]);
+
+  // Trigger popup when order is approved & hasn't been reviewed & not dismissed this session
+  useEffect(() => {
+    if (!isSuccess || !orderSummary || !orderKey) return;
+    const isApproved = orderSummary.paymentStatus === 'SUCCESS' || 
+      ['Processing', 'Shipped', 'Completed', 'Disetujui'].includes(orderSummary.orderStatus);
+    
+    if (!isApproved || hasSubmittedReview) return;
+
+    if (typeof window !== 'undefined') {
+      const isDismissed = sessionStorage.getItem(`review_dismissed_${orderKey}`) === 'true';
+      const isReviewed = localStorage.getItem(`review_submitted_${orderKey}`) === 'true';
+      if (!isDismissed && !isReviewed) {
+        const timer = setTimeout(() => {
+          setShowReviewModal(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isSuccess, orderSummary, orderKey, hasSubmittedReview]);
+
+  const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    if (orderKey && typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem(`review_dismissed_${orderKey}`, 'true');
+      } catch (e) {}
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    setHasSubmittedReview(true);
+    if (orderKey && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`review_submitted_${orderKey}`, 'true');
+      } catch (e) {}
+    }
+  };
+
+  const handleLookupOrder = async (e) => {
+    e.preventDefault();
+    const q = lookupQuery.trim();
+    if (!q) return;
+    setLookupLoading(true);
+    setLookupError('');
+
+    try {
+      let foundOrder = await db.getOrderByIdAsync(q);
+      if (!foundOrder) {
+        const cleanPhone = q.replace(/\D/g, '');
+        const allOrders = await db.fetchOrders();
+        foundOrder = allOrders.find(o => 
+          (o.phone && o.phone.replace(/\D/g, '').includes(cleanPhone)) ||
+          (o.orderId && o.orderId.toLowerCase() === q.toLowerCase()) ||
+          (o.id && o.id.toLowerCase() === q.toLowerCase())
+        );
+      }
+
+      if (foundOrder) {
+        const mapped = {
+          orderId: foundOrder.orderId || foundOrder.id,
+          name: foundOrder.name,
+          kelas: foundOrder.kelas,
+          phone: foundOrder.phone,
+          items: foundOrder.items || [],
+          totalHarga: foundOrder.totalHarga || foundOrder.total_harga || 0,
+          paymentMethod: foundOrder.paymentMethod || foundOrder.payment_method || 'cash',
+          paymentStatus: foundOrder.paymentStatus || foundOrder.payment_status || 'PENDING',
+          orderStatus: foundOrder.orderStatus || foundOrder.order_status || 'Pending',
+          paymentProofImage: foundOrder.paymentProofImage || foundOrder.paymentProof || foundOrder.payment_proof || foundOrder.payment_proof_url,
+          paymentProofUrl: foundOrder.paymentProofUrl || foundOrder.payment_proof_url || '',
+          notes: foundOrder.notes || '',
+          orderTime: foundOrder.orderTime || foundOrder.order_time || ''
+        };
+        setSavedOrder(mapped);
+        setLiveOrder(mapped);
+        setIsSuccess(true);
+        setShowLookupBox(false);
+      } else {
+        setLookupError('Pesanan tidak ditemukan. Pastikan nomor WhatsApp atau nomor pesanan (contoh: FRX-8365) sudah tepat.');
+      }
+    } catch (err) {
+      setLookupError(`Gagal mencari pesanan: ${err.message}`);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -367,8 +522,17 @@ export default function CheckoutPage() {
 
     const { isValid, errors } = validateCustomerData();
     if (!isValid) {
-      const firstError = errors.name || errors.jenjang || errors.kelas || errors.phone || errors.paymentMethod;
+      // Jika nomor WhatsApp kurang dari 10 digit atau belum diisi, prioritaskan alert
+      if (errors.phone) {
+        setSubmitError(errors.phone);
+        alert(errors.phone);
+        document.getElementById('input-phone')?.focus();
+        return;
+      }
+
+      const firstError = errors.name || errors.jenjang || errors.kelas || errors.paymentMethod;
       setSubmitError(firstError);
+      alert(firstError);
 
       if (errors.name) {
         document.getElementById('input-name')?.focus();
@@ -376,8 +540,6 @@ export default function CheckoutPage() {
         document.getElementById('input-jenjang')?.focus();
       } else if (errors.kelas) {
         document.getElementById('input-kelas')?.focus();
-      } else if (errors.phone) {
-        document.getElementById('input-phone')?.focus();
       } else if (errors.paymentMethod) {
         document.getElementById('section-payment-method')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -491,6 +653,7 @@ export default function CheckoutPage() {
     }
 
     setSavedOrder(summaryData);
+    setHasSavedReceipt(false);
     setIsSuccess(true);
     setIsLoading(false);
 
@@ -498,13 +661,41 @@ export default function CheckoutPage() {
   };
 
   const handlePrint = () => {
+    setHasSavedReceipt(true);
+    if (orderSummary?.orderId && typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem(`receipt_saved_${orderSummary.orderId}`, 'true');
+      } catch (e) {}
+    }
     window.print();
   };
 
   const handleNewOrder = () => {
+    // 1. Alert bahwa harus simpan atau cetak bukti struk terlebih dahulu
+    if (!hasSavedReceipt) {
+      alert(
+        '⚠️ PERHATIAN:\n\nAnda harus menyimpan atau mencetak bukti struk terlebih dahulu sebelum membuat pesanan baru!\n\nNomor pesanan dan detail struk tidak dapat diakses kembali setelah membuat pesanan baru.'
+      );
+      handlePrint();
+      return;
+    }
+
+    // 2. Butuh konfirmasi dari pelanggan setelah struk disimpan
+    const isConfirmed = window.confirm(
+      `KONFIRMASI BUAT PESANAN BARU:\n\nApakah Anda yakin sudah menyimpan bukti struk pesanan #${orderSummary?.orderId || ''} dengan aman?\n\nLayar struk saat ini akan direset dan Anda dapat membuat pesanan baru.\n\nKlik "OK" untuk melanjutkan.`
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
     try {
       localStorage.removeItem('freonix_last_order');
+      if (orderSummary?.orderId) {
+        sessionStorage.removeItem(`receipt_saved_${orderSummary.orderId}`);
+      }
     } catch (e) {}
+    setHasSavedReceipt(false);
     setSavedOrder(null);
     setIsSuccess(false);
     setPaymentProof(null);
@@ -680,6 +871,25 @@ export default function CheckoutPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-2.5 print:hidden">
+            {/* Rating & Review Action for Approved Orders */}
+            {(orderSummary.paymentStatus === 'SUCCESS' || ['Processing', 'Shipped', 'Completed', 'Disetujui'].includes(orderSummary.orderStatus)) && (
+              hasSubmittedReview ? (
+                <div className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-900 text-xs font-bold shadow-2xs">
+                  <Star size={15} className="fill-amber-500 text-amber-500" />
+                  <span>Ulasan Anda Sudah Terkirim — Terima Kasih!</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-[0_4px_16px_rgba(245,158,11,0.35)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.5)] transition-all active:scale-95 animate-pulse"
+                >
+                  <Star size={15} className="fill-white" />
+                  Beri Rating & Ulasan Sekarang
+                </button>
+              )
+            )}
+
             <a
               href={orderSummary.waUrl}
               target="_blank"
@@ -692,10 +902,14 @@ export default function CheckoutPage() {
             <button
               type="button"
               onClick={handlePrint}
-              className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-[#5D3A29] py-3 rounded-2xl font-bold text-xs uppercase tracking-wider border border-white/90 shadow-xs transition-all active:scale-95"
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider border shadow-xs transition-all active:scale-95 ${
+                hasSavedReceipt 
+                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300' 
+                  : 'bg-white/80 hover:bg-white text-[#5D3A29] border-white/90'
+              }`}
             >
-              <Printer size={15} />
-              Cetak / Simpan Bukti Struk
+              {hasSavedReceipt ? <CheckCircle2 size={15} className="text-emerald-600" /> : <Printer size={15} />}
+              {hasSavedReceipt ? 'Struk Berhasil Disimpan / Dicetak' : 'Cetak / Simpan Bukti Struk'}
             </button>
             <button
               type="button"
@@ -713,6 +927,14 @@ export default function CheckoutPage() {
             </Link>
           </div>
         </div>
+
+        {/* Review Popup Modal */}
+        <ReviewModal
+          order={orderSummary}
+          isOpen={showReviewModal}
+          onClose={handleCloseReviewModal}
+          onSuccess={handleReviewSuccess}
+        />
       </div>
     );
   }
@@ -742,18 +964,62 @@ export default function CheckoutPage() {
           </p>
         </div>
 
+        {/* Cek Status Pesanan / Kode Struk / Nomor WA */}
+        <div className="mb-8 p-4 sm:p-5 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-[#5D3A29]">
+              <div className="p-2 rounded-xl bg-[#8B5742]/10 text-[#8B5742]">
+                <Search size={16} />
+              </div>
+              <div>
+                <span className="font-extrabold block">Sudah Pernah Memesan?</span>
+                <span className="text-[11px] text-stone-500">Cek status pesanan atau berikan rating & ulasan Anda</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLookupBox(!showLookupBox)}
+              className="px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-[#5D3A29] text-xs font-bold transition-all active:scale-95"
+            >
+              {showLookupBox ? 'Tutup Pencarian' : 'Cek Status Pesanan →'}
+            </button>
+          </div>
+
+          {showLookupBox && (
+            <form onSubmit={handleLookupOrder} className="mt-4 pt-3 border-t border-stone-200/60 flex flex-col sm:flex-row gap-2.5">
+              <input
+                type="text"
+                value={lookupQuery}
+                onChange={(e) => setLookupQuery(e.target.value)}
+                placeholder="Nomor WhatsApp (misal: 0812345678) atau ID Pesanan (FRX-...)"
+                className="flex-1 text-xs p-3 rounded-2xl bg-white border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#8B5742]/30 text-stone-800"
+              />
+              <button
+                type="submit"
+                disabled={lookupLoading}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all active:scale-95 disabled:opacity-50 shrink-0"
+              >
+                {lookupLoading ? 'Mencari...' : 'Lacak Pesanan'}
+              </button>
+            </form>
+          )}
+
+          {lookupError && (
+            <p className="text-xs text-rose-600 font-semibold mt-2.5 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+              ⚠️ {lookupError}
+            </p>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/80 p-6 sm:p-10 shadow-[0_20px_60px_rgba(93,58,41,0.08)] relative overflow-hidden">
           <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
           {/* Data Diri */}
           <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200/50 pb-3 mb-5 gap-2">
+            <div className="border-b border-stone-200/50 pb-3 mb-5">
               <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider">
                 Data Diri Pembeli
               </h2>
-              <span className="text-[11px] font-bold text-red-600 bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full w-fit">
-                * Kolom Bertanda Bintang Wajib Diisi
-              </span>
             </div>
 
             {/* Error Notification Alert */}
@@ -881,13 +1147,14 @@ export default function CheckoutPage() {
                     required
                     value={formData.phone}
                     onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
                     onKeyDown={handlePhoneKeyDown}
                     className={`w-full pl-11 pr-4 py-3 rounded-2xl border bg-white/70 backdrop-blur-md focus:bg-white focus:outline-none focus:ring-2 text-sm shadow-xs transition-all font-mono placeholder:text-stone-400 ${
                       formErrors.phone 
                         ? 'border-red-400 ring-2 ring-red-300/60 text-red-800' 
                         : 'border-white/90 focus:ring-[#DDA15E]/60 text-[#1F2937]'
                     }`}
-                    placeholder="Contoh: 081234567890 (khusus angka)"
+                    placeholder="Contoh: 0812345678"
                   />
                 </div>
                 {formErrors.phone ? (
@@ -896,7 +1163,7 @@ export default function CheckoutPage() {
                   </p>
                 ) : (
                   <p className="text-[11px] text-stone-500 mt-1.5 flex items-center gap-1">
-                    <span>📱 Digunakan untuk verifikasi pemesanan & notifikasi pengambilan di stand.</span>
+                    <span>📱 Wajib minimal 10 digit angka (contoh: 0812345678). Digunakan untuk verifikasi pemesanan & notifikasi pengambilan di stand.</span>
                   </p>
                 )}
               </div>

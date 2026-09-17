@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 
-export default function FAQ() {
+export default function FAQ({ className = '' }) {
   const [openIndex, setOpenIndex] = useState(0);
 
   const faqs = [
@@ -30,7 +30,7 @@ export default function FAQ() {
   };
 
   return (
-    <div className="mt-20 max-w-3xl mx-auto">
+    <div className={`w-full max-w-3xl mx-auto ${className}`}>
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-md border border-white/80 text-[#8B5742] text-xs font-bold uppercase tracking-wider mb-3 shadow-sm">
           <HelpCircle size={14} className="text-[#DDA15E]" /> FAQ & Bantuan

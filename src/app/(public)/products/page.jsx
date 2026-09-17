@@ -9,7 +9,6 @@ import {
   Package, 
   ArrowRight 
 } from 'lucide-react';
-import FAQ from '../../../components/FAQ';
 import { useDb } from '../../../lib/useDb';
 
 export default function ProductsPage() {
@@ -172,9 +171,6 @@ export default function ProductsPage() {
             <ArrowRight size={16} />
           </Link>
         </div>
-
-        {/* FAQ Section */}
-        <FAQ />
       </div>
     </section>
   );

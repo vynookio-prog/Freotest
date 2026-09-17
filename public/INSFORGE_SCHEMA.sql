@@ -92,6 +92,25 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 7. ULASAN & RATING (reviews)
+CREATE TABLE IF NOT EXISTS public.reviews (
+    id TEXT PRIMARY KEY,
+    order_id TEXT NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+    product_id TEXT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT DEFAULT NULL,
+    photo_url TEXT DEFAULT NULL,
+    photo_key TEXT DEFAULT NULL,
+    buyer_name TEXT NOT NULL,
+    is_hidden BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    CONSTRAINT unique_order_product_review UNIQUE (order_id, product_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON public.reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_order_id ON public.reviews(order_id);
+
 -- Permissions
 GRANT ALL ON TABLE public.categories TO anon, authenticated;
 GRANT ALL ON TABLE public.products TO anon, authenticated;
@@ -99,6 +118,7 @@ GRANT ALL ON TABLE public.orders TO anon, authenticated;
 GRANT ALL ON TABLE public.store_settings TO anon, authenticated;
 GRANT ALL ON TABLE public.notifications TO anon, authenticated;
 GRANT ALL ON TABLE public.audit_logs TO anon, authenticated;
+GRANT ALL ON TABLE public.reviews TO anon, authenticated;
 
 -- Default Settings & Seed Data
 INSERT INTO public.store_settings (id, store_name, event_date, event_date_display, admin_phone, currency, low_stock_threshold, store_status, order_prefix)

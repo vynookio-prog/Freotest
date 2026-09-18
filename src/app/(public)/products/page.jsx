@@ -193,12 +193,18 @@ export default function ProductsPage() {
                       {/* Subtle Specular Top Highlight */}
                       <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-10" />
 
-                      {/* Category Badge */}
-                      {item.categoryName && (
-                        <div className="absolute bottom-3 left-3 bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                          {item.categoryName}
+                      {/* Category & Origin Badge */}
+                      <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+                        {item.categoryName && (
+                          <div className="bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                            {item.categoryName}
+                          </div>
+                        )}
+                        <div className="bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span>{(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) ? '🇯🇵' : '🇵🇭'}</span>
+                          <span>{(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) ? 'Autentik Japan' : 'Filipina'}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Card Information */}

@@ -58,8 +58,8 @@ export const INITIAL_DB = {
       stock: 50,
       unit: 'bowl',
       status: 'active',
-      desc: 'Sajian rice bowl lezat dan mengenyangkan dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
-      description: 'Sajian rice bowl lezat dan mengenyangkan dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
+      desc: 'Sajian rice bowl autentik khas Jepang dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
+      description: 'Sajian rice bowl autentik khas Jepang dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
       image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/rice-bowl-1789728744991-fc4f2p.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [

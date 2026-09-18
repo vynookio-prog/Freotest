@@ -1539,22 +1539,27 @@ export default function CheckoutPage() {
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
                                     <span>🧁</span>
-                                    <span>Pilih 1 Topping:</span>
+                                    <span>Pilih Topping:</span>
                                   </span>
                                   <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
                                     +Rp 1.000 / cup
                                   </span>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setShowToppings(false);
-                                    setIskrambolToppings([]);
-                                  }}
-                                  className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer"
-                                >
-                                  ✕ Batal (Tanpa Topping)
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-semibold text-stone-500">
+                                    Topping: <strong className="text-[#8B5742]">{iskrambolToppings[0] || 'Tanpa Topping'}</strong>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setShowToppings(false);
+                                      setIskrambolToppings([]);
+                                    }}
+                                    className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer"
+                                  >
+                                    ✕ Batal
+                                  </button>
+                                </div>
                               </div>
 
                               <div className="grid grid-cols-3 gap-2">
@@ -1579,14 +1584,20 @@ export default function CheckoutPage() {
                                 })}
                               </div>
 
-                              <div className="flex items-center justify-between pt-1 text-[10px] font-medium text-amber-800">
+                              <div className="flex items-center justify-between pt-1 text-[11px] font-medium text-amber-800">
                                 <span>
-                                  {iskrambolToppings.length > 0
-                                    ? `✓ Topping aktif: ${iskrambolToppings[0]} (+Rp ${(currentQty * TOPPING_PRICE).toLocaleString('id-ID')})`
-                                    : 'Pilih salah satu topping di atas'}
+                                  {iskrambolToppings.length > 0 ? (
+                                    <span className="text-amber-900 font-bold flex items-center gap-1">
+                                      <span>✓</span>
+                                      <span>Topping:</span>
+                                      <strong className="text-[#5D3A29]">{iskrambolToppings[0]}</strong>
+                                    </span>
+                                  ) : (
+                                    'Pilih salah satu topping di atas'
+                                  )}
                                 </span>
-                                <span className="text-[10px] font-semibold text-amber-700">
-                                  Maksimal 1 topping
+                                <span className="text-[10px] font-semibold text-amber-700/80">
+                                  Pilih 1 topping
                                 </span>
                               </div>
                             </div>

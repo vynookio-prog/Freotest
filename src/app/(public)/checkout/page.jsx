@@ -1456,20 +1456,21 @@ export default function CheckoutPage() {
 
                           {/* 1. Pilihan Varian Rasa (Matcha, Coklat, Strawberry, Taro) */}
                           <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <label className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5 shrink-0">
                                 <span>✨</span>
                                 <span>Pilih Varian Rasa:</span>
                                 <span className="text-[10px] font-bold text-amber-800 bg-amber-200/60 px-1.5 py-0.2 rounded-md">
                                   Wajib
                                 </span>
                               </label>
-                              <span className="text-[10px] font-semibold text-stone-500">
-                                Rasa: <strong className="text-[#8B5742]">{iskrambolVariants.join(', ') || 'Coklat'}</strong>
+                              <span className="text-[11px] font-semibold text-stone-600 flex items-center gap-1">
+                                <span>Rasa:</span>
+                                <strong className="text-[#8B5742]">{iskrambolVariants.join(', ') || 'Coklat'}</strong>
                               </span>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
                               {ISKRAMBOL_VARIANTS.map(variant => {
                                 const isSelected = iskrambolVariants.includes(variant.name);
                                 return (
@@ -1477,7 +1478,7 @@ export default function CheckoutPage() {
                                     key={variant.id}
                                     type="button"
                                     onClick={() => handleToggleVariant(variant.name, currentQty)}
-                                    className={`p-2.5 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                                    className={`px-3.5 py-2.5 rounded-xl border text-xs font-extrabold flex items-center gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
                                       isSelected
                                         ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#5D3A29]/25 shadow-xs scale-[1.02]'
                                         : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
@@ -1485,7 +1486,7 @@ export default function CheckoutPage() {
                                   >
                                     <span className="text-base">{variant.icon}</span>
                                     <span>{variant.name}</span>
-                                    {isSelected && <span className="text-xs ml-0.5">✓</span>}
+                                    {isSelected && <span className="text-xs ml-0.5 font-black">✓</span>}
                                   </button>
                                 );
                               })}
@@ -1514,8 +1515,8 @@ export default function CheckoutPage() {
                                         +Rp 1.000 / cup
                                       </span>
                                     </div>
-                                    <p className="text-[10px] text-amber-800 font-medium mt-0.5">
-                                      Pilih 1 topping: Meses Coklat, Marshmellow, atau Coco Crunch
+                                    <p className="text-[10px] text-amber-800 font-medium mt-0.5 whitespace-nowrap truncate">
+                                      Pilihan: Meses Coklat, Marshmellow, atau Coco Crunch
                                     </p>
                                   </div>
                                 </div>
@@ -1535,8 +1536,8 @@ export default function CheckoutPage() {
                             </div>
                           ) : (
                             <div className="pt-2.5 border-t border-amber-200/70 space-y-2.5 animate-fade-in">
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-1.5">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <div className="flex items-center gap-1.5 shrink-0">
                                   <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
                                     <span>🧁</span>
                                     <span>Pilih Topping:</span>
@@ -1546,8 +1547,9 @@ export default function CheckoutPage() {
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-semibold text-stone-500">
-                                    Topping: <strong className="text-[#8B5742]">{iskrambolToppings[0] || 'Tanpa Topping'}</strong>
+                                  <span className="text-[11px] font-semibold text-stone-600 flex items-center gap-1">
+                                    <span>Topping:</span>
+                                    <strong className="text-[#8B5742]">{iskrambolToppings[0] || 'Tanpa Topping'}</strong>
                                   </span>
                                   <button
                                     type="button"
@@ -1555,14 +1557,14 @@ export default function CheckoutPage() {
                                       setShowToppings(false);
                                       setIskrambolToppings([]);
                                     }}
-                                    className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer"
+                                    className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer shrink-0"
                                   >
                                     ✕ Batal
                                   </button>
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
                                 {ISKRAMBOL_TOPPINGS.map(top => {
                                   const isSelected = iskrambolToppings.includes(top.name);
                                   return (
@@ -1570,15 +1572,15 @@ export default function CheckoutPage() {
                                       key={top.id}
                                       type="button"
                                       onClick={() => handleToggleTopping(top.name)}
-                                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
                                         isSelected
                                           ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02]'
                                           : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
                                       }`}
                                     >
                                       <span className="text-base">{top.icon}</span>
-                                      <span className="truncate">{top.name}</span>
-                                      {isSelected && <span className="text-xs ml-0.5">✓</span>}
+                                      <span>{top.name}</span>
+                                      {isSelected && <span className="text-xs ml-0.5 font-black">✓</span>}
                                     </button>
                                   );
                                 })}

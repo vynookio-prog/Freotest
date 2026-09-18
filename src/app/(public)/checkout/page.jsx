@@ -64,14 +64,16 @@ export const ISKRAMBOL_VARIANTS = [
   { id: 'matcha', name: 'Matcha', icon: '🍵' },
   { id: 'coklat', name: 'Coklat', icon: '🍫' },
   { id: 'strawberry', name: 'Strawberry', icon: '🍓' },
-  { id: 'taro', name: 'Taro', icon: '🍠', sold: true }
+  { id: 'taro', name: 'Taro', icon: '🍠', sold: true },
+  { id: 'keju', name: 'Keju', icon: '🧀' }
 ];
 
 // Pilihan topping Iskrambol
 export const ISKRAMBOL_TOPPINGS = [
   { id: 'meses-coklat', name: 'Meses Coklat', icon: '🍫' },
   { id: 'marshmellow', name: 'Marshmellow', icon: '☁️' },
-  { id: 'cococrunh', name: 'Coco Crunch', icon: '🥣' }
+  { id: 'cococrunh', name: 'Coco Crunch', icon: '🥣' },
+  { id: 'keju', name: 'Keju', icon: '🧀' }
 ];
 
 export default function CheckoutPage() {
@@ -281,6 +283,10 @@ export default function CheckoutPage() {
     setIskrambolToppings(prev => {
       if (prev.includes(toppingName)) {
         return prev.filter(t => t !== toppingName);
+      }
+      if (prev.length >= 3) {
+        alert('Maksimal hanya dapat memilih hingga 3 topping.');
+        return prev;
       }
       return [...prev, toppingName];
     });
@@ -1557,16 +1563,22 @@ export default function CheckoutPage() {
                               <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
                                 {ISKRAMBOL_TOPPINGS.map(top => {
                                   const isSelected = iskrambolToppings.includes(top.name);
+                                  const isMaxReached = iskrambolToppings.length >= 3;
+                                  const isDisabled = !isSelected && isMaxReached;
                                   return (
                                     <button
                                       key={top.id}
                                       type="button"
+                                      disabled={isDisabled}
                                       onClick={() => handleToggleTopping(top.name)}
-                                      className={`px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
-                                        isSelected
-                                          ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02]'
-                                          : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
+                                      className={`px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all ${
+                                        isDisabled
+                                          ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-50'
+                                          : isSelected
+                                          ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02] cursor-pointer'
+                                          : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300 cursor-pointer shadow-2xs'
                                       }`}
+                                      title={isDisabled ? 'Maksimal 3 topping telah dipilih' : top.name}
                                     >
                                       <span className="text-base">{top.icon}</span>
                                       <span>{top.name}</span>
@@ -1581,19 +1593,19 @@ export default function CheckoutPage() {
                                   {iskrambolToppings.length > 0 ? (
                                     <span className="text-amber-900 font-bold flex items-center gap-1 flex-wrap">
                                       <span>✓</span>
-                                      <span>Topping aktif ({iskrambolToppings.length}):</span>
+                                      <span>Topping aktif ({iskrambolToppings.length}/3):</span>
                                       <strong className="text-[#5D3A29]">{iskrambolToppings.join(', ')}</strong>
                                       <span className="text-xs font-black text-amber-800 ml-1">
                                         (+Rp {(iskrambolToppings.length * TOPPING_PRICE).toLocaleString('id-ID')}/cup)
                                       </span>
                                     </span>
                                   ) : (
-                                    <span className="text-stone-500">Pilih satu atau lebih topping di atas</span>
+                                    <span className="text-stone-500">Pilih 1 s/d 3 topping di atas</span>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span className="text-[10px] font-semibold text-amber-700/80">
-                                    Bisa pilih lebih dari 1
+                                    {iskrambolToppings.length >= 3 ? 'Maks. 3 topping tercapai' : 'Maks. 3 topping'}
                                   </span>
                                   <span className="text-stone-300">•</span>
                                   <button

@@ -9,7 +9,17 @@ const CANDIDATE_MODELS = [
   'gemini-flash-lite-latest'
 ];
 
+// In-memory cache for product context to optimize API performance
+let cachedProductsContext = null;
+let lastProductsContextTime = 0;
+const PRODUCTS_CONTEXT_TTL = 60000; // 60s TTL
+
 async function getProductsContext() {
+  const now = Date.now();
+  if (cachedProductsContext && (now - lastProductsContextTime < PRODUCTS_CONTEXT_TTL)) {
+    return cachedProductsContext;
+  }
+
   try {
     if (isInsforgeConfigured) {
       const { data, error } = await insforge
@@ -19,7 +29,7 @@ async function getProductsContext() {
         .eq('status', 'active');
       
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map(p => ({
+        cachedProductsContext = data.map(p => ({
           name: p.name,
           price: Number(p.price) || 0,
           unit: p.unit || 'porsi',
@@ -28,6 +38,8 @@ async function getProductsContext() {
           nutrition: Array.isArray(p.nutrition) ? p.nutrition : [],
           ingredients: Array.isArray(p.ingredients) ? p.ingredients : []
         }));
+        lastProductsContextTime = now;
+        return cachedProductsContext;
       }
     }
   } catch (err) {
@@ -35,7 +47,7 @@ async function getProductsContext() {
   }
 
   // Fallback ke data template
-  return (INITIAL_DB.products || []).filter(p => p.status === 'active').map(p => ({
+  cachedProductsContext = (INITIAL_DB.products || []).filter(p => p.status === 'active').map(p => ({
     name: p.name,
     price: p.price,
     unit: p.unit || 'porsi',
@@ -44,6 +56,8 @@ async function getProductsContext() {
     nutrition: p.nutrition || [],
     ingredients: p.ingredients || []
   }));
+  lastProductsContextTime = now;
+  return cachedProductsContext;
 }
 
 export async function POST(req) {

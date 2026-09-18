@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Package
 } from 'lucide-react';
-import AdminLayout from '../../../components/admin/AdminLayout';
 import { useDb } from '../../../lib/useDb';
 
 export default function AdminReviewsPage() {
@@ -139,8 +138,7 @@ export default function AdminReviewsPage() {
   }, [reviews, searchQuery, productFilter, ratingFilter, statusFilter, productMap]);
 
   return (
-    <AdminLayout title="Manajemen Ulasan & Rating">
-      <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
         
         {/* Toast Alert */}
         {toast && (
@@ -458,6 +456,5 @@ export default function AdminReviewsPage() {
         )}
 
       </div>
-    </AdminLayout>
   );
 }

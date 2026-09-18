@@ -629,18 +629,26 @@ export async function fetchCatalog(force = false) {
   }
 }
 
-export async function fetchAdminData() {
+let lastAdminFetchTime = 0;
+const ADMIN_CACHE_TTL = 15000; // 15 seconds debounce
+
+export async function fetchAdminData(force = false) {
   if (!isInsforgeConfigured) return;
+  const now = Date.now();
+  if (!force && now - lastAdminFetchTime < ADMIN_CACHE_TTL) {
+    return;
+  }
+  lastAdminFetchTime = now;
 
   try {
     const data = loadLocalDb();
     let hasUpdates = false;
 
-    const [ordersRes, notifRes, logsRes, revsRes] = await Promise.all([
+    // Fetch Orders, Notifications, and Audit Logs (Reviews already fetched concurrently during fetchCatalog)
+    const [ordersRes, notifRes, logsRes] = await Promise.all([
       insforge.database.from('orders').select('*').order('created_at', { ascending: false }),
       insforge.database.from('notifications').select('*').order('created_at', { ascending: false }).limit(30),
-      insforge.database.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
-      insforge.database.from('reviews').select('*').order('created_at', { ascending: false })
+      insforge.database.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50)
     ]);
 
     if (!ordersRes.error && Array.isArray(ordersRes.data)) {
@@ -658,11 +666,6 @@ export async function fetchAdminData() {
       hasUpdates = true;
     }
 
-    if (!revsRes.error && Array.isArray(revsRes.data)) {
-      data.reviews = revsRes.data.map(mapReviewFromDb);
-      hasUpdates = true;
-    }
-
     if (hasUpdates) {
       saveLocalDb(data);
     }
@@ -671,12 +674,12 @@ export async function fetchAdminData() {
   }
 }
 
-export async function fetchFromInsforge() {
+export async function fetchFromInsforge(force = false) {
   if (!isInsforgeConfigured || isSyncing) return;
   isSyncing = true;
 
   try {
-    await fetchCatalog();
+    await fetchCatalog(force);
 
     const isAdmin = typeof window !== 'undefined' && (
       sessionStorage.getItem('freonix_admin_auth') === 'true' ||
@@ -684,7 +687,7 @@ export async function fetchFromInsforge() {
     );
 
     if (isAdmin) {
-      await fetchAdminData();
+      await fetchAdminData(force);
     }
   } finally {
     isSyncing = false;
@@ -707,7 +710,7 @@ export const db = {
     return syncStatus;
   },
   async syncNow() {
-    await fetchFromInsforge();
+    await fetchFromInsforge(true);
     return syncStatus;
   },
   resetToInitial() {

@@ -65,7 +65,7 @@ export const ISKRAMBOL_VARIANTS = [
   { id: 'keju', name: 'Keju', icon: '🧀' },
   { id: 'matcha', name: 'Matcha', icon: '🍵' },
   { id: 'strawberry', name: 'Strawberry', icon: '🍓' },
-  { id: 'taro', name: 'Taro', icon: '🍠' }
+  { id: 'taro', name: 'Taro', icon: '🍠', sold: true }
 ];
 
 // Pilihan topping Iskrambol

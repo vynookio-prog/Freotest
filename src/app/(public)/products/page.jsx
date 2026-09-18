@@ -200,10 +200,12 @@ export default function ProductsPage() {
                             {item.categoryName}
                           </div>
                         )}
-                        <div className="bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <span>{(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) ? '🇯🇵' : '🇵🇭'}</span>
-                          <span>{(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) ? 'Autentik Japan' : 'Filipina'}</span>
-                        </div>
+                        {(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) && (
+                          <div className="bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span>🇯🇵</span>
+                            <span>Autentik Japan</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -1514,13 +1514,13 @@ export default function CheckoutPage() {
                           {/* 2. Opsi Topping (Dipencet dulu baru opsi topping muncul) */}
                           {!showToppings ? (
                             <div className="pt-2.5 border-t border-amber-200/70">
-                              <div className="p-3.5 rounded-2xl bg-amber-100/60 hover:bg-amber-100/90 border border-amber-200/90 flex items-center justify-between gap-3 transition-colors shadow-2xs">
+                              <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-100/60 hover:bg-amber-100/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors shadow-2xs">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-9 h-9 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center text-lg shrink-0 border border-amber-300/80 shadow-2xs">
+                                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center text-base sm:text-lg shrink-0 border border-amber-300/80 shadow-2xs">
                                     🧁
                                   </div>
                                   <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                    <span className="text-xs sm:text-sm font-extrabold text-[#5D3A29] whitespace-nowrap">
+                                    <span className="text-xs sm:text-sm font-extrabold text-[#5D3A29]">
                                       Mau Tambah Topping?
                                     </span>
                                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 border border-amber-300/80 whitespace-nowrap shrink-0">
@@ -1536,7 +1536,7 @@ export default function CheckoutPage() {
                                       setIskrambolToppings(['Meses Coklat']);
                                     }
                                   }}
-                                  className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs sm:text-sm font-extrabold shrink-0 shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                  className="w-full sm:w-auto px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs sm:text-sm font-extrabold shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                   <span>+ Tambah Topping</span>
                                 </button>
@@ -1550,24 +1550,18 @@ export default function CheckoutPage() {
                                     <span>🧁</span>
                                     <span>Pilih Topping:</span>
                                   </span>
-                                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
+                                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60 whitespace-nowrap">
                                     +Rp 1.000 / topping / cup
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[11px] font-semibold text-stone-600 flex items-center gap-1">
-                                    <span>Topping:</span>
-                                    <strong className="text-[#8B5742]">
-                                      {iskrambolToppings.length > 0 ? iskrambolToppings.join(', ') : 'Belum dipilih'}
-                                    </strong>
-                                  </span>
+                                <div>
                                   <button
                                     type="button"
                                     onClick={() => {
                                       setShowToppings(false);
                                       setIskrambolToppings([]);
                                     }}
-                                    className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer shrink-0"
+                                    className="text-[11px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer shrink-0 py-0.5 px-1"
                                   >
                                     ✕ Batal
                                   </button>
@@ -1582,7 +1576,7 @@ export default function CheckoutPage() {
                                       key={top.id}
                                       type="button"
                                       onClick={() => handleToggleTopping(top.name)}
-                                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
+                                      className={`px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
                                         isSelected
                                           ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02]'
                                           : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
@@ -1596,7 +1590,7 @@ export default function CheckoutPage() {
                                 })}
                               </div>
 
-                              <div className="flex items-center justify-between pt-1 text-[11px] font-medium text-amber-800">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1 text-[11px] font-medium text-amber-800">
                                 <span>
                                   {iskrambolToppings.length > 0 ? (
                                     <span className="text-amber-900 font-bold flex items-center gap-1 flex-wrap">
@@ -1608,7 +1602,7 @@ export default function CheckoutPage() {
                                       </span>
                                     </span>
                                   ) : (
-                                    'Pilih satu atau lebih topping di atas'
+                                    <span className="text-stone-500">Pilih satu atau lebih topping di atas</span>
                                   )}
                                 </span>
                                 <span className="text-[10px] font-semibold text-amber-700/80">

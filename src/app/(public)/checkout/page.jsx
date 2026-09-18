@@ -746,24 +746,6 @@ export default function CheckoutPage() {
   };
 
   const handleNewOrder = () => {
-    // 1. Alert bahwa harus simpan atau cetak bukti struk terlebih dahulu
-    if (!hasSavedReceipt) {
-      alert(
-        '⚠️ PERHATIAN:\n\nAnda harus menyimpan atau mencetak bukti struk terlebih dahulu sebelum membuat pesanan baru!\n\nNomor pesanan dan detail struk tidak dapat diakses kembali setelah membuat pesanan baru.'
-      );
-      handlePrint();
-      return;
-    }
-
-    // 2. Butuh konfirmasi dari pelanggan setelah struk disimpan
-    const isConfirmed = window.confirm(
-      `KONFIRMASI BUAT PESANAN BARU:\n\nApakah Anda yakin sudah menyimpan bukti struk pesanan #${orderSummary?.orderId || ''} dengan aman?\n\nLayar struk saat ini akan direset dan Anda dapat membuat pesanan baru.\n\nKlik "OK" untuk melanjutkan.`
-    );
-
-    if (!isConfirmed) {
-      return;
-    }
-
     try {
       localStorage.removeItem('freonix_last_order');
       if (orderSummary?.orderId) {

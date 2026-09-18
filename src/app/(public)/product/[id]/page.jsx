@@ -354,7 +354,7 @@ export default function ProductDetailPage({ params }) {
                 </div>
               ) : (
                 <Link
-                  href="/checkout"
+                  href={`/checkout?item=${encodeURIComponent(product.slug || product.id)}`}
                   className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white py-3.5 rounded-2xl font-extrabold text-sm uppercase tracking-wider shadow-[0_8px_24px_rgba(139,87,66,0.35)] hover:shadow-[0_12px_28px_rgba(139,87,66,0.5)] transition-all duration-200 active:scale-95"
                 >
                   <ShoppingBag size={18} />
@@ -605,7 +605,7 @@ export default function ProductDetailPage({ params }) {
                 </div>
 
                 <Link
-                  href="/checkout"
+                  href={`/checkout?item=${encodeURIComponent(product.slug || product.id)}`}
                   className="px-4 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-xs font-bold text-[#8B5742] hover:text-[#5D3A29] shadow-2xs transition-all active:scale-95 shrink-0"
                 >
                   Pesan & Beri Nilai →
@@ -629,7 +629,7 @@ export default function ProductDetailPage({ params }) {
                     Jadilah yang pertama mencoba dan memberikan ulasan! Pesanan Anda yang disetujui akan langsung mendapatkan pop-up rating di halaman status pesanan.
                   </p>
                   <Link
-                    href="/checkout"
+                    href={`/checkout?item=${encodeURIComponent(product.slug || product.id)}`}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8B5742] hover:bg-[#784936] text-white text-xs font-bold shadow-sm active:scale-95 transition-all"
                   >
                     <ShoppingBag size={14} /> Pesan Menu Sekarang
@@ -807,7 +807,7 @@ export default function ProductDetailPage({ params }) {
                       Lihat Gizi
                     </Link>
                     <Link
-                      href="/checkout"
+                      href={`/checkout?item=${encodeURIComponent(other.slug || other.id)}`}
                       className="py-2 px-3 rounded-xl bg-[#8B5742] text-white font-bold text-xs text-center hover:bg-[#5D3A29] transition-colors"
                     >
                       Pesan

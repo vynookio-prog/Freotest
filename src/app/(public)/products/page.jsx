@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   ShoppingBag, 
@@ -14,9 +14,22 @@ import {
 } from 'lucide-react';
 import { useDb } from '../../../lib/useDb';
 
+const MENU_ORDER = ['rice-bowl', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
+
 export default function ProductsPage() {
   const db = useDb();
-  const activeProducts = db.getActiveProducts() || [];
+  const rawActiveProducts = db.getActiveProducts() || [];
+  const activeProducts = useMemo(() => {
+    return [...rawActiveProducts].sort((a, b) => {
+      const aKey = (a.id || a.slug || '').toLowerCase();
+      const bKey = (b.id || b.slug || '').toLowerCase();
+      let aIdx = MENU_ORDER.findIndex(k => aKey.includes(k) || k.includes(aKey));
+      let bIdx = MENU_ORDER.findIndex(k => bKey.includes(k) || k.includes(bKey));
+      if (aIdx === -1) aIdx = 99;
+      if (bIdx === -1) bIdx = 99;
+      return aIdx - bIdx;
+    });
+  }, [rawActiveProducts]);
   const settings = db.getSettings() || {};
 
   const [reviews, setReviews] = useState([]);
@@ -56,7 +69,9 @@ export default function ProductsPage() {
     'buko-coklat': 'Iskrambol',
     'iskrambol': 'Iskrambol',
     'kwek-kwek': 'Kwek Kwek',
-    'turon': 'Turon'
+    'turon': 'Turon',
+    'rice-bowl': 'Rice Bowl',
+    'chicken-adobo': 'Rice Bowl'
   };
   activeProducts.forEach(p => {
     productMap[p.id] = p.name;
@@ -148,7 +163,7 @@ export default function ProductsPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
             {activeProducts.map((item) => {
               const targetSlug = encodeURIComponent(item.slug || item.id);
 
@@ -218,7 +233,7 @@ export default function ProductsPage() {
                       {/* DIRECT KE MENU CHECKOUT DI BAWAH NILAI GIZI */}
                       <div className="w-full pt-3 border-t border-stone-200/60">
                         <Link
-                          href="/checkout"
+                          href={`/checkout?item=${encodeURIComponent(item.slug || item.id)}`}
                           className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95"
                         >
                           <ShoppingBag size={15} />

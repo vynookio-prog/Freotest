@@ -48,6 +48,43 @@ export const INITIAL_DB = {
   ],
   products: [
     {
+      id: 'rice-bowl',
+      slug: 'rice-bowl',
+      name: 'Rice Bowl',
+      categoryId: 'cat-2',
+      categoryName: 'Makanan Utama',
+      price: 12000,
+      discountPrice: 0,
+      stock: 50,
+      unit: 'bowl',
+      status: 'active',
+      desc: 'Sajian rice bowl lezat dan mengenyangkan dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
+      description: 'Sajian rice bowl lezat dan mengenyangkan dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
+      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/rice-bowl-1789728744991-fc4f2p.jpg',
+      waLink: 'https://wa.me/628818578363',
+      ingredients: [
+        'Nasi putih pulen hangat berkualitas (1 porsi/bowl)',
+        'Potongan daging ayam gurih empuk bumbu spesial',
+        'Telur segar olahan lezat bernutrisi',
+        'Saus spesial gurih manis khas rice bowl',
+        'Pelengkap sayuran segar higienis',
+        'Taburan bawang goreng renyah & daun bawang'
+      ],
+      tools: [
+        'Rice cooker / penanak nasi higienis',
+        'Wajan / kompor penggorengan',
+        'Spatula & sendok takar bumbu',
+        'Mangkuk saji kraft paper bowl food-grade + sendok higienis'
+      ],
+      nutrition: [
+        { label: 'Kalori', value: '420 kkal' },
+        { label: 'Protein', value: '22 g' },
+        { label: 'Karbohidrat', value: '56 g' },
+        { label: 'Lemak', value: '11 g' }
+      ],
+      updatedAt: '2026-09-18T10:00:00.000Z'
+    },
+    {
       id: 'kwek-kwek',
       slug: 'kwek-kwek',
       name: 'Kwek Kwek',
@@ -166,6 +203,33 @@ export const INITIAL_DB = {
   auditLogs: [],
   reviews: []
 };
+
+// Urutan tampilan menu resmi FREONIX: 1. Rice Bowl, 2. Kwek Kwek, 3. Turon, 4. Iskrambol
+export const PRODUCT_DISPLAY_ORDER = [
+  'rice-bowl',
+  'kwek-kwek',
+  'turon',
+  'iskrambol',
+  'buko-coklat'
+];
+
+export function sortProductsByOrder(list) {
+  if (!Array.isArray(list)) return [];
+  return [...list].sort((a, b) => {
+    const aKey = (a.id || a.slug || '').toLowerCase();
+    const bKey = (b.id || b.slug || '').toLowerCase();
+    
+    let aIdx = PRODUCT_DISPLAY_ORDER.findIndex(k => aKey.includes(k) || k.includes(aKey));
+    let bIdx = PRODUCT_DISPLAY_ORDER.findIndex(k => bKey.includes(k) || k.includes(bKey));
+    if (aIdx === -1) aIdx = 99;
+    if (bIdx === -1) bIdx = 99;
+    
+    if (aIdx !== bIdx) {
+      return aIdx - bIdx;
+    }
+    return (new Date(a.createdAt || a.created_at || 0)).getTime() - (new Date(b.createdAt || b.created_at || 0)).getTime();
+  });
+}
 
 // --- DATA MAPPERS (InsForge snake_case <-> Application camelCase) ---
 
@@ -438,23 +502,31 @@ function loadLocalDb() {
       },
       categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : INITIAL_DB.categories,
       products: Array.isArray(parsed.products) && parsed.products.length > 0 
-        ? parsed.products
-            .filter(p => p.id !== 'chicken-adobo' && p.id !== 'halo-halo' && p.slug !== 'chicken-adobo' && p.slug !== 'halo-halo')
-            .map(p => {
-              if (p.id === 'buko-coklat' && (p.name === 'Buko Coklat' || p.slug === 'buko-coklat')) {
-                return {
-                  ...p,
-                  name: 'Iskrambol',
-                  slug: 'iskrambol',
-                  price: 7000,
-                  desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
-                  description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
-                  image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg'
-                };
+        ? (() => {
+            const list = parsed.products
+              .filter(p => p.id !== 'halo-halo' && p.slug !== 'halo-halo')
+              .map(p => {
+                if (p.id === 'buko-coklat' && (p.name === 'Buko Coklat' || p.slug === 'buko-coklat')) {
+                  return {
+                    ...p,
+                    name: 'Iskrambol',
+                    slug: 'iskrambol',
+                    price: 7000,
+                    desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+                    description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
+                    image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg'
+                  };
+                }
+                return p;
+              });
+            INITIAL_DB.products.forEach(initP => {
+              if (!list.some(item => item.id === initP.id || item.slug === initP.slug)) {
+                list.push(initP);
               }
-              return p;
-            })
-        : INITIAL_DB.products,
+            });
+            return sortProductsByOrder(list);
+          })()
+        : sortProductsByOrder(INITIAL_DB.products),
       orders: [],
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
@@ -529,7 +601,7 @@ export async function fetchCatalog(force = false) {
     }
 
     if (!prodRes.error && Array.isArray(prodRes.data) && prodRes.data.length > 0) {
-      data.products = prodRes.data.map(mapProductFromDb);
+      data.products = sortProductsByOrder(prodRes.data.map(mapProductFromDb));
       hasUpdates = true;
     }
 
@@ -769,10 +841,10 @@ export const db = {
 
   // --- PRODUCTS ---
   getProducts() {
-    return loadLocalDb().products;
+    return sortProductsByOrder(loadLocalDb().products || []);
   },
   getActiveProducts() {
-    const prods = loadLocalDb().products || [];
+    const prods = sortProductsByOrder(loadLocalDb().products || []);
     if (prods === cachedProductsRef && cachedActiveProducts) {
       return cachedActiveProducts;
     }
@@ -782,7 +854,7 @@ export const db = {
   },
   getProductById(id) {
     if (!id) return null;
-    const prods = loadLocalDb().products || [];
+    const prods = sortProductsByOrder(loadLocalDb().products || []);
     const cleanId = String(id).trim().toLowerCase();
     const decodedId = decodeURIComponent(cleanId).toLowerCase();
     const normalized = decodedId.replace(/[^a-z0-9]/g, '');
@@ -807,15 +879,18 @@ export const db = {
       if (found) return found;
     }
 
-    // 3. Number or common shortcuts
-    if (cleanId === '1' || cleanId.startsWith('kwek')) {
-      return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[0];
+    // 3. Number or common shortcuts (1: Rice Bowl, 2: Kwek Kwek, 3: Turon, 4: Iskrambol)
+    if (cleanId === '1' || cleanId.includes('rice') || cleanId.includes('bowl') || cleanId.includes('adobo')) {
+      return prods.find(p => p.id === 'rice-bowl' || p.slug === 'rice-bowl' || p.id === 'chicken-adobo') || prods.find(p => p.categoryId === 'cat-2') || prods[0];
     }
-    if (cleanId === '2' || cleanId.includes('turon')) {
-      return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods[1];
+    if (cleanId === '2' || cleanId.startsWith('kwek')) {
+      return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[1];
     }
-    if (cleanId === '3' || cleanId.includes('iskrambol') || cleanId.includes('scramble') || cleanId.includes('buko') || cleanId.includes('coklat')) {
-      return prods.find(p => p.slug === 'iskrambol' || p.id === 'iskrambol' || p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods[2];
+    if (cleanId === '3' || cleanId.includes('turon')) {
+      return prods.find(p => p.id === 'turon' || p.slug === 'turon') || prods[2];
+    }
+    if (cleanId === '4' || cleanId.includes('iskrambol') || cleanId.includes('scramble') || cleanId.includes('buko') || cleanId.includes('coklat')) {
+      return prods.find(p => p.slug === 'iskrambol' || p.id === 'iskrambol' || p.id === 'buko-coklat' || p.slug === 'buko-coklat') || prods[3];
     }
 
     const num = parseInt(cleanId, 10);

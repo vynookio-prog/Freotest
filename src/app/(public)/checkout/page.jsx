@@ -59,13 +59,13 @@ export const isIskrambolProduct = (p) => {
 
 export const TOPPING_PRICE = 1000;
 
-// Varian rasa Iskrambol
+// Varian rasa Iskrambol (Coklat, Keju, Matcha, Strawberry, Taro)
 export const ISKRAMBOL_VARIANTS = [
-  { id: 'matcha', name: 'Matcha', icon: '🍵' },
   { id: 'coklat', name: 'Coklat', icon: '🍫' },
+  { id: 'keju', name: 'Keju', icon: '🧀' },
+  { id: 'matcha', name: 'Matcha', icon: '🍵' },
   { id: 'strawberry', name: 'Strawberry', icon: '🍓' },
-  { id: 'taro', name: 'Taro', icon: '🍠', sold: true },
-  { id: 'keju', name: 'Keju', icon: '🧀' }
+  { id: 'taro', name: 'Taro', icon: '🍠' }
 ];
 
 // Pilihan topping Iskrambol
@@ -76,9 +76,22 @@ export const ISKRAMBOL_TOPPINGS = [
   { id: 'keju', name: 'Keju', icon: '🧀' }
 ];
 
+const MENU_ORDER = ['rice-bowl', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
+
 export default function CheckoutPage() {
   const db = useDb();
-  const activeProducts = db.getActiveProducts() || [];
+  const rawActiveProducts = db.getActiveProducts() || [];
+  const activeProducts = useMemo(() => {
+    return [...rawActiveProducts].sort((a, b) => {
+      const aKey = (a.id || a.slug || '').toLowerCase();
+      const bKey = (b.id || b.slug || '').toLowerCase();
+      let aIdx = MENU_ORDER.findIndex(k => aKey.includes(k) || k.includes(aKey));
+      let bIdx = MENU_ORDER.findIndex(k => bKey.includes(k) || k.includes(bKey));
+      if (aIdx === -1) aIdx = 99;
+      if (bIdx === -1) bIdx = 99;
+      return aIdx - bIdx;
+    });
+  }, [rawActiveProducts]);
   const settings = db.getSettings() || {};
 
   // Form State
@@ -323,6 +336,33 @@ export default function CheckoutPage() {
       console.error('Error reading localStorage order:', err);
     }
   }, []);
+
+  // Pre-select item from URL query parameter (e.g. ?item=rice-bowl)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const preselectedItem = urlParams.get('item') || urlParams.get('product') || urlParams.get('id');
+      if (preselectedItem && activeProducts.length > 0) {
+        const cleanTarget = preselectedItem.trim().toLowerCase();
+        const matched = activeProducts.find(p => 
+          (p.id && p.id.toLowerCase() === cleanTarget) || 
+          (p.slug && p.slug.toLowerCase() === cleanTarget) ||
+          (p.name && p.name.toLowerCase().includes(cleanTarget))
+        );
+        if (matched) {
+          setQuantities(prev => {
+            if ((prev[matched.id] || 0) === 0) {
+              return { ...prev, [matched.id]: 1 };
+            }
+            return prev;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading preselected item query param:', e);
+    }
+  }, [activeProducts]);
 
   const [liveOrder, setLiveOrder] = useState(null);
 
@@ -705,6 +745,7 @@ export default function CheckoutPage() {
         return {
           id: p.id,
           name: p.name,
+          unit: p.unit || 'porsi',
           qty,
           price: p.price,
           variant: variantText,
@@ -728,7 +769,7 @@ export default function CheckoutPage() {
     if (formData.phone) textMessage += `WhatsApp: ${formData.phone}\n`;
     textMessage += `\n*RINCIAN PESANAN*\n`;
     orderItems.forEach(item => {
-      textMessage += `• ${item.name}: ${item.qty} porsi (Rp ${item.total.toLocaleString('id-ID')})\n`;
+      textMessage += `• ${item.name}: ${item.qty} ${item.unit || 'porsi'} (Rp ${item.total.toLocaleString('id-ID')})\n`;
       if (item.variant) {
         textMessage += `   └ 🍧 Varian Rasa: ${item.variant}\n`;
       }

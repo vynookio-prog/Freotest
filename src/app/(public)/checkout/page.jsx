@@ -64,7 +64,7 @@ export const ISKRAMBOL_VARIANTS = [
   { id: 'matcha', name: 'Matcha', icon: '🍵' },
   { id: 'coklat', name: 'Coklat', icon: '🍫' },
   { id: 'strawberry', name: 'Strawberry', icon: '🍓' },
-  { id: 'taro', name: 'Taro', icon: '🍠' }
+  { id: 'taro', name: 'Taro', icon: '🍠', sold: true }
 ];
 
 // Pilihan topping Iskrambol
@@ -260,6 +260,9 @@ export default function CheckoutPage() {
   const iskrambolTopping = iskrambolToppings.length > 0;
 
   const handleToggleVariant = (variantName, qty) => {
+    const targetVariant = ISKRAMBOL_VARIANTS.find(v => v.name === variantName);
+    if (targetVariant?.sold) return;
+
     setIskrambolVariants(prev => {
       if (qty <= 1) {
         return [variantName];
@@ -277,11 +280,9 @@ export default function CheckoutPage() {
   const handleToggleTopping = (toppingName) => {
     setIskrambolToppings(prev => {
       if (prev.includes(toppingName)) {
-        setShowToppings(false);
-        return [];
+        return prev.filter(t => t !== toppingName);
       }
-      // Hanya boleh memilih 1 topping
-      return [toppingName];
+      return [...prev, toppingName];
     });
   };
 
@@ -608,9 +609,9 @@ export default function CheckoutPage() {
     return activeProducts.reduce((sum, p) => {
       const qty = quantities[p.id] || 0;
       const baseTotal = sum + (qty * (p.price || 0));
-      // Tambah biaya toping Iskrambol jika diaktifkan
+      // Tambah biaya toping Iskrambol jika diaktifkan (Rp 1.000 per varian toping per cup)
       if (isIskrambolProduct(p) && iskrambolTopping && qty > 0) {
-        return baseTotal + (qty * TOPPING_PRICE);
+        return baseTotal + (qty * iskrambolToppings.length * TOPPING_PRICE);
       }
       return baseTotal;
     }, 0);
@@ -693,7 +694,7 @@ export default function CheckoutPage() {
         const qty = quantities[p.id];
         const isIsk = isIskrambolProduct(p);
         const hasTopping = isIsk && iskrambolToppings.length > 0;
-        const toppingCost = hasTopping ? qty * TOPPING_PRICE : 0;
+        const toppingCost = hasTopping ? qty * iskrambolToppings.length * TOPPING_PRICE : 0;
         const variantText = isIsk ? (iskrambolVariants.length > 0 ? iskrambolVariants.join(', ') : 'Coklat') : null;
         return {
           id: p.id,
@@ -929,7 +930,7 @@ export default function CheckoutPage() {
                   )}
                   {item.topping && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-200/80 px-1.5 py-0.2 rounded-md mt-0.5">
-                      🧁 Topping: {item.toppings && item.toppings.length > 0 ? item.toppings.join(', ') : 'Ekstra Toping'} (+Rp {Number(item.toppingCost || (item.qty * TOPPING_PRICE)).toLocaleString('id-ID')})
+                      🧁 Topping: {item.toppings && item.toppings.length > 0 ? item.toppings.join(', ') : 'Ekstra Toping'} (+Rp {Number(item.toppingCost || (item.qty * (item.toppings?.length || 1) * TOPPING_PRICE)).toLocaleString('id-ID')})
                     </span>
                   )}
                 </div>
@@ -1473,20 +1474,32 @@ export default function CheckoutPage() {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
                               {ISKRAMBOL_VARIANTS.map(variant => {
                                 const isSelected = iskrambolVariants.includes(variant.name);
+                                const isSold = Boolean(variant.sold);
                                 return (
                                   <button
                                     key={variant.id}
                                     type="button"
-                                    onClick={() => handleToggleVariant(variant.name, currentQty)}
-                                    className={`px-3.5 py-2.5 rounded-xl border text-xs font-extrabold flex items-center gap-2 whitespace-nowrap shrink-0 transition-all cursor-pointer shadow-2xs ${
-                                      isSelected
-                                        ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#5D3A29]/25 shadow-xs scale-[1.02]'
-                                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
+                                    disabled={isSold}
+                                    onClick={() => {
+                                      if (!isSold) handleToggleVariant(variant.name, currentQty);
+                                    }}
+                                    className={`px-3.5 py-2.5 rounded-xl border text-xs font-extrabold flex items-center gap-2 whitespace-nowrap shrink-0 transition-all ${
+                                      isSold
+                                        ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-75'
+                                        : isSelected
+                                        ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#5D3A29]/25 shadow-xs scale-[1.02] cursor-pointer'
+                                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300 cursor-pointer'
                                     }`}
                                   >
                                     <span className="text-base">{variant.icon}</span>
-                                    <span>{variant.name}</span>
-                                    {isSelected && <span className="text-xs ml-0.5 font-black">✓</span>}
+                                    <span className={isSold ? 'line-through text-stone-400' : ''}>{variant.name}</span>
+                                    {isSold ? (
+                                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-100 text-red-600 border border-red-200 shadow-2xs">
+                                        Sold
+                                      </span>
+                                    ) : isSelected ? (
+                                      <span className="text-xs ml-0.5 font-black">✓</span>
+                                    ) : null}
                                   </button>
                                 );
                               })}
@@ -1511,7 +1524,7 @@ export default function CheckoutPage() {
                                       Mau Tambah Topping?
                                     </span>
                                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 border border-amber-300/80 whitespace-nowrap shrink-0">
-                                      +Rp 1.000 / cup
+                                      +Rp 1.000 / topping
                                     </span>
                                   </div>
                                 </div>
@@ -1538,13 +1551,15 @@ export default function CheckoutPage() {
                                     <span>Pilih Topping:</span>
                                   </span>
                                   <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
-                                    +Rp 1.000 / cup
+                                    +Rp 1.000 / topping / cup
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[11px] font-semibold text-stone-600 flex items-center gap-1">
                                     <span>Topping:</span>
-                                    <strong className="text-[#8B5742]">{iskrambolToppings[0] || 'Tanpa Topping'}</strong>
+                                    <strong className="text-[#8B5742]">
+                                      {iskrambolToppings.length > 0 ? iskrambolToppings.join(', ') : 'Belum dipilih'}
+                                    </strong>
                                   </span>
                                   <button
                                     type="button"
@@ -1584,17 +1599,20 @@ export default function CheckoutPage() {
                               <div className="flex items-center justify-between pt-1 text-[11px] font-medium text-amber-800">
                                 <span>
                                   {iskrambolToppings.length > 0 ? (
-                                    <span className="text-amber-900 font-bold flex items-center gap-1">
+                                    <span className="text-amber-900 font-bold flex items-center gap-1 flex-wrap">
                                       <span>✓</span>
-                                      <span>Topping:</span>
-                                      <strong className="text-[#5D3A29]">{iskrambolToppings[0]}</strong>
+                                      <span>Topping aktif ({iskrambolToppings.length}):</span>
+                                      <strong className="text-[#5D3A29]">{iskrambolToppings.join(', ')}</strong>
+                                      <span className="text-xs font-black text-amber-800 ml-1">
+                                        (+Rp {(iskrambolToppings.length * TOPPING_PRICE).toLocaleString('id-ID')}/cup)
+                                      </span>
                                     </span>
                                   ) : (
-                                    'Pilih salah satu topping di atas'
+                                    'Pilih satu atau lebih topping di atas'
                                   )}
                                 </span>
                                 <span className="text-[10px] font-semibold text-amber-700/80">
-                                  Pilih 1 topping
+                                  Bisa pilih lebih dari 1
                                 </span>
                               </div>
                             </div>
@@ -1720,9 +1738,10 @@ export default function CheckoutPage() {
                   const iskProd = activeProducts.find(isIskrambolProduct);
                   const iskQty = iskProd ? (quantities[iskProd.id] || 0) : 0;
                   if (iskQty <= 0) return null;
+                  const totalToppingCost = iskQty * iskrambolToppings.length * TOPPING_PRICE;
                   return (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
-                      🧁 Termasuk Topping ({iskrambolToppings.join(', ')}) ({iskQty} cup: +Rp {(iskQty * TOPPING_PRICE).toLocaleString('id-ID')})
+                      🧁 Termasuk Topping ({iskrambolToppings.join(', ')}) ({iskQty} cup × {iskrambolToppings.length} toping: +Rp {totalToppingCost.toLocaleString('id-ID')})
                     </span>
                   );
                 })()}

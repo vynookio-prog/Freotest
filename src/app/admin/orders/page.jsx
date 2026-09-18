@@ -920,7 +920,7 @@ export default function AdminOrdersPage() {
                       )}
                       {item.topping && item.toppings && item.toppings.length > 0 && (
                         <div className="text-[11px] text-amber-700 font-medium mt-0.5">
-                          🧁 Topping: {item.toppings.join(', ')} (+Rp {Number(item.toppingCost || (item.qty * 1000)).toLocaleString('id-ID')})
+                          🧁 Topping: {item.toppings.join(', ')} (+Rp {Number(item.toppingCost || (item.qty * (item.toppings?.length || 1) * 1000)).toLocaleString('id-ID')})
                         </div>
                       )}
                     </div>

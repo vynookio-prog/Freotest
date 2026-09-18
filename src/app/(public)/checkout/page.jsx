@@ -1544,28 +1544,14 @@ export default function CheckoutPage() {
                             </div>
                           ) : (
                             <div className="pt-2.5 border-t border-amber-200/70 space-y-2.5 animate-fade-in">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
-                                    <span>🧁</span>
-                                    <span>Pilih Topping:</span>
-                                  </span>
-                                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60 whitespace-nowrap">
-                                    +Rp 1.000 / topping / cup
-                                  </span>
-                                </div>
-                                <div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setShowToppings(false);
-                                      setIskrambolToppings([]);
-                                    }}
-                                    className="text-[11px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer shrink-0 py-0.5 px-1"
-                                  >
-                                    ✕ Batal
-                                  </button>
-                                </div>
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
+                                  <span>🧁</span>
+                                  <span>Pilih Topping:</span>
+                                </span>
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60 whitespace-nowrap">
+                                  +Rp 1.000 / topping / cup
+                                </span>
                               </div>
 
                               <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
@@ -1590,8 +1576,8 @@ export default function CheckoutPage() {
                                 })}
                               </div>
 
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1 text-[11px] font-medium text-amber-800">
-                                <span>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1 text-[11px] font-medium text-amber-800">
+                                <div>
                                   {iskrambolToppings.length > 0 ? (
                                     <span className="text-amber-900 font-bold flex items-center gap-1 flex-wrap">
                                       <span>✓</span>
@@ -1604,10 +1590,24 @@ export default function CheckoutPage() {
                                   ) : (
                                     <span className="text-stone-500">Pilih satu atau lebih topping di atas</span>
                                   )}
-                                </span>
-                                <span className="text-[10px] font-semibold text-amber-700/80">
-                                  Bisa pilih lebih dari 1
-                                </span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="text-[10px] font-semibold text-amber-700/80">
+                                    Bisa pilih lebih dari 1
+                                  </span>
+                                  <span className="text-stone-300">•</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setShowToppings(false);
+                                      setIskrambolToppings([]);
+                                    }}
+                                    className="text-[11px] font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer flex items-center gap-0.5 py-0.5"
+                                  >
+                                    <span>✕</span>
+                                    <span>Batal</span>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           )}

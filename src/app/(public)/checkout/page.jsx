@@ -1501,23 +1501,18 @@ export default function CheckoutPage() {
                           {/* 2. Opsi Topping (Dipencet dulu baru opsi topping muncul) */}
                           {!showToppings ? (
                             <div className="pt-2.5 border-t border-amber-200/70">
-                              <div className="p-3 rounded-2xl bg-amber-100/50 hover:bg-amber-100/80 border border-amber-200/80 flex items-center justify-between gap-3 transition-colors">
+                              <div className="p-3.5 rounded-2xl bg-amber-100/60 hover:bg-amber-100/90 border border-amber-200/90 flex items-center justify-between gap-3 transition-colors shadow-2xs">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center text-base shrink-0 border border-amber-300/60 shadow-2xs">
+                                  <div className="w-9 h-9 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center text-lg shrink-0 border border-amber-300/80 shadow-2xs">
                                     🧁
                                   </div>
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="text-xs font-bold text-amber-950">
-                                        Mau Tambah Topping?
-                                      </span>
-                                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
-                                        +Rp 1.000 / cup
-                                      </span>
-                                    </div>
-                                    <p className="text-[10px] text-amber-800 font-medium mt-0.5 whitespace-nowrap truncate">
-                                      Pilihan: Meses Coklat, Marshmellow, atau Coco Crunch
-                                    </p>
+                                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                    <span className="text-xs sm:text-sm font-extrabold text-[#5D3A29] whitespace-nowrap">
+                                      Mau Tambah Topping?
+                                    </span>
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 border border-amber-300/80 whitespace-nowrap shrink-0">
+                                      +Rp 1.000 / cup
+                                    </span>
                                   </div>
                                 </div>
                                 <button
@@ -1528,7 +1523,7 @@ export default function CheckoutPage() {
                                       setIskrambolToppings(['Meses Coklat']);
                                     }
                                   }}
-                                  className="px-3 py-1.5 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs font-extrabold shrink-0 shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                  className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs sm:text-sm font-extrabold shrink-0 shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                                 >
                                   <span>+ Tambah Topping</span>
                                 </button>

@@ -224,7 +224,12 @@ export default function AdminOrdersPage() {
       `"${o.paymentMethod?.toUpperCase() || '-'}"`,
       `"${o.paymentStatus || '-'}"`,
       `"${o.orderStatus || '-'}"`,
-      `"${(o.items || []).map(i => `${i.name} (x${i.qty})`).join('; ')}"`,
+      `"${(o.items || []).map(i => {
+        let text = `${i.name} (x${i.qty})`;
+        if (i.variant) text += ` [Rasa: ${i.variant}]`;
+        if (i.topping && i.toppings?.length) text += ` [Toping: ${i.toppings.join(', ')}]`;
+        return text;
+      }).join('; ')}"`,
       `"${o.totalHarga || 0}"`,
       `"${(o.notes || '').replace(/"/g, '""')}"`,
       `"${o.paymentProofUrl || o.paymentProofImage || '-'}"`
@@ -284,7 +289,13 @@ export default function AdminOrdersPage() {
       `Status Bayar: *${statusNote}*\n` +
       `Status Pesanan: *${order.orderStatus}*\n\n` +
       `Rincian Pesanan:\n` +
-      (order.items || []).map(i => `• ${i.name} x${i.qty} = Rp ${(i.price * i.qty).toLocaleString('id-ID')}`).join('\n') +
+      (order.items || []).map(i => {
+        let text = `• ${i.name} x${i.qty}`;
+        if (i.variant) text += ` (Rasa: ${i.variant})`;
+        if (i.topping && i.toppings?.length) text += ` [Topping: ${i.toppings.join(', ')}]`;
+        text += ` = Rp ${(i.total || (i.price * i.qty)).toLocaleString('id-ID')}`;
+        return text;
+      }).join('\n') +
       `\n*Total Tagihan: Rp ${(order.totalHarga || 0).toLocaleString('id-ID')}*\n\n` +
       closingNote;
 
@@ -611,11 +622,23 @@ export default function AdminOrdersPage() {
 
                       {/* Items */}
                       <td className="py-3.5 px-4">
-                        <div className="space-y-1 max-w-[220px]">
+                        <div className="space-y-1.5 max-w-[220px]">
                           {(order.items || []).map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between text-[11px]">
-                              <span className="text-stone-700 font-medium truncate mr-2">{item.name}</span>
-                              <span className="font-bold text-[#8B5742] shrink-0">x{item.qty}</span>
+                            <div key={idx} className="text-[11px] leading-tight">
+                              <div className="flex items-center justify-between">
+                                <span className="text-stone-700 font-medium truncate mr-2">{item.name}</span>
+                                <span className="font-bold text-[#8B5742] shrink-0">x{item.qty}</span>
+                              </div>
+                              {item.variant && (
+                                <div className="text-[10px] text-amber-900 font-semibold mt-0.5">
+                                  🍧 {item.variant}
+                                </div>
+                              )}
+                              {item.topping && item.toppings && item.toppings.length > 0 && (
+                                <div className="text-[10px] text-amber-700 font-medium">
+                                  🧁 {item.toppings.join(', ')}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -890,9 +913,19 @@ export default function AdminOrdersPage() {
                     <div>
                       <span className="font-bold text-stone-800 block">{item.name}</span>
                       <span className="text-stone-400 text-[11px]">Rp {Number(item.price || 0).toLocaleString('id-ID')} x {item.qty}</span>
+                      {item.variant && (
+                        <div className="text-[11px] text-amber-900 font-semibold mt-0.5">
+                          🍧 Varian Rasa: {item.variant}
+                        </div>
+                      )}
+                      {item.topping && item.toppings && item.toppings.length > 0 && (
+                        <div className="text-[11px] text-amber-700 font-medium mt-0.5">
+                          🧁 Topping: {item.toppings.join(', ')} (+Rp {Number(item.toppingCost || (item.qty * 1000)).toLocaleString('id-ID')})
+                        </div>
+                      )}
                     </div>
                     <span className="font-black text-[#5D3A29]">
-                      Rp {Number((item.price || 0) * (item.qty || 1)).toLocaleString('id-ID')}
+                      Rp {Number(item.total || ((item.price || 0) * (item.qty || 1))).toLocaleString('id-ID')}
                     </span>
                   </div>
                 ))}

@@ -59,6 +59,21 @@ export const isIskrambolProduct = (p) => {
 
 export const TOPPING_PRICE = 1000;
 
+// Varian rasa Iskrambol
+export const ISKRAMBOL_VARIANTS = [
+  { id: 'matcha', name: 'Matcha', icon: '🍵' },
+  { id: 'coklat', name: 'Coklat', icon: '🍫' },
+  { id: 'strawberry', name: 'Strawberry', icon: '🍓' },
+  { id: 'taro', name: 'Taro', icon: '🍠' }
+];
+
+// Pilihan topping Iskrambol
+export const ISKRAMBOL_TOPPINGS = [
+  { id: 'meses-coklat', name: 'Meses Coklat', icon: '🍫' },
+  { id: 'marshmellow', name: 'Marshmellow', icon: '☁️' },
+  { id: 'cococrunh', name: 'Coco Crunch', icon: '🥣' }
+];
+
 export default function CheckoutPage() {
   const db = useDb();
   const activeProducts = db.getActiveProducts() || [];
@@ -238,8 +253,39 @@ export default function CheckoutPage() {
     return initial;
   });
 
-  // Toping Iskrambol: true = pakai toping (+Rp1.000/porsi), false = tanpa toping
-  const [iskrambolTopping, setIskrambolTopping] = useState(false);
+  // Varian & Topping Iskrambol
+  const [iskrambolVariants, setIskrambolVariants] = useState(['Coklat']);
+  const [iskrambolToppings, setIskrambolToppings] = useState([]);
+  const [showToppings, setShowToppings] = useState(false);
+  const iskrambolTopping = iskrambolToppings.length > 0;
+
+  const handleToggleVariant = (variantName, qty) => {
+    setIskrambolVariants(prev => {
+      if (qty <= 1) {
+        return [variantName];
+      }
+      if (prev.includes(variantName)) {
+        if (prev.length > 1) {
+          return prev.filter(v => v !== variantName);
+        }
+        return prev;
+      }
+      return [...prev, variantName];
+    });
+  };
+
+  const handleToggleTopping = (toppingName) => {
+    setIskrambolToppings(prev => {
+      if (prev.includes(toppingName)) {
+        const next = prev.filter(t => t !== toppingName);
+        if (next.length === 0) {
+          setShowToppings(false);
+        }
+        return next;
+      }
+      return [...prev, toppingName];
+    });
+  };
 
   const [paymentProof, setPaymentProof] = useState(null); // Data URL for local thumbnail preview
   const [paymentProofUrl, setPaymentProofUrl] = useState(''); // Public CDN URL for WhatsApp & Sheets
@@ -438,10 +484,15 @@ export default function CheckoutPage() {
       const current = prev[productId] || 0;
       const next = Math.max(0, current + delta);
       
-      // Jika porsi Iskrambol berkurang menjadi < 1, otomatis nonaktifkan toping
+      // Jika porsi Iskrambol berkurang menjadi < 1, otomatis reset topping & panel topping
       const prod = activeProducts.find(p => p.id === productId);
-      if (isIskrambolProduct(prod) && next < 1) {
-        setIskrambolTopping(false);
+      if (isIskrambolProduct(prod)) {
+        if (next < 1) {
+          setIskrambolToppings([]);
+          setShowToppings(false);
+        } else if (current === 0 && next >= 1 && iskrambolVariants.length === 0) {
+          setIskrambolVariants(['Coklat']);
+        }
       }
 
       return { ...prev, [productId]: next };
@@ -642,14 +693,19 @@ export default function CheckoutPage() {
       .filter(p => (quantities[p.id] || 0) > 0)
       .map(p => {
         const qty = quantities[p.id];
-        const hasTopping = isIskrambolProduct(p) && iskrambolTopping;
+        const isIsk = isIskrambolProduct(p);
+        const hasTopping = isIsk && iskrambolToppings.length > 0;
         const toppingCost = hasTopping ? qty * TOPPING_PRICE : 0;
+        const variantText = isIsk ? (iskrambolVariants.length > 0 ? iskrambolVariants.join(', ') : 'Coklat') : null;
         return {
           id: p.id,
           name: p.name,
           qty,
           price: p.price,
+          variant: variantText,
+          variants: isIsk ? iskrambolVariants : [],
           topping: hasTopping,
+          toppings: isIsk ? iskrambolToppings : [],
           toppingCost,
           total: (qty * p.price) + toppingCost
         };
@@ -667,11 +723,15 @@ export default function CheckoutPage() {
     if (formData.phone) textMessage += `WhatsApp: ${formData.phone}\n`;
     textMessage += `\n*RINCIAN PESANAN*\n`;
     orderItems.forEach(item => {
-      textMessage += `• ${item.name}: ${item.qty} porsi (Rp ${item.total.toLocaleString('id-ID')})`;
-      if (item.topping) {
-        textMessage += ` ✅ Pakai Toping (+Rp ${(item.toppingCost).toLocaleString('id-ID')})`;
+      textMessage += `• ${item.name}: ${item.qty} porsi (Rp ${item.total.toLocaleString('id-ID')})\n`;
+      if (item.variant) {
+        textMessage += `   └ 🍧 Varian Rasa: ${item.variant}\n`;
       }
-      textMessage += `\n`;
+      if (item.topping && item.toppings && item.toppings.length > 0) {
+        textMessage += `   └ 🧁 Topping: ${item.toppings.join(', ')} (+Rp ${(item.toppingCost).toLocaleString('id-ID')})\n`;
+      } else if (item.variant) {
+        textMessage += `   └ 🧁 Topping: Tanpa Toping\n`;
+      }
     });
     if (formData.notes.trim()) {
       textMessage += `\n*CATATAN KHUSUS:* ${formData.notes.trim()}\n`;
@@ -777,7 +837,9 @@ export default function CheckoutPage() {
     const resetQty = {};
     activeProducts.forEach(p => { resetQty[p.id] = 0; });
     setQuantities(resetQty);
-    setIskrambolTopping(false);
+    setIskrambolToppings([]);
+    setShowToppings(false);
+    setIskrambolVariants(['Coklat']);
   };
 
   // Tunggu client mount untuk memastikan keselarasan SSR dan browser (cegah hydration mismatch)
@@ -861,9 +923,15 @@ export default function CheckoutPage() {
                     <span className="font-bold text-[#5D3A29]">{item.name}</span>
                     <span className="text-stone-400 font-semibold">x{item.qty}</span>
                   </div>
+                  {item.variant && (
+                    <div className="text-[10px] text-stone-600 font-semibold mt-0.5 flex items-center gap-1">
+                      <span>🍧 Rasa:</span>
+                      <span className="text-[#8B5742]">{item.variant}</span>
+                    </div>
+                  )}
                   {item.topping && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-200/80 px-1.5 py-0.2 rounded-md mt-0.5">
-                      🧁 Ekstra Toping (+Rp {Number(item.toppingCost || (item.qty * TOPPING_PRICE)).toLocaleString('id-ID')})
+                      🧁 Topping: {item.toppings && item.toppings.length > 0 ? item.toppings.join(', ') : 'Ekstra Toping'} (+Rp {Number(item.toppingCost || (item.qty * TOPPING_PRICE)).toLocaleString('id-ID')})
                     </span>
                   )}
                 </div>
@@ -1278,8 +1346,24 @@ export default function CheckoutPage() {
                   const currentQty = quantities[prod.id] || 0;
 
                   return (
-                    <div key={prod.id} className="rounded-2xl border shadow-xs transition-all bg-white/50 backdrop-blur-md border-white/70 overflow-hidden">
-                      <div className="flex items-center justify-between p-3.5">
+                    <div 
+                      key={prod.id} 
+                      className={`rounded-2xl border shadow-xs transition-all overflow-hidden ${
+                        isIskrambolProduct(prod) && currentQty > 0
+                          ? 'bg-amber-50/40 border-amber-300 ring-1 ring-amber-300/40'
+                          : 'bg-white/50 backdrop-blur-md border-white/70 hover:border-amber-200'
+                      }`}
+                    >
+                      <div 
+                        className={`flex items-center justify-between p-3.5 ${
+                          isIskrambolProduct(prod) && currentQty === 0 ? 'cursor-pointer hover:bg-amber-50/40 transition-colors' : ''
+                        }`}
+                        onClick={() => {
+                          if (isIskrambolProduct(prod) && currentQty === 0) {
+                            handleQtyChange(prod.id, 1);
+                          }
+                        }}
+                      >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-12 h-12 sm:w-14 sm:h-14 min-w-[3rem] min-h-[3rem] sm:min-w-[3.5rem] sm:min-h-[3.5rem] max-w-[3rem] max-h-[3rem] sm:max-w-[3.5rem] sm:max-h-[3.5rem] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
                             <img 
@@ -1314,7 +1398,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button 
                             type="button"
                             disabled={currentQty === 0}
@@ -1336,66 +1420,193 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* Opsi Toping khusus Iskrambol */}
-                      {isIskrambolProduct(prod) && (
-                        <div className={`mx-3.5 mb-3.5 p-3 rounded-2xl border flex items-center justify-between gap-3 shadow-2xs transition-all ${
-                          currentQty < 1 
-                            ? 'bg-stone-50/80 border-stone-200/80 opacity-70' 
-                            : 'bg-amber-50/90 border-amber-200/90'
-                        }`}>
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0 border ${
-                              currentQty < 1 
-                                ? 'bg-stone-200/50 text-stone-400 border-stone-200' 
-                                : 'bg-amber-100/90 text-amber-900 border-amber-200/60'
-                            }`}>
-                              🧁
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-xs font-bold leading-tight ${
-                                  currentQty < 1 ? 'text-stone-600' : 'text-amber-950'
-                                }`}>
-                                  Tambah Ekstra Toping
-                                </span>
-                                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                                  currentQty < 1 
-                                    ? 'bg-stone-200/60 text-stone-500 border-stone-300/60' 
-                                    : 'bg-amber-200/80 text-amber-900 border-amber-300/60'
-                                }`}>
-                                  +Rp 1.000 / cup
-                                </span>
-                              </div>
-                              <p className={`text-[10px] font-medium mt-0.5 ${
-                                currentQty < 1 ? 'text-stone-400' : 'text-amber-700'
-                              }`}>
-                                {currentQty < 1
-                                  ? 'Pilih minimal 1 porsi Iskrambol untuk menambahkan toping'
-                                  : (iskrambolTopping 
-                                      ? `✓ Toping aktif untuk ${currentQty} cup (+Rp ${(currentQty * TOPPING_PRICE).toLocaleString('id-ID')})`
-                                      : 'Pilih untuk menambah topping manis (+Rp 1.000/cup)')}
-                              </p>
-                            </div>
-                          </div>
-
+                      {/* Tombol ajakan saat Iskrambol belum dipilih (currentQty === 0) */}
+                      {isIskrambolProduct(prod) && currentQty === 0 && (
+                        <div className="px-3.5 pb-3.5">
                           <button
                             type="button"
-                            disabled={currentQty < 1}
-                            onClick={() => {
-                              if (currentQty < 1) return;
-                              setIskrambolTopping(prev => !prev);
-                            }}
-                            title={currentQty < 1 ? 'Pilih minimal 1 porsi Iskrambol terlebih dahulu' : ''}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 shadow-2xs ${
-                              currentQty < 1
-                                ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-60'
-                                : iskrambolTopping
-                                ? 'bg-[#5D3A29] text-white hover:bg-[#43291d] ring-2 ring-[#5D3A29]/20 cursor-pointer active:scale-95'
-                                : 'bg-white text-stone-700 border border-stone-300 hover:bg-amber-100/60 cursor-pointer active:scale-95'
-                            }`}
+                            onClick={() => handleQtyChange(prod.id, 1)}
+                            className="w-full py-2.5 px-3 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-dashed border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.99]"
                           >
-                            <span>{iskrambolTopping && currentQty >= 1 ? '✓ Pakai Toping' : '+ Tambah Toping'}</span>
+                            <span className="flex items-center gap-2">
+                              <span className="text-base">🍧</span>
+                              <span>Pesan Iskrambol (Pilih Varian Rasa & Topping)</span>
+                            </span>
+                            <span className="text-[11px] font-black bg-amber-200/90 text-amber-900 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                              + Tambah
+                            </span>
                           </button>
+                        </div>
+                      )}
+
+                      {/* Panel Kustomisasi Varian & Topping Iskrambol (Hanya Tampil saat Dipencet / currentQty >= 1) */}
+                      {isIskrambolProduct(prod) && currentQty >= 1 && (
+                        <div className="mx-3.5 mb-3.5 p-3.5 rounded-2xl bg-amber-50/95 border border-amber-200/90 shadow-2xs space-y-3.5 animate-fade-in transition-all">
+                          {/* Header kustomisasi */}
+                          <div className="flex items-center justify-between border-b border-amber-200/70 pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🍧</span>
+                              <div>
+                                <h4 className="text-xs font-extrabold text-amber-950 uppercase tracking-wider">
+                                  Kustomisasi Iskrambol ({currentQty} Cup)
+                                </h4>
+                                <p className="text-[10px] text-amber-700 font-medium">
+                                  Pilih varian rasa favorit dan topping manis Anda
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
+                              Rp 7.000 / cup
+                            </span>
+                          </div>
+
+                          {/* 1. Pilihan Varian Rasa (Matcha, Coklat, Strawberry, Taro) */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
+                                <span>✨</span>
+                                <span>Pilih Varian Rasa:</span>
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-200/60 px-1.5 py-0.2 rounded-md">
+                                  Wajib
+                                </span>
+                              </label>
+                              <span className="text-[10px] font-semibold text-stone-500">
+                                Rasa: <strong className="text-[#8B5742]">{iskrambolVariants.join(', ') || 'Coklat'}</strong>
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {ISKRAMBOL_VARIANTS.map(variant => {
+                                const isSelected = iskrambolVariants.includes(variant.name);
+                                return (
+                                  <button
+                                    key={variant.id}
+                                    type="button"
+                                    onClick={() => handleToggleVariant(variant.name, currentQty)}
+                                    className={`p-2.5 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                                      isSelected
+                                        ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#5D3A29]/25 shadow-xs scale-[1.02]'
+                                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
+                                    }`}
+                                  >
+                                    <span className="text-base">{variant.icon}</span>
+                                    <span>{variant.name}</span>
+                                    {isSelected && <span className="text-xs ml-0.5">✓</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {currentQty > 1 && (
+                              <p className="text-[10px] text-amber-700/90 mt-1.5 italic">
+                                💡 Info: Anda memesan {currentQty} cup. Anda dapat memilih beberapa varian rasa sekaligus.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* 2. Opsi Topping (Dipencet dulu baru opsi topping muncul) */}
+                          {!showToppings ? (
+                            <div className="pt-2.5 border-t border-amber-200/70">
+                              <div className="p-3 rounded-2xl bg-amber-100/50 hover:bg-amber-100/80 border border-amber-200/80 flex items-center justify-between gap-3 transition-colors">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center text-base shrink-0 border border-amber-300/60 shadow-2xs">
+                                    🧁
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-xs font-bold text-amber-950">
+                                        Mau Tambah Topping?
+                                      </span>
+                                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                                        +Rp 1.000 / cup
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-amber-800 font-medium mt-0.5">
+                                      Pilihan: Meses Coklat, Marshmellow, Coco Crunch
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowToppings(true);
+                                    if (iskrambolToppings.length === 0) {
+                                      setIskrambolToppings(['Meses Coklat']);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs font-extrabold shrink-0 shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                >
+                                  <span>+ Tambah Topping</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="pt-2.5 border-t border-amber-200/70 space-y-2.5 animate-fade-in">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
+                                    <span>🧁</span>
+                                    <span>Pilihan Topping:</span>
+                                  </span>
+                                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
+                                    +Rp 1.000 / cup
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowToppings(false);
+                                    setIskrambolToppings([]);
+                                  }}
+                                  className="text-[10px] font-bold text-stone-500 hover:text-red-600 underline cursor-pointer"
+                                >
+                                  ✕ Batal (Tanpa Topping)
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-2">
+                                {ISKRAMBOL_TOPPINGS.map(top => {
+                                  const isSelected = iskrambolToppings.includes(top.name);
+                                  return (
+                                    <button
+                                      key={top.id}
+                                      type="button"
+                                      onClick={() => handleToggleTopping(top.name)}
+                                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                                        isSelected
+                                          ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02]'
+                                          : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300'
+                                      }`}
+                                    >
+                                      <span className="text-base">{top.icon}</span>
+                                      <span className="truncate">{top.name}</span>
+                                      {isSelected && <span className="text-xs ml-0.5">✓</span>}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="flex items-center justify-between pt-1 text-[10px] font-medium text-amber-800">
+                                <span>
+                                  {iskrambolToppings.length > 0
+                                    ? `✓ Topping aktif: ${iskrambolToppings.join(', ')} (+Rp ${(currentQty * TOPPING_PRICE).toLocaleString('id-ID')})`
+                                    : 'Pilih minimal 1 topping di atas'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (iskrambolToppings.length === ISKRAMBOL_TOPPINGS.length) {
+                                      setIskrambolToppings(['Meses Coklat']);
+                                    } else {
+                                      setIskrambolToppings(ISKRAMBOL_TOPPINGS.map(t => t.name));
+                                    }
+                                  }}
+                                  className="text-[10px] font-extrabold text-[#8B5742] hover:text-[#5D3A29] underline cursor-pointer"
+                                >
+                                  {iskrambolToppings.length === ISKRAMBOL_TOPPINGS.length ? 'Pilih 1 Saja' : '✨ Pilih Semua (Mix)'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1513,13 +1724,13 @@ export default function CheckoutPage() {
                     ? 'Siapkan uang pas saat ambil di stand'
                     : 'Silakan pilih salah satu metode pembayaran di atas'}
                 </span>
-                {iskrambolTopping && (() => {
+                {iskrambolToppings.length > 0 && (() => {
                   const iskProd = activeProducts.find(isIskrambolProduct);
                   const iskQty = iskProd ? (quantities[iskProd.id] || 0) : 0;
                   if (iskQty <= 0) return null;
                   return (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
-                      🧁 Termasuk Ekstra Toping ({iskQty} cup: +Rp {(iskQty * TOPPING_PRICE).toLocaleString('id-ID')})
+                      🧁 Termasuk Topping ({iskrambolToppings.join(', ')}) ({iskQty} cup: +Rp {(iskQty * TOPPING_PRICE).toLocaleString('id-ID')})
                     </span>
                   );
                 })()}

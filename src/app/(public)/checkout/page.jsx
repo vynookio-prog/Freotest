@@ -976,7 +976,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   {item.topping && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-200/80 px-1.5 py-0.2 rounded-md mt-0.5">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5D3A29] bg-[#DDA15E]/20 border border-[#DDA15E]/40 px-1.5 py-0.2 rounded-md mt-0.5">
                       🧁 Topping: {item.toppings && item.toppings.length > 0 ? item.toppings.join(', ') : 'Ekstra Toping'} (+Rp {Number(item.toppingCost || (item.qty * (item.toppings?.length || 1) * TOPPING_PRICE)).toLocaleString('id-ID')})
                     </span>
                   )}
@@ -1396,13 +1396,13 @@ export default function CheckoutPage() {
                       key={prod.id} 
                       className={`rounded-2xl border shadow-xs transition-all overflow-hidden ${
                         isIskrambolProduct(prod) && currentQty > 0
-                          ? 'bg-amber-50/40 border-amber-300 ring-1 ring-amber-300/40'
-                          : 'bg-white/50 backdrop-blur-md border-white/70 hover:border-amber-200'
+                          ? 'bg-[#FAF4ED]/70 border-[#DDA15E]/80 ring-1 ring-[#8B5742]/25'
+                          : 'bg-white/50 backdrop-blur-md border-white/70 hover:border-[#DDA15E]/50'
                       }`}
                     >
                       <div 
                         className={`flex items-center justify-between p-3.5 ${
-                          isIskrambolProduct(prod) && currentQty === 0 ? 'cursor-pointer hover:bg-amber-50/40 transition-colors' : ''
+                          isIskrambolProduct(prod) && currentQty === 0 ? 'cursor-pointer hover:bg-[#FAF4ED]/60 transition-colors' : ''
                         }`}
                         onClick={() => {
                           if (isIskrambolProduct(prod) && currentQty === 0) {
@@ -1468,13 +1468,13 @@ export default function CheckoutPage() {
                           <button
                             type="button"
                             onClick={() => handleQtyChange(prod.id, 1)}
-                            className="w-full py-2.5 px-3 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-dashed border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.99]"
+                            className="w-full py-2.5 px-3 rounded-xl bg-[#FAF4ED] hover:bg-[#F5EBE1] border border-dashed border-[#DDA15E] text-[#5D3A29] text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.99]"
                           >
                             <span className="flex items-center gap-2">
                               <span className="text-base">🍧</span>
                               <span>Pesan Iskrambol (Pilih Varian Rasa & Topping)</span>
                             </span>
-                            <span className="text-[11px] font-black bg-amber-200/90 text-amber-900 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                            <span className="text-[11px] font-black bg-[#DDA15E]/25 text-[#5D3A29] px-2.5 py-0.5 rounded-lg border border-[#DDA15E]/50">
                               + Tambah
                             </span>
                           </button>
@@ -1483,21 +1483,21 @@ export default function CheckoutPage() {
 
                       {/* Panel Kustomisasi Varian & Topping Iskrambol (Hanya Tampil saat Dipencet / currentQty >= 1) */}
                       {isIskrambolProduct(prod) && currentQty >= 1 && (
-                        <div className="mx-3.5 mb-3.5 p-3.5 rounded-2xl bg-amber-50/95 border border-amber-200/90 shadow-2xs space-y-3.5 animate-fade-in transition-all">
+                        <div className="mx-3.5 mb-3.5 p-3.5 rounded-2xl bg-gradient-to-b from-[#FAF4ED] to-[#F5EBE1]/80 border-2 border-[#8B5742]/40 ring-1 ring-[#DDA15E]/60 shadow-xs space-y-3.5 animate-fade-in transition-all">
                           {/* Header kustomisasi */}
-                          <div className="flex items-center justify-between border-b border-amber-200/70 pb-2.5">
+                          <div className="flex items-center justify-between border-b border-[#DDA15E]/30 pb-2.5">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🍧</span>
                               <div>
-                                <h4 className="text-xs font-extrabold text-amber-950 uppercase tracking-wider">
+                                <h4 className="text-xs font-extrabold text-[#5D3A29] uppercase tracking-wider">
                                   Kustomisasi Iskrambol ({currentQty} Cup)
                                 </h4>
-                                <p className="text-[10px] text-amber-700 font-medium">
+                                <p className="text-[10px] text-[#8B5742] font-medium">
                                   Pilih varian rasa favorit dan topping manis Anda
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#DDA15E]/20 text-[#5D3A29] border border-[#DDA15E]/40 shadow-2xs">
                               Rp 7.000 / cup
                             </span>
                           </div>
@@ -1508,7 +1508,7 @@ export default function CheckoutPage() {
                               <label className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5 shrink-0">
                                 <span>✨</span>
                                 <span>Pilih Varian Rasa:</span>
-                                <span className="text-[10px] font-bold text-amber-800 bg-amber-200/60 px-1.5 py-0.2 rounded-md">
+                                <span className="text-[10px] font-bold text-[#5D3A29] bg-[#DDA15E]/25 border border-[#DDA15E]/40 px-1.5 py-0.2 rounded-md">
                                   Wajib
                                 </span>
                               </label>
@@ -1534,8 +1534,8 @@ export default function CheckoutPage() {
                                       isSold
                                         ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-75'
                                         : isSelected
-                                        ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#5D3A29]/25 shadow-xs scale-[1.02] cursor-pointer'
-                                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300 cursor-pointer'
+                                        ? 'bg-[#5D3A29] text-white border-[#5D3A29] ring-2 ring-[#8B5742]/30 shadow-xs scale-[1.02] cursor-pointer'
+                                        : 'bg-white text-stone-700 border-stone-200 hover:bg-[#FAF4ED] hover:border-[#DDA15E] cursor-pointer shadow-2xs'
                                     }`}
                                   >
                                     <span className="text-base">{variant.icon}</span>
@@ -1552,7 +1552,7 @@ export default function CheckoutPage() {
                               })}
                             </div>
                             {currentQty > 1 && (
-                              <p className="text-[10px] text-amber-700/90 mt-1.5 italic">
+                              <p className="text-[10px] text-[#8B5742] mt-1.5 italic">
                                 💡 Info: Anda memesan {currentQty} cup. Anda dapat memilih beberapa varian rasa sekaligus.
                               </p>
                             )}
@@ -1560,17 +1560,17 @@ export default function CheckoutPage() {
 
                           {/* 2. Opsi Topping (Dipencet dulu baru opsi topping muncul) */}
                           {!showToppings ? (
-                            <div className="pt-2.5 border-t border-amber-200/70">
-                              <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-100/60 hover:bg-amber-100/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors shadow-2xs">
+                            <div className="pt-2.5 border-t border-[#DDA15E]/30">
+                              <div className="p-3 sm:p-3.5 rounded-2xl bg-[#FAF4ED] hover:bg-[#F5EBE1] border-2 border-[#DDA15E]/50 ring-1 ring-[#8B5742]/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors shadow-2xs">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center text-base sm:text-lg shrink-0 border border-amber-300/80 shadow-2xs">
+                                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#DDA15E]/25 text-[#5D3A29] flex items-center justify-center text-base sm:text-lg shrink-0 border border-[#DDA15E]/50 shadow-2xs">
                                     🧁
                                   </div>
                                   <div className="flex items-center gap-2 flex-wrap min-w-0">
                                     <span className="text-xs sm:text-sm font-extrabold text-[#5D3A29]">
                                       Mau Tambah Topping?
                                     </span>
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 border border-amber-300/80 whitespace-nowrap shrink-0">
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#DDA15E]/25 text-[#5D3A29] border border-[#DDA15E]/50 whitespace-nowrap shrink-0">
                                       +Rp 1.000 / topping
                                     </span>
                                   </div>
@@ -1583,20 +1583,20 @@ export default function CheckoutPage() {
                                       setIskrambolToppings(['Meses Coklat']);
                                     }
                                   }}
-                                  className="w-full sm:w-auto px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl bg-[#5D3A29] hover:bg-[#43291d] text-white text-xs sm:text-sm font-extrabold shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                  className="w-full sm:w-auto px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#8B5742] to-[#5D3A29] hover:from-[#784936] hover:to-[#4a2e20] text-white text-xs sm:text-sm font-extrabold shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                   <span>+ Tambah Topping</span>
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="pt-2.5 border-t border-amber-200/70 space-y-2.5 animate-fade-in">
+                            <div className="pt-2.5 border-t border-[#DDA15E]/30 space-y-2.5 animate-fade-in">
                               <div className="flex items-center gap-1.5 mb-1">
                                 <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
                                   <span>🧁</span>
                                   <span>Pilih Topping:</span>
                                 </span>
-                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60 whitespace-nowrap">
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-[#DDA15E]/25 text-[#5D3A29] border border-[#DDA15E]/40 whitespace-nowrap shadow-2xs">
                                   +Rp 1.000 / topping / cup
                                 </span>
                               </div>
@@ -1616,8 +1616,8 @@ export default function CheckoutPage() {
                                         isDisabled
                                           ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-50'
                                           : isSelected
-                                          ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-600/25 shadow-xs scale-[1.02] cursor-pointer'
-                                          : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-amber-300 cursor-pointer shadow-2xs'
+                                          ? 'bg-gradient-to-r from-[#BC6C25] to-[#DDA15E] text-white border-[#BC6C25] ring-2 ring-[#DDA15E]/40 shadow-xs scale-[1.02] cursor-pointer'
+                                          : 'bg-white text-stone-700 border-stone-200 hover:bg-[#FAF4ED] hover:border-[#DDA15E] cursor-pointer shadow-2xs'
                                       }`}
                                       title={isDisabled ? 'Maksimal 3 topping telah dipilih' : top.name}
                                     >
@@ -1629,14 +1629,14 @@ export default function CheckoutPage() {
                                 })}
                               </div>
 
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1 text-[11px] font-medium text-amber-800">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1 text-[11px] font-medium text-[#8B5742]">
                                 <div>
                                   {iskrambolToppings.length > 0 ? (
-                                    <span className="text-amber-900 font-bold flex items-center gap-1 flex-wrap">
+                                    <span className="text-[#5D3A29] font-bold flex items-center gap-1 flex-wrap">
                                       <span>✓</span>
                                       <span>Topping aktif ({iskrambolToppings.length}/3):</span>
                                       <strong className="text-[#5D3A29]">{iskrambolToppings.join(', ')}</strong>
-                                      <span className="text-xs font-black text-amber-800 ml-1">
+                                      <span className="text-xs font-black text-[#BC6C25] ml-1">
                                         (+Rp {(iskrambolToppings.length * TOPPING_PRICE).toLocaleString('id-ID')}/cup)
                                       </span>
                                     </span>
@@ -1645,7 +1645,7 @@ export default function CheckoutPage() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-[10px] font-semibold text-amber-700/80">
+                                  <span className="text-[10px] font-semibold text-[#8B5742]/90">
                                     {iskrambolToppings.length >= 3 ? 'Maks. 3 topping tercapai' : 'Maks. 3 topping'}
                                   </span>
                                   <span className="text-stone-300">•</span>
@@ -1787,7 +1787,7 @@ export default function CheckoutPage() {
                   if (iskQty <= 0) return null;
                   const totalToppingCost = iskQty * iskrambolToppings.length * TOPPING_PRICE;
                   return (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5D3A29] bg-[#DDA15E]/20 border border-[#DDA15E]/40 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
                       🧁 Termasuk Topping ({iskrambolToppings.join(', ')}) ({iskQty} cup × {iskrambolToppings.length} toping: +Rp {totalToppingCost.toLocaleString('id-ID')})
                     </span>
                   );

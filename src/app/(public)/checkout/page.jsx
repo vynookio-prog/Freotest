@@ -277,13 +277,11 @@ export default function CheckoutPage() {
   const handleToggleTopping = (toppingName) => {
     setIskrambolToppings(prev => {
       if (prev.includes(toppingName)) {
-        const next = prev.filter(t => t !== toppingName);
-        if (next.length === 0) {
-          setShowToppings(false);
-        }
-        return next;
+        setShowToppings(false);
+        return [];
       }
-      return [...prev, toppingName];
+      // Hanya boleh memilih 1 topping
+      return [toppingName];
     });
   };
 
@@ -1390,10 +1388,6 @@ export default function CheckoutPage() {
                               <span className="text-xs font-semibold text-[#8B5742] whitespace-nowrap">
                                 Rp {Number(prod.price || 0).toLocaleString('id-ID')} / {prod.unit || 'porsi'}
                               </span>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
-                                <span className="w-1 h-1 rounded-full bg-emerald-600" />
-                                Open PO
-                              </span>
                             </div>
                           </div>
                         </div>
@@ -1521,7 +1515,7 @@ export default function CheckoutPage() {
                                       </span>
                                     </div>
                                     <p className="text-[10px] text-amber-800 font-medium mt-0.5">
-                                      Pilihan: Meses Coklat, Marshmellow, Coco Crunch
+                                      Pilih 1 topping: Meses Coklat, Marshmellow, atau Coco Crunch
                                     </p>
                                   </div>
                                 </div>
@@ -1545,7 +1539,7 @@ export default function CheckoutPage() {
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-xs font-extrabold text-[#5D3A29] flex items-center gap-1.5">
                                     <span>🧁</span>
-                                    <span>Pilihan Topping:</span>
+                                    <span>Pilih 1 Topping:</span>
                                   </span>
                                   <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300/60">
                                     +Rp 1.000 / cup
@@ -1588,22 +1582,12 @@ export default function CheckoutPage() {
                               <div className="flex items-center justify-between pt-1 text-[10px] font-medium text-amber-800">
                                 <span>
                                   {iskrambolToppings.length > 0
-                                    ? `✓ Topping aktif: ${iskrambolToppings.join(', ')} (+Rp ${(currentQty * TOPPING_PRICE).toLocaleString('id-ID')})`
-                                    : 'Pilih minimal 1 topping di atas'}
+                                    ? `✓ Topping aktif: ${iskrambolToppings[0]} (+Rp ${(currentQty * TOPPING_PRICE).toLocaleString('id-ID')})`
+                                    : 'Pilih salah satu topping di atas'}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (iskrambolToppings.length === ISKRAMBOL_TOPPINGS.length) {
-                                      setIskrambolToppings(['Meses Coklat']);
-                                    } else {
-                                      setIskrambolToppings(ISKRAMBOL_TOPPINGS.map(t => t.name));
-                                    }
-                                  }}
-                                  className="text-[10px] font-extrabold text-[#8B5742] hover:text-[#5D3A29] underline cursor-pointer"
-                                >
-                                  {iskrambolToppings.length === ISKRAMBOL_TOPPINGS.length ? 'Pilih 1 Saja' : '✨ Pilih Semua (Mix)'}
-                                </button>
+                                <span className="text-[10px] font-semibold text-amber-700">
+                                  Maksimal 1 topping
+                                </span>
                               </div>
                             </div>
                           )}

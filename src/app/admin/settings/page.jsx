@@ -108,7 +108,7 @@ export default function AdminSettingsPage() {
 
   // Export JSON Backup
   const handleExportBackup = () => {
-    const backupData = localStorage.getItem('freonix_database_v3');
+    const backupData = localStorage.getItem('freonix_database_v4') || localStorage.getItem('freonix_database_v3');
     if (!backupData) {
       showToast('Database kosong, tidak ada data untuk diekspor.', 'error');
       return;
@@ -137,7 +137,7 @@ export default function AdminSettingsPage() {
         if (!parsed.products && !parsed.settings) {
           throw new Error('Format file JSON tidak valid untuk database Freonix');
         }
-        localStorage.setItem('freonix_database_v3', JSON.stringify(parsed));
+        localStorage.setItem('freonix_database_v4', JSON.stringify(parsed));
         window.dispatchEvent(new CustomEvent('freonix_db_updated', { detail: { action: 'RESTORE_BACKUP' } }));
         showToast('Database berhasil dipulihkan dari file backup!');
       } catch (err) {

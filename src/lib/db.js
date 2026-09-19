@@ -3,7 +3,7 @@
 
 import { insforge, isInsforgeConfigured } from './insforge.js';
 
-const DB_KEY = 'freonix_database_v3';
+const DB_KEY = 'freonix_database_v4';
 
 // Data default awal sebagai fallback dan template seeding
 export const INITIAL_DB = {
@@ -269,7 +269,8 @@ function mapProductFromDb(row) {
   let tools = Array.isArray(row.tools) ? row.tools : [];
   let nutrition = Array.isArray(row.nutrition) ? row.nutrition : [];
 
-  if (id === 'rice-bowl' || slug === 'rice-bowl' || (name || '').toLowerCase() === 'rice bowl') {
+  const rowName = (name || '').toLowerCase();
+  if (id === 'rice-bowl' || slug === 'rice-bowl' || rowName.includes('rice') || rowName.includes('bowl')) {
     const initItem = INITIAL_DB.products.find(p => p.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
     id = 'mangkok-ng-kanin';
     slug = 'mangkok-ng-kanin';
@@ -499,6 +500,13 @@ let syncStatus = {
 function loadLocalDb() {
   if (cachedDb) return cachedDb;
   try {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('freonix_database_v3');
+        localStorage.removeItem('freonix_database_v2');
+        localStorage.removeItem('freonix_database_v1');
+      } catch (e) {}
+    }
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(DB_KEY) : null;
     if (!raw) {
       cachedDb = JSON.parse(JSON.stringify(INITIAL_DB));
@@ -530,7 +538,8 @@ function loadLocalDb() {
             const list = parsed.products
               .filter(p => p.id !== 'halo-halo' && p.slug !== 'halo-halo')
               .map(p => {
-                if (p.id === 'rice-bowl' || p.slug === 'rice-bowl' || (p.name || '').toLowerCase() === 'rice bowl') {
+                const pName = (p.name || '').toLowerCase();
+                if (p.id === 'rice-bowl' || p.slug === 'rice-bowl' || pName.includes('rice') || pName.includes('bowl')) {
                   const initMangkok = INITIAL_DB.products.find(x => x.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
                   return {
                     ...p,
@@ -884,20 +893,34 @@ export const db = {
 
   // --- PRODUCTS ---
   getProducts() {
-    return sortProductsByOrder(loadLocalDb().products || []);
+    const raw = sortProductsByOrder(loadLocalDb().products || []);
+    return raw.map(p => {
+      const pName = (p.name || '').toLowerCase();
+      if (p.id === 'rice-bowl' || p.slug === 'rice-bowl' || pName.includes('rice') || pName.includes('bowl')) {
+        const initMangkok = INITIAL_DB.products.find(x => x.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
+        return {
+          ...p,
+          id: 'mangkok-ng-kanin',
+          slug: 'mangkok-ng-kanin',
+          name: 'Mangkok ng Kanin',
+          unit: 'bowl',
+          desc: initMangkok.desc,
+          description: initMangkok.description,
+          image: '/images/mangkok-ng-kanin.jpg',
+          ingredients: initMangkok.ingredients,
+          tools: initMangkok.tools,
+          nutrition: initMangkok.nutrition
+        };
+      }
+      return p;
+    });
   },
   getActiveProducts() {
-    const prods = sortProductsByOrder(loadLocalDb().products || []);
-    if (prods === cachedProductsRef && cachedActiveProducts) {
-      return cachedActiveProducts;
-    }
-    cachedProductsRef = prods;
-    cachedActiveProducts = prods.filter(p => p.status === 'active');
-    return cachedActiveProducts;
+    return this.getProducts().filter(p => p.status === 'active');
   },
   getProductById(id) {
     if (!id) return null;
-    const prods = sortProductsByOrder(loadLocalDb().products || []);
+    const prods = this.getProducts();
     const cleanId = String(id).trim().toLowerCase();
     const decodedId = decodeURIComponent(cleanId).toLowerCase();
     const normalized = decodedId.replace(/[^a-z0-9]/g, '');

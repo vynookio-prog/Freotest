@@ -23,7 +23,7 @@ export function useDb() {
 
     // Event listener untuk update dari tab lain di browser
     const handleStorage = (e) => {
-      if (e.key === 'freonix_database_v3') {
+      if (e.key === 'freonix_database_v4') {
         refresh();
       }
     };

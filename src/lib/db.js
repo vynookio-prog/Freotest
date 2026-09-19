@@ -58,23 +58,22 @@ export const INITIAL_DB = {
       stock: 50,
       unit: 'bowl',
       status: 'active',
-      desc: 'Nasi mangkuk khas Filipina dengan topping Chicken Adobo gurih legit, nasi beraroma bawang putih (Sinangag), telur rebus lembut bernutrisi, serta taburan bawang putih krispi.',
-      description: 'Nasi mangkuk khas Filipina dengan perpaduan nasi putih pulen beraroma bawang putih hangat (Sinangag), potongan daging ayam Chicken Adobo empuk gurih manis berempah otentik, telur rebus lembut bernutrisi, serta taburan bawang putih goreng renyah dan irisan daun bawang segar.',
-      image: '/images/mangkok-ng-kanin.jpg',
+      desc: 'Hidangan nasi hangat dalam mangkuk dengan topping ayam crispy berbalut saus pedas gurih warna merah menyala, dilengkapi selada atau mentimun',
+      description: 'Hidangan nasi hangat dalam mangkuk dengan topping ayam crispy berbalut saus pedas gurih warna merah menyala, dilengkapi selada atau mentimun',
+      image: 'https://cdn.phototourl.com/free/2026-09-19-64f6be2d-fc17-4cf8-a859-b6ffb9812bb2.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
-        'Daging ayam paha fillet empuk bumbu marinasi Chicken Adobo khas Filipina',
-        'Nasi putih pulen hangat beraroma bawang putih gurih (Sinangag / Garlic Rice)',
-        'Telur ayam rebus lembut berprotein tinggi (soft-boiled egg)',
-        'Kuah karamelisasi saus adobo manis-gurih (kecap kedelai, cuka tebu, daun salam & lada hitam)',
-        'Taburan bawang putih goreng krispi (crispy garlic bits) & irisan daun bawang segar',
-        'Pelengkap irisan jeruk limau / calamansi penyeimbang rasa segar'
+        'Potongan daging ayam krispi renyah (crispy chicken) berbalut tepung bumbu gurih',
+        'Nasi putih pulen hangat berkualitas',
+        'Saus pedas gurih warna merah menyala spesial',
+        'Garnish sayuran segar (irisan selada renyah atau mentimun segar)',
+        'Taburan wijen aromatik & daun bawang segar'
       ],
       tools: [
-        'Wajan tumis / saute pan stainless food-grade higienis',
+        'Wajan penggoreng / deep fryer stainless food-grade higienis',
         'Rice cooker penanak nasi pulen steril',
-        'Panci perebus telur & timer presisi',
-        'Spatula kayu & sendok takar bumbu',
+        'Wadah pencampur saus higienis',
+        'Capitan makanan stainless & sendok takar bumbu',
         'Kraft paper bowl eco-friendly food-grade tahan panas + sendok higienis'
       ],
       nutrition: [
@@ -98,7 +97,7 @@ export const INITIAL_DB = {
       status: 'active',
       desc: 'Telur puyuh goreng berbalut tepung dengan rempah spesial, renyah di luar lembut di dalam.',
       description: 'Telur puyuh goreng berbalut tepung dengan rempah spesial, renyah di luar lembut di dalam.',
-      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/kwek-kwek.jpg',
+      image: 'https://cdn.phototourl.com/free/2026-09-19-19685751-6c57-445a-b4e2-d6717f46bb30.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Telur puyuh rebus berkualitas (3 butir/tusuk)',
@@ -174,7 +173,7 @@ export const INITIAL_DB = {
       status: 'active',
       desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
       description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
-      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg',
+      image: 'https://cdn.phototourl.com/free/2026-09-19-80be0309-e32c-48d6-a2d2-10032edd17e0.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
         'Es serut halus higienis (Shaved ice - 2 cups)',
@@ -275,8 +274,8 @@ function mapProductFromDb(row) {
     id = 'mangkok-ng-kanin';
     slug = 'mangkok-ng-kanin';
     name = 'Mangkok ng Kanin';
-    desc = initItem.desc;
-    image = '/images/mangkok-ng-kanin.jpg';
+    desc = row.description || initItem.desc;
+    image = row.image || initItem.image;
     ingredients = initItem.ingredients;
     tools = initItem.tools;
     nutrition = initItem.nutrition;
@@ -539,7 +538,7 @@ function loadLocalDb() {
               .filter(p => p.id !== 'halo-halo' && p.slug !== 'halo-halo')
               .map(p => {
                 const pName = (p.name || '').toLowerCase();
-                if (p.id === 'rice-bowl' || p.slug === 'rice-bowl' || pName.includes('rice') || pName.includes('bowl')) {
+                if (p.id === 'mangkok-ng-kanin' || p.slug === 'mangkok-ng-kanin' || p.id === 'rice-bowl' || p.slug === 'rice-bowl' || pName.includes('rice') || pName.includes('bowl')) {
                   const initMangkok = INITIAL_DB.products.find(x => x.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
                   return {
                     ...p,
@@ -547,15 +546,25 @@ function loadLocalDb() {
                     slug: 'mangkok-ng-kanin',
                     name: 'Mangkok ng Kanin',
                     unit: 'bowl',
-                    desc: initMangkok.desc,
-                    description: initMangkok.description,
-                    image: '/images/mangkok-ng-kanin.jpg',
-                    ingredients: initMangkok.ingredients,
+                    desc: (p.desc && p.desc.includes('pedas gurih')) ? p.desc : initMangkok.desc,
+                    description: (p.description && p.description.includes('pedas gurih')) ? p.description : initMangkok.description,
+                    image: (p.image && p.image.includes('phototourl')) ? p.image : initMangkok.image,
+                    ingredients: (Array.isArray(p.ingredients) && p.ingredients.some(i => i.toLowerCase().includes('crispy') || i.toLowerCase().includes('krispi'))) ? p.ingredients : initMangkok.ingredients,
                     tools: initMangkok.tools,
                     nutrition: initMangkok.nutrition
                   };
                 }
-                if (p.id === 'buko-coklat' && (p.name === 'Buko Coklat' || p.slug === 'buko-coklat')) {
+                if (p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') {
+                  const initKwek = INITIAL_DB.products.find(x => x.id === 'kwek-kwek');
+                  if (initKwek && (!p.image || !p.image.includes('phototourl'))) {
+                    return {
+                      ...p,
+                      image: initKwek.image
+                    };
+                  }
+                }
+                if (p.id === 'buko-coklat' || p.id === 'iskrambol' || p.slug === 'iskrambol') {
+                  const initIskrambol = INITIAL_DB.products.find(x => x.id === 'buko-coklat') || INITIAL_DB.products.find(x => x.id === 'iskrambol');
                   return {
                     ...p,
                     name: 'Iskrambol',
@@ -563,7 +572,7 @@ function loadLocalDb() {
                     price: 7000,
                     desc: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
                     description: 'Es serut khas Filipina dengan campuran susu manis, sirup, dan aneka topping lezat menyegarkan.',
-                    image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/products/iskrambol.jpg'
+                    image: (p.image && p.image.includes('80be0309')) ? p.image : (initIskrambol?.image || 'https://cdn.phototourl.com/free/2026-09-19-80be0309-e32c-48d6-a2d2-10032edd17e0.jpg')
                   };
                 }
                 return p;
@@ -904,9 +913,9 @@ export const db = {
           slug: 'mangkok-ng-kanin',
           name: 'Mangkok ng Kanin',
           unit: 'bowl',
-          desc: initMangkok.desc,
-          description: initMangkok.description,
-          image: '/images/mangkok-ng-kanin.jpg',
+          desc: p.desc || initMangkok.desc,
+          description: p.description || initMangkok.description,
+          image: p.image || initMangkok.image,
           ingredients: initMangkok.ingredients,
           tools: initMangkok.tools,
           nutrition: initMangkok.nutrition

@@ -81,6 +81,7 @@ const MENU_ORDER = ['mangkok-ng-kanin', 'rice-bowl', 'chicken-adobo', 'kwek-kwek
 export default function CheckoutPage() {
   const db = useDb();
   const rawActiveProducts = db.getActiveProducts() || [];
+  const productsSyncKey = rawActiveProducts.map(p => `${p.id}:${p.status}:${p.price}:${p.name}`).join('|');
   const activeProducts = useMemo(() => {
     return [...rawActiveProducts].sort((a, b) => {
       const aKey = (a.id || a.slug || '').toLowerCase();
@@ -91,7 +92,7 @@ export default function CheckoutPage() {
       if (bIdx === -1) bIdx = 99;
       return aIdx - bIdx;
     });
-  }, [rawActiveProducts]);
+  }, [productsSyncKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const settings = db.getSettings() || {};
 
   // Form State
@@ -337,13 +338,20 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // Pre-select item from URL query parameter (e.g. ?item=rice-bowl)
+  // Flag agar pre-selection dari URL (?item=...) hanya dijalankan sekali saat pertama kali halaman checkout dibuka
+  const preselectedHandledRef = React.useRef(false);
+
+  // Pre-select item dari URL query parameter (contoh: ?item=iskrambol)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (preselectedHandledRef.current) return;
+    if (!activeProducts || activeProducts.length === 0) return;
+
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const preselectedItem = urlParams.get('item') || urlParams.get('product') || urlParams.get('id');
-      if (preselectedItem && activeProducts.length > 0) {
+      if (preselectedItem) {
+        preselectedHandledRef.current = true;
         const cleanTarget = preselectedItem.trim().toLowerCase();
         const matched = activeProducts.find(p => 
           (p.id && p.id.toLowerCase() === cleanTarget) || 
@@ -352,18 +360,42 @@ export default function CheckoutPage() {
           ((cleanTarget.includes('rice') || cleanTarget.includes('bowl') || cleanTarget.includes('kanin') || cleanTarget.includes('mangkok')) && (p.id === 'mangkok-ng-kanin' || p.slug === 'mangkok-ng-kanin'))
         );
         if (matched) {
-          setQuantities(prev => {
-            if ((prev[matched.id] || 0) === 0) {
-              return { ...prev, [matched.id]: 1 };
-            }
-            return prev;
-          });
+          setQuantities(prev => ({
+            ...prev,
+            [matched.id]: (prev[matched.id] || 0) > 0 ? prev[matched.id] : 1
+          }));
+
+          if (isIskrambolProduct(matched)) {
+            setIskrambolVariants(prev => prev.length > 0 ? prev : ['Coklat']);
+          }
         }
+
+        // Hapus query parameter dari URL tanpa reload agar tidak memicu re-selection saat render ulang
+        try {
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        } catch (err) {}
+      } else {
+        preselectedHandledRef.current = true;
       }
     } catch (e) {
       console.warn('Error reading preselected item query param:', e);
     }
   }, [activeProducts]);
+
+  // Sinkronisasi otomatis varian & topping Iskrambol saat jumlah porsi berubah
+  const iskrambolProd = useMemo(() => activeProducts.find(isIskrambolProduct), [activeProducts]);
+  const iskrambolId = iskrambolProd?.id;
+  const iskrambolQty = iskrambolId ? (quantities[iskrambolId] || 0) : 0;
+
+  useEffect(() => {
+    if (iskrambolQty < 1) {
+      setIskrambolToppings([]);
+      setShowToppings(false);
+    } else if (iskrambolQty >= 1 && iskrambolVariants.length === 0) {
+      setIskrambolVariants(['Coklat']);
+    }
+  }, [iskrambolQty, iskrambolVariants.length]);
 
   const [liveOrder, setLiveOrder] = useState(null);
 
@@ -529,18 +561,6 @@ export default function CheckoutPage() {
     setQuantities(prev => {
       const current = prev[productId] || 0;
       const next = Math.max(0, current + delta);
-      
-      // Jika porsi Iskrambol berkurang menjadi < 1, otomatis reset topping & panel topping
-      const prod = activeProducts.find(p => p.id === productId);
-      if (isIskrambolProduct(prod)) {
-        if (next < 1) {
-          setIskrambolToppings([]);
-          setShowToppings(false);
-        } else if (current === 0 && next >= 1 && iskrambolVariants.length === 0) {
-          setIskrambolVariants(['Coklat']);
-        }
-      }
-
       return { ...prev, [productId]: next };
     });
   };
@@ -1378,9 +1398,28 @@ export default function CheckoutPage() {
 
           {/* Rincian Menu Produk */}
           <div className="mb-8">
-            <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider border-b border-stone-200/50 pb-3 mb-5">
-              Rincian Menu Produk
-            </h2>
+            <div className="flex items-center justify-between border-b border-stone-200/50 pb-3 mb-5">
+              <h2 className="text-base font-bold text-[#8B5742] uppercase tracking-wider">
+                Rincian Menu Produk
+              </h2>
+              {totalItemCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const resetQty = {};
+                    activeProducts.forEach(p => { resetQty[p.id] = 0; });
+                    setQuantities(resetQty);
+                    setIskrambolToppings([]);
+                    setShowToppings(false);
+                  }}
+                  className="text-xs font-semibold text-stone-500 hover:text-rose-600 transition-colors flex items-center gap-1 cursor-pointer px-2.5 py-1 rounded-lg hover:bg-rose-50 border border-stone-200/60"
+                  title="Batalkan & kosongkan semua menu yang dipilih"
+                >
+                  <span>✕</span>
+                  <span>Kosongkan Menu</span>
+                </button>
+              )}
+            </div>
             <div className="space-y-3.5">
               {activeProducts.length === 0 ? (
                 <div className="p-8 text-center rounded-2xl bg-white/40 backdrop-blur-md border border-white/70">
@@ -1401,16 +1440,7 @@ export default function CheckoutPage() {
                           : 'bg-white/50 backdrop-blur-md border-white/70 hover:border-[#DDA15E]/50'
                       }`}
                     >
-                      <div 
-                        className={`flex items-center justify-between p-3.5 ${
-                          isIskrambolProduct(prod) && currentQty === 0 ? 'cursor-pointer hover:bg-[#FAF4ED]/60 transition-colors' : ''
-                        }`}
-                        onClick={() => {
-                          if (isIskrambolProduct(prod) && currentQty === 0) {
-                            handleQtyChange(prod.id, 1);
-                          }
-                        }}
-                      >
+                      <div className="flex items-center justify-between p-3.5">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-12 h-12 sm:w-14 sm:h-14 min-w-[3rem] min-h-[3rem] sm:min-w-[3.5rem] sm:min-h-[3.5rem] max-w-[3rem] max-h-[3rem] sm:max-w-[3.5rem] sm:max-h-[3.5rem] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-xs shrink-0 flex items-center justify-center relative">
                             <img 
@@ -1445,8 +1475,12 @@ export default function CheckoutPage() {
                           <button 
                             type="button"
                             disabled={currentQty === 0}
-                            onClick={() => handleQtyChange(prod.id, -1)}
-                            className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQtyChange(prod.id, -1);
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 disabled:cursor-not-allowed border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all cursor-pointer"
+                            aria-label={`Kurangi ${prod.name}`}
                           >
                             -
                           </button>
@@ -1455,8 +1489,12 @@ export default function CheckoutPage() {
                           </span>
                           <button 
                             type="button"
-                            onClick={() => handleQtyChange(prod.id, 1)}
-                            className="w-8 h-8 rounded-full bg-white/80 disabled:opacity-40 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQtyChange(prod.id, 1);
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/80 border border-white/90 shadow-xs flex items-center justify-center text-[#5D3A29] font-black hover:bg-white active:scale-90 transition-all cursor-pointer"
+                            aria-label={`Tambah ${prod.name}`}
                           >
                             +
                           </button>
@@ -1498,9 +1536,20 @@ export default function CheckoutPage() {
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#DDA15E]/20 text-[#5D3A29] border border-[#DDA15E]/40 shadow-2xs">
-                              Rp 7.000 / cup
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleQtyChange(prod.id, -currentQty)}
+                                className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Batal pesan Iskrambol"
+                              >
+                                <span>✕</span>
+                                <span>Batal Pesan</span>
+                              </button>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#DDA15E]/20 text-[#5D3A29] border border-[#DDA15E]/40 shadow-2xs">
+                                Rp 7.000 / cup
+                              </span>
+                            </div>
                           </div>
 
                           {/* 1. Pilihan Varian Rasa (Matcha, Coklat, Strawberry, Taro) */}

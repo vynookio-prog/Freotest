@@ -76,7 +76,7 @@ export const ISKRAMBOL_TOPPINGS = [
   { id: 'keju', name: 'Keju', icon: '🧀' }
 ];
 
-const MENU_ORDER = ['rice-bowl', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
+const MENU_ORDER = ['mangkok-ng-kanin', 'rice-bowl', 'chicken-adobo', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
 
 export default function CheckoutPage() {
   const db = useDb();
@@ -348,7 +348,8 @@ export default function CheckoutPage() {
         const matched = activeProducts.find(p => 
           (p.id && p.id.toLowerCase() === cleanTarget) || 
           (p.slug && p.slug.toLowerCase() === cleanTarget) ||
-          (p.name && p.name.toLowerCase().includes(cleanTarget))
+          (p.name && p.name.toLowerCase().includes(cleanTarget)) ||
+          ((cleanTarget.includes('rice') || cleanTarget.includes('bowl') || cleanTarget.includes('kanin') || cleanTarget.includes('mangkok')) && (p.id === 'mangkok-ng-kanin' || p.slug === 'mangkok-ng-kanin'))
         );
         if (matched) {
           setQuantities(prev => {

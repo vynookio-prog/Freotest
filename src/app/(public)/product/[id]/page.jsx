@@ -142,7 +142,11 @@ export default function ProductDetailPage({ params }) {
   const isRiceBowl = Boolean(
     product?.id === 'rice-bowl' || 
     product?.slug === 'rice-bowl' || 
-    (product?.name || '').toLowerCase().includes('rice bowl')
+    product?.id === 'mangkok-ng-kanin' ||
+    product?.slug === 'mangkok-ng-kanin' ||
+    (product?.name || '').toLowerCase().includes('rice bowl') ||
+    (product?.name || '').toLowerCase().includes('mangkok') ||
+    (product?.name || '').toLowerCase().includes('kanin')
   );
 
   const formattedPrice = typeof product.price === 'number' 
@@ -295,8 +299,8 @@ export default function ProductDetailPage({ params }) {
                 {/* Top Badges */}
                 <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2 z-10 pointer-events-none">
                   <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-black/55 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-[11px] font-bold shadow-sm">
-                    <span>{isRiceBowl ? '🇯🇵' : '🇵🇭'}</span>
-                    <span>{isRiceBowl ? 'Kuliner Khas Jepang' : 'Kuliner Khas Filipina'}</span>
+                    <span>🇵🇭</span>
+                    <span>Kuliner Khas Filipina</span>
                   </span>
 
                   {settings.storeStatus === 'closed' ? (
@@ -449,7 +453,7 @@ export default function ProductDetailPage({ params }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-stone-200/60">
                 <div className="p-3 rounded-2xl bg-[#FAFAF9] border border-stone-200/60">
                   <span className="text-[10px] font-extrabold text-stone-500 uppercase block mb-1">Ciri Khas</span>
-                  <span className="text-xs font-bold text-[#5D3A29]">{isRiceBowl ? 'Autentik Japan' : 'Autentik Filipina'}</span>
+                  <span className="text-xs font-bold text-[#5D3A29]">Autentik Filipina</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-[#FAFAF9] border border-stone-200/60">
                   <span className="text-[10px] font-extrabold text-stone-500 uppercase block mb-1">Penyajian</span>

@@ -271,6 +271,24 @@ INSERT INTO public.products (
     id, slug, name, category_id, category_name, price, discount_price, stock, unit, status, description, image, wa_link, ingredients, tools, nutrition
 ) VALUES 
 (
+    'mangkok-ng-kanin',
+    'mangkok-ng-kanin',
+    'Mangkok ng Kanin',
+    'cat-2',
+    'Makanan Utama',
+    12000,
+    0,
+    50,
+    'bowl',
+    'active',
+    'Nasi mangkuk khas Filipina dengan topping Chicken Adobo empuk gurih manis berempah otentik, nasi pulen hangat beraroma bawang putih (Sinangag), telur rebus lembut setengah matang, serta taburan bawang putih goreng krispi dan daun bawang segar.',
+    '/images/mangkok-ng-kanin.jpg',
+    'https://wa.me/628818578363',
+    '["Daging ayam paha fillet empuk bumbu marinasi Chicken Adobo khas Filipina", "Nasi putih pulen hangat beraroma bawang putih gurih (Sinangag / Garlic Rice)", "Telur ayam rebus lembut berprotein tinggi (soft-boiled egg)", "Kuah karamelisasi saus adobo manis-gurih (kecap kedelai, cuka tebu, daun salam & lada hitam)", "Taburan bawang putih goreng krispi (crispy garlic bits) & irisan daun bawang segar", "Pelengkap irisan jeruk limau / calamansi penyeimbang rasa segar"]'::jsonb,
+    '["Wajan tumis / saute pan stainless food-grade higienis", "Rice cooker penanak nasi pulen steril", "Panci perebus telur & timer presisi", "Spatula kayu & sendok takar bumbu", "Kraft paper bowl eco-friendly food-grade tahan panas + sendok higienis"]'::jsonb,
+    '[{"label": "Kalori", "value": "485 kkal"}, {"label": "Protein", "value": "28 g"}, {"label": "Karbohidrat", "value": "62 g"}, {"label": "Lemak", "value": "14 g"}]'::jsonb
+),
+(
     'kwek-kwek',
     'kwek-kwek',
     'Kwek Kwek',

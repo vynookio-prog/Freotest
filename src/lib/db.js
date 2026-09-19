@@ -48,9 +48,9 @@ export const INITIAL_DB = {
   ],
   products: [
     {
-      id: 'rice-bowl',
-      slug: 'rice-bowl',
-      name: 'Rice Bowl',
+      id: 'mangkok-ng-kanin',
+      slug: 'mangkok-ng-kanin',
+      name: 'Mangkok ng Kanin',
       categoryId: 'cat-2',
       categoryName: 'Makanan Utama',
       price: 12000,
@@ -58,31 +58,32 @@ export const INITIAL_DB = {
       stock: 50,
       unit: 'bowl',
       status: 'active',
-      desc: 'Sajian rice bowl autentik khas Jepang dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
-      description: 'Sajian rice bowl autentik khas Jepang dengan perpaduan nasi putih pulen hangat, potongan daging ayam gurih empuk bertabur saus spesial, telur lezat, serta taburan pelengkap renyah yang higienis.',
-      image: 'https://ie8b79we.ap-southeast.insforge.app/api/storage/buckets/freonix-uploads/objects/rice-bowl-1789728744991-fc4f2p.jpg',
+      desc: 'Nasi mangkuk khas Filipina dengan topping Chicken Adobo gurih legit, nasi beraroma bawang putih (Sinangag), telur rebus lembut bernutrisi, serta taburan bawang putih krispi.',
+      description: 'Nasi mangkuk khas Filipina dengan perpaduan nasi putih pulen beraroma bawang putih hangat (Sinangag), potongan daging ayam Chicken Adobo empuk gurih manis berempah otentik, telur rebus lembut bernutrisi, serta taburan bawang putih goreng renyah dan irisan daun bawang segar.',
+      image: '/images/mangkok-ng-kanin.jpg',
       waLink: 'https://wa.me/628818578363',
       ingredients: [
-        'Nasi putih pulen hangat berkualitas (1 porsi/bowl)',
-        'Potongan daging ayam gurih empuk bumbu spesial',
-        'Telur segar olahan lezat bernutrisi',
-        'Saus spesial gurih manis khas rice bowl',
-        'Pelengkap sayuran segar higienis',
-        'Taburan bawang goreng renyah & daun bawang'
+        'Daging ayam paha fillet empuk bumbu marinasi Chicken Adobo khas Filipina',
+        'Nasi putih pulen hangat beraroma bawang putih gurih (Sinangag / Garlic Rice)',
+        'Telur ayam rebus lembut berprotein tinggi (soft-boiled egg)',
+        'Kuah karamelisasi saus adobo manis-gurih (kecap kedelai, cuka tebu, daun salam & lada hitam)',
+        'Taburan bawang putih goreng krispi (crispy garlic bits) & irisan daun bawang segar',
+        'Pelengkap irisan jeruk limau / calamansi penyeimbang rasa segar'
       ],
       tools: [
-        'Rice cooker / penanak nasi higienis',
-        'Wajan / kompor penggorengan',
-        'Spatula & sendok takar bumbu',
-        'Mangkuk saji kraft paper bowl food-grade + sendok higienis'
+        'Wajan tumis / saute pan stainless food-grade higienis',
+        'Rice cooker penanak nasi pulen steril',
+        'Panci perebus telur & timer presisi',
+        'Spatula kayu & sendok takar bumbu',
+        'Kraft paper bowl eco-friendly food-grade tahan panas + sendok higienis'
       ],
       nutrition: [
-        { label: 'Kalori', value: '420 kkal' },
-        { label: 'Protein', value: '22 g' },
-        { label: 'Karbohidrat', value: '56 g' },
-        { label: 'Lemak', value: '11 g' }
+        { label: 'Kalori', value: '485 kkal' },
+        { label: 'Protein', value: '28 g' },
+        { label: 'Karbohidrat', value: '62 g' },
+        { label: 'Lemak', value: '14 g' }
       ],
-      updatedAt: '2026-09-18T10:00:00.000Z'
+      updatedAt: '2026-09-19T08:00:00.000Z'
     },
     {
       id: 'kwek-kwek',
@@ -204,9 +205,11 @@ export const INITIAL_DB = {
   reviews: []
 };
 
-// Urutan tampilan menu resmi FREONIX: 1. Rice Bowl, 2. Kwek Kwek, 3. Turon, 4. Iskrambol
+// Urutan tampilan menu resmi FREONIX: 1. Mangkok ng Kanin, 2. Kwek Kwek, 3. Turon, 4. Iskrambol
 export const PRODUCT_DISPLAY_ORDER = [
+  'mangkok-ng-kanin',
   'rice-bowl',
+  'chicken-adobo',
   'kwek-kwek',
   'turon',
   'iskrambol',
@@ -257,24 +260,45 @@ function mapCategoryToDb(cat) {
 }
 
 function mapProductFromDb(row) {
+  let id = row.id;
+  let slug = row.slug || row.id;
+  let name = row.name;
+  let desc = row.description || '';
+  let image = row.image || '';
+  let ingredients = Array.isArray(row.ingredients) ? row.ingredients : [];
+  let tools = Array.isArray(row.tools) ? row.tools : [];
+  let nutrition = Array.isArray(row.nutrition) ? row.nutrition : [];
+
+  if (id === 'rice-bowl' || slug === 'rice-bowl' || (name || '').toLowerCase() === 'rice bowl') {
+    const initItem = INITIAL_DB.products.find(p => p.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
+    id = 'mangkok-ng-kanin';
+    slug = 'mangkok-ng-kanin';
+    name = 'Mangkok ng Kanin';
+    desc = initItem.desc;
+    image = '/images/mangkok-ng-kanin.jpg';
+    ingredients = initItem.ingredients;
+    tools = initItem.tools;
+    nutrition = initItem.nutrition;
+  }
+
   return {
-    id: row.id,
-    slug: row.slug || row.id,
-    name: row.name,
+    id,
+    slug,
+    name,
     categoryId: row.category_id,
     categoryName: row.category_name,
     price: Number(row.price) || 0,
     discountPrice: Number(row.discount_price) || 0,
     stock: Number(row.stock) || 0,
-    unit: row.unit || 'porsi',
+    unit: row.unit || 'bowl',
     status: row.status || 'active',
-    desc: row.description || '',
-    description: row.description || '',
-    image: row.image || '',
+    desc,
+    description: desc,
+    image,
     waLink: row.wa_link || '',
-    ingredients: Array.isArray(row.ingredients) ? row.ingredients : [],
-    tools: Array.isArray(row.tools) ? row.tools : [],
-    nutrition: Array.isArray(row.nutrition) ? row.nutrition : [],
+    ingredients,
+    tools,
+    nutrition,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -506,6 +530,22 @@ function loadLocalDb() {
             const list = parsed.products
               .filter(p => p.id !== 'halo-halo' && p.slug !== 'halo-halo')
               .map(p => {
+                if (p.id === 'rice-bowl' || p.slug === 'rice-bowl' || (p.name || '').toLowerCase() === 'rice bowl') {
+                  const initMangkok = INITIAL_DB.products.find(x => x.id === 'mangkok-ng-kanin') || INITIAL_DB.products[0];
+                  return {
+                    ...p,
+                    id: 'mangkok-ng-kanin',
+                    slug: 'mangkok-ng-kanin',
+                    name: 'Mangkok ng Kanin',
+                    unit: 'bowl',
+                    desc: initMangkok.desc,
+                    description: initMangkok.description,
+                    image: '/images/mangkok-ng-kanin.jpg',
+                    ingredients: initMangkok.ingredients,
+                    tools: initMangkok.tools,
+                    nutrition: initMangkok.nutrition
+                  };
+                }
                 if (p.id === 'buko-coklat' && (p.name === 'Buko Coklat' || p.slug === 'buko-coklat')) {
                   return {
                     ...p,
@@ -882,9 +922,9 @@ export const db = {
       if (found) return found;
     }
 
-    // 3. Number or common shortcuts (1: Rice Bowl, 2: Kwek Kwek, 3: Turon, 4: Iskrambol)
-    if (cleanId === '1' || cleanId.includes('rice') || cleanId.includes('bowl') || cleanId.includes('adobo')) {
-      return prods.find(p => p.id === 'rice-bowl' || p.slug === 'rice-bowl' || p.id === 'chicken-adobo') || prods.find(p => p.categoryId === 'cat-2') || prods[0];
+    // 3. Number or common shortcuts (1: Mangkok ng Kanin / Rice Bowl, 2: Kwek Kwek, 3: Turon, 4: Iskrambol)
+    if (cleanId === '1' || cleanId.includes('rice') || cleanId.includes('bowl') || cleanId.includes('kanin') || cleanId.includes('mangkok') || cleanId.includes('adobo')) {
+      return prods.find(p => p.id === 'mangkok-ng-kanin' || p.slug === 'mangkok-ng-kanin' || p.id === 'rice-bowl' || p.slug === 'rice-bowl' || p.id === 'chicken-adobo') || prods.find(p => p.categoryId === 'cat-2') || prods[0];
     }
     if (cleanId === '2' || cleanId.startsWith('kwek')) {
       return prods.find(p => p.id === 'kwek-kwek' || p.slug === 'kwek-kwek') || prods[1];

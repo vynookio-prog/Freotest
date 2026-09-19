@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useDb } from '../../../lib/useDb';
 
-const MENU_ORDER = ['rice-bowl', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
+const MENU_ORDER = ['mangkok-ng-kanin', 'rice-bowl', 'kwek-kwek', 'turon', 'iskrambol', 'buko-coklat'];
 
 export default function ProductsPage() {
   const db = useDb();
@@ -70,8 +70,9 @@ export default function ProductsPage() {
     'iskrambol': 'Iskrambol',
     'kwek-kwek': 'Kwek Kwek',
     'turon': 'Turon',
-    'rice-bowl': 'Rice Bowl',
-    'chicken-adobo': 'Rice Bowl'
+    'mangkok-ng-kanin': 'Mangkok ng Kanin',
+    'rice-bowl': 'Mangkok ng Kanin',
+    'chicken-adobo': 'Mangkok ng Kanin'
   };
   activeProducts.forEach(p => {
     productMap[p.id] = p.name;
@@ -200,10 +201,10 @@ export default function ProductsPage() {
                             {item.categoryName}
                           </div>
                         )}
-                        {(item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('rice bowl')) && (
+                        {(item.id === 'mangkok-ng-kanin' || item.id === 'rice-bowl' || (item.name || '').toLowerCase().includes('kanin') || (item.name || '').toLowerCase().includes('rice bowl') || (item.name || '').toLowerCase().includes('mangkok')) && (
                           <div className="bg-black/45 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <span>🇯🇵</span>
-                            <span>Autentik Japan</span>
+                            <span>🇵🇭</span>
+                            <span>Autentik Filipina</span>
                           </div>
                         )}
                       </div>
